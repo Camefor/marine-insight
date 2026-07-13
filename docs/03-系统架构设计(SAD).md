@@ -3,7 +3,7 @@
 ## 1. 架构目标
 
 - 将地点、预报、分析和用户能力分离，控制业务复杂度。
-- 通过防腐层隔离 Windy 等第三方字段、协议和故障模式。
+- 通过防腐层隔离 Open-Meteo、Stormglass、WorldTides 和文件型数据源的字段、协议与故障模式。
 - 保证没有 AI、Redis 或单个外部数据源时，核心查询仍可降级运行。
 - 使任一分析结论可通过数据批次、算法版本和 Trace 复现。
 - 支持单机 Docker 起步，并保留横向扩展和多 Provider 能力。
@@ -23,10 +23,19 @@ flowchart LR
     User[匿名/注册用户] --> Web[Blazor Web App]
     Admin[管理员] --> Web
     Web --> App[Application API]
-    App --> Domain[Marine Domain]
-    App --> Providers[Provider Adapters]
-    Providers --> Windy[Windy API]
-    Providers --> Alternatives[天气/海洋/潮汐备选源]
+    App --> Assembler[Forecast Snapshot Assembler]
+    Assembler --> Domain[Marine Domain]
+    App --> Weather[Weather Provider]
+    App --> Marine[Marine Provider]
+    App --> Tide[Tide Provider 可选]
+    Weather --> OpenWeather[Open-Meteo Weather]
+    Marine --> OpenMarine[Open-Meteo Marine]
+    Marine --> Stormglass[Stormglass 可选]
+    Tide --> WorldTides[WorldTides 可选]
+    App -.后台导入.-> NOAA[NOAA/NCEP + NDBC]
+    Weather --> Assembler
+    Marine --> Assembler
+    Tide --> Assembler
     App --> Db[(PostgreSQL)]
     App --> Cache[(Memory/Redis)]
     App --> Llm[可选 LLM]
@@ -84,7 +93,10 @@ sequenceDiagram
     participant UI as Blazor UI
     participant App as Query Handler
     participant Cache as Cache
-    participant Provider as Forecast Provider
+    participant Weather as Weather Provider
+    participant Marine as Marine Provider
+    participant Tide as Tide Provider
+    participant Assembler as Snapshot Assembler
     participant Engine as Analysis Engine
     participant AI as AI Explainer
     participant DB as PostgreSQL
@@ -92,12 +104,23 @@ sequenceDiagram
     UI->>App: 地点 + 时间范围 + 活动
     App->>Cache: 查询标准预报
     alt 缓存未命中或过期
-        App->>Provider: 拉取第三方数据
-        Provider-->>App: Provider DTO
-        App->>App: 标准化、校验、质量标记
-        App->>Cache: 写入标准预报
+        par 常规天气
+            App->>Weather: 拉取 Weather 数据
+            Weather-->>App: Weather Provider DTO
+        and 海浪涌浪
+            App->>Marine: 拉取 Marine 数据
+            Marine-->>App: Marine Provider DTO
+        end
+        opt 潮汐已启用
+            App->>Tide: 拉取 Tide 数据
+            Tide-->>App: Tide Provider DTO
+        end
+        App->>App: 分域标准化、校验并保存独立批次
+        App->>Cache: 写入各来源批次
     end
-    App->>Engine: 逐小时预报 + 活动配置
+    App->>Assembler: 来源批次集合
+    Assembler-->>App: 按 UTC 对齐的 ForecastSnapshot
+    App->>Engine: ForecastSnapshot + 活动配置
     Engine-->>App: 分数、风险、时间窗、置信度
     App->>DB: 保存批次和分析结果
     opt AI 已启用
@@ -111,7 +134,7 @@ sequenceDiagram
 
 | 类别 | 选型 | 理由 | 备选 |
 | --- | --- | --- | --- |
-| 运行时 | .NET 9 / ASP.NET Core | 与用户技术栈一致，性能和可观测性完善 | .NET 8 LTS |
+| 运行时 | .NET 10 / ASP.NET Core | 当前 LTS，与用户技术栈一致，性能和可观测性完善 | 无，项目统一使用 .NET 10 |
 | UI | Blazor Web App + MudBlazor | C# 全栈、组件成熟、响应式支持 | 原生 Razor 组件 |
 | 图表 | ApexCharts for Blazor | 逐小时多序列展示成熟 | ECharts 封装 |
 | 地图 | Leaflet + OpenStreetMap | 轻量、易于坐标选点 | MapLibre |
@@ -124,7 +147,7 @@ sequenceDiagram
 
 ## 8. 数据架构
 
-- PostgreSQL 保存地点、预报批次、标准化点位、分析结果、算法版本和用户数据。
+- PostgreSQL 保存地点、分数据域预报批次、标准化点位、分析来源关联、分析结果、算法版本和用户数据。
 - Redis/Memory 保存短期预报、分析响应和防重复回源锁，不作为事实唯一来源。
 - 原始 Provider 响应可按调试配置短期保存并脱敏，默认不长期保留。
 - 所有时序记录以 UTC 存储；经纬度初期使用定点精度，复杂空间查询再引入 PostGIS。
@@ -161,9 +184,13 @@ Web 应保持无状态，用户会话和持久数据不依赖容器本地磁盘�
 | ADR-003 | 评分引擎确定性，AI 仅解释 | 已接受 | 安全可测，文本表现与模型解耦 |
 | ADR-004 | PostgreSQL 生产、SQLite 本地 | 已接受 | 迁移需验证提供程序差异 |
 | ADR-005 | Redis 为可选增强依赖 | 已接受 | 单机易启动，分布式时需启用共享缓存 |
+| ADR-006 | Open-Meteo 为 MVP 主源，Weather/Marine 分批次保存 | 已接受 | 降低成本，并要求分析结果关联多个来源批次 |
+| ADR-007 | Stormglass/WorldTides 由预算和功能开关控制 | 已接受 | 避免主源故障触发不可控付费调用 |
+| ADR-008 | NOAA/NCEP 文件解析仅进入后台管线 | 已接受 | 保留长期免费路线，不增加在线请求延迟 |
 
 ## 12. 变更记录
 
 | 版本 | 日期 | 变更说明 |
 | --- | --- | --- |
 | 1.0 | 2026-07-13 | 建立模块化单体、Provider 防腐层和确定性分析架构 |
+| 1.1 | 2026-07-13 | 引入 Open-Meteo 双 Provider、批次组装和分层数据源架构 |

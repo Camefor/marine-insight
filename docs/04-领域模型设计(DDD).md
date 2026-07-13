@@ -24,7 +24,7 @@ Marine Insight 的核心领域不是“展示天气”，而是将标准化海�
 | 上下文 | 职责 | 类型 | 集成方式 |
 | --- | --- | --- | --- |
 | Location | 地点、坐标、时区、岸线元数据 | 支撑域 | 通过 LocationId/GeoPoint 提供给其他上下文 |
-| Forecast Acquisition | Provider 调用、标准化、质量校验 | 支撑域 | 发布 ForecastBatchReady |
+| Forecast Acquisition | Weather/Marine/Tide Provider 调用、标准化、质量校验 | 支撑域 | 发布 ForecastBatchReady |
 | Marine Analysis | 风险规则、评分、活动适配、时间窗 | 核心域 | 消费标准预报，产出 AnalysisReport |
 | User Preference | 收藏、历史、单位和默认活动 | 通用域 | 只引用 LocationId 和 AnalysisId |
 | Explanation | 规则模板和 AI 自然语言解释 | 支撑域 | 只读 AnalysisReport 投影 |
@@ -52,23 +52,30 @@ flowchart LR
 - 聚合根：`ForecastBatch`。
 - 实体：`ForecastPoint`。
 - 值对象：`ProviderIdentity`、`ForecastMetricSet`、`DataQuality`。
-- 不变式：同一批次中地点、Provider、模型和发布时间一致；预报时间唯一且升序；缺失值使用空值而不是 0。
+- 不变式：同一批次中地点、Provider、数据域、模型和发布时间一致；预报时间唯一且升序；缺失值使用空值而不是 0。
 - 批次创建后不可修改指标，只能创建新批次，保证分析可复现。
 
-### 4.3 AnalysisReport 聚合
+### 4.3 ForecastSnapshot 分析输入模型
+
+- `ForecastSnapshot` 不是第三方响应，而是由多个 `ForecastBatch` 按 UTC 时间轴组装的不可变领域输入。
+- 值对象：`SourceBatchReference`、`MetricSource`、`SnapshotQuality`。
+- 不变式：每个指标必须能追溯到批次、Provider 和模型；多来源同名指标必须经过显式选择策略；不能用较新的 Weather 批次掩盖过期 Marine/Tide 批次。
+- Open-Meteo Weather、Open-Meteo Marine 和可选 WorldTides 通常形成 2-3 个来源批次。
+
+### 4.4 AnalysisReport 聚合
 
 - 聚合根：`AnalysisReport`。
 - 实体：`HourlyAssessment`、`RiskFactor`、`ActivityAssessment`、`RecommendationWindow`。
 - 值对象：`Score`、`RiskLevel`、`Confidence`、`AlgorithmVersion`。
 - 不变式：分数范围为 0-100；硬性风险触发时等级必须为 `Avoid`；数据不足时允许 `Unknown`，不得伪造分数。
 
-### 4.4 UserProfile 聚合
+### 4.5 UserProfile 聚合
 
 - 聚合根：`UserProfile`。
 - 实体：`FavoriteLocation`、`UserSetting`。
 - 不变式：收藏地点在单个用户内唯一；单位偏好必须来自受支持枚举；用户只能访问自己的数据。
 
-### 4.5 AlgorithmVersion 聚合
+### 4.6 AlgorithmVersion 聚合
 
 - 聚合根：`AlgorithmVersion`。
 - 状态：`Draft -> Validated -> Published -> Retired`。
@@ -90,7 +97,8 @@ flowchart LR
 
 | 服务 | 职责 | 输入 | 输出 |
 | --- | --- | --- | --- |
-| `MarineAnalysisService` | 编排逐小时确定性分析 | ForecastBatch, ActivityProfiles | AnalysisReport |
+| `ForecastSnapshotAssembler` | 对齐多数据域批次并保留指标来源 | ForecastBatch 集合 | ForecastSnapshot |
+| `MarineAnalysisService` | 编排逐小时确定性分析 | ForecastSnapshot, ActivityProfiles | AnalysisReport |
 | `SafetyGateEvaluator` | 判断不可抵消风险 | ForecastPoint, RuleSet | SafetyGateResult |
 | `ScoreCalculator` | 计算指标和活动分数 | ForecastPoint, RuleSet | ScoreBreakdown |
 | `WindowPlanner` | 计算推荐窗口和返航截止 | HourlyAssessment 列表 | RecommendationWindow 列表 |
@@ -101,7 +109,7 @@ flowchart LR
 
 | 事件 | 触发条件 | 订阅方 | 主要数据 |
 | --- | --- | --- | --- |
-| `ForecastBatchReady` | 标准化批次保存成功 | Analysis 用例、缓存 | BatchId, LocationId |
+| `ForecastBatchReady` | 任一标准化批次保存成功 | Snapshot 组装、缓存 | BatchId, LocationId, DataDomain |
 | `AnalysisCompleted` | 分析报告创建成功 | UI 投影、历史、通知 | AnalysisId, RiskLevel |
 | `SafetyGateTriggered` | 任一硬性风险触发 | 日志、通知 | RuleCode, Time, Severity |
 | `RiskEscalated` | 新结果相对前次明显恶化 | 通知 | PreviousLevel, CurrentLevel |
@@ -115,7 +123,10 @@ flowchart LR
 | `IForecastBatchRepository` | ForecastBatch | 按地点/Provider/时间读取和追加 |
 | `IAnalysisReportRepository` | AnalysisReport | 保存、按查询读取、历史对比 |
 | `IAlgorithmVersionRepository` | AlgorithmVersion | 草稿、发布版本和回滚读取 |
-| `IForecastProvider` | 外部数据端口 | 获取指定地点和时间范围的原始预报 |
+| `IWeatherForecastProvider` | 常规天气端口 | 获取指定地点和时间范围的 Weather 预报 |
+| `IMarineForecastProvider` | 海浪/涌浪端口 | 获取指定地点和时间范围的 Marine 预报 |
+| `ITideProvider` | 潮汐端口 | 获取潮位、极值和时序预测 |
+| `IObservationProvider` | 实测端口 | 获取 NDBC 等站点观测用于校准 |
 | `IExplanationProvider` | AI/模板端口 | 从只读分析投影生成解释 |
 
 ## 9. 核心领域规则
@@ -132,10 +143,11 @@ flowchart LR
 
 ## 10. 防腐层
 
-每个 Provider 在 Infrastructure 内完成：认证、请求、原始 DTO 解析、单位换算、枚举映射、时间对齐和质量标记。领域层只接收 `MarineForecastPoint`，不引用 `WindyResponse` 等第三方类型。Provider 字段变化只影响适配器和契约测试。
+每个 Provider 在 Infrastructure 内完成：认证、请求或文件读取、原始 DTO 解析、单位换算、枚举映射、时间对齐和质量标记。领域层只接收标准批次和 `ForecastSnapshot`，不引用 `OpenMeteoMarineResponse`、`StormglassResponse` 等第三方类型。Provider 字段变化只影响适配器、Normalizer 和契约测试。
 
 ## 11. 变更记录
 
 | 版本 | 日期 | 变更说明 |
 | --- | --- | --- |
 | 1.0 | 2026-07-13 | 定义核心域、聚合、不变式和 Provider 防腐层 |
+| 1.1 | 2026-07-13 | 增加 ForecastSnapshot 和 Weather/Marine/Tide 多来源批次模型 |

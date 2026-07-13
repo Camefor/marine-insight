@@ -9,7 +9,7 @@
 | 项目版本 | v1.0 |
 | 文档版本 | v1.0 |
 | 编写日期 | 2026-07-13 |
-| 技术基线 | C# / .NET 9 / Blazor Web App |
+| 技术基线 | C# / .NET 10 / Blazor Web App |
 | 数据库 | PostgreSQL；SQLite 用于本地开发 |
 | 部署平台 | Linux Docker；可选 Windows IIS |
 
@@ -26,10 +26,16 @@ flowchart LR
     U[匿名/注册用户] --> W[Blazor Web App]
     A[管理员] --> W
     W --> API[ASP.NET Core Application]
-    API --> AN[海况分析与评分引擎]
-    API --> P[Weather/Marine Provider]
-    P --> WINDY[Windy API]
-    P --> ALT[合规备选数据源]
+    API --> ASSEMBLER[Forecast Snapshot Assembler]
+    ASSEMBLER --> AN[海况分析与评分引擎]
+    API --> OW[Open-Meteo Weather Provider]
+    API --> OM[Open-Meteo Marine Provider]
+    API --> SG[Stormglass Provider 可选]
+    API --> WT[WorldTides Provider 可选]
+    OW --> ASSEMBLER
+    OM --> ASSEMBLER
+    SG --> ASSEMBLER
+    WT --> ASSEMBLER
     API --> DB[(PostgreSQL)]
     API --> CACHE[(Memory/Redis)]
     API --> AI[可选 AI Provider]
@@ -60,8 +66,10 @@ flowchart LR
 - `FR-012` 在数据源支持时，应获取主/次涌浪高度、周期和方向。
 - `FR-013` 系统应获取降雨、雷暴或雷暴概率、CAPE、能见度、温度、湿度、气压和云量。
 - `FR-014` UV、海水温度、潮汐、日出日落、月相和洋流允许作为可选字段分阶段接入。
-- `FR-015` 每个标准化数据点应保留 Provider、模型、原始发布时间、预报时间、抓取时间和质量状态。
+- `FR-015` 每个标准化数据点应保留 Provider、数据域、模型、原始发布时间、预报时间、抓取时间和质量状态。
 - `FR-016` 缺失值不得默认填充为 0；必须使用 `null` 和质量标记表达。
+- `FR-017` Weather、Marine、Tide 和 Observation 应分别形成不可变来源批次，分析输入通过批次集合组装。
+- `FR-018` 分析结果应记录全部来源批次及其用途，不能只保存一个“主 Provider”而丢失其他指标来源。
 
 ### 5.3 分析与评分
 
@@ -116,6 +124,9 @@ public sealed record MarineForecastPoint(
     double? WaveHeightM,
     double? WavePeriodS,
     double? WaveDirectionDeg,
+    double? WindWaveHeightM,
+    double? WindWavePeriodS,
+    double? WindWaveDirectionDeg,
     double? SwellHeightM,
     double? SwellPeriodS,
     double? SwellDirectionDeg,
@@ -126,11 +137,16 @@ public sealed record MarineForecastPoint(
     double? HumidityPercent,
     double? PressureHpa,
     double? CloudCoverPercent,
+    double? SeaTemperatureC,
+    double? CurrentSpeedMs,
+    double? CurrentDirectionDeg,
+    double? TideHeightM,
     bool? Thunderstorm,
-    ForecastQuality Quality);
+    ForecastQuality Quality,
+    IReadOnlyDictionary<string, MetricSourceReference> MetricSources);
 ```
 
-内部标准单位固定为 `m/s`、`m`、`s`、`degree`、`mm`、`m`、`C`、`hPa`。展示层负责单位换算。
+内部标准单位固定为 `m/s`、`m`、`s`、`degree`、`mm`、`C`、`hPa`。展示层负责单位换算。`MetricSources` 记录每个非空指标对应的批次、Provider、模型和质量状态；潮汐极值等非逐小时结构使用独立的 Tide DTO 表达。
 
 ## 7. 初始业务规则基线
 
@@ -164,8 +180,11 @@ public sealed record MarineForecastPoint(
 
 | 能力 | 初始方案 | 约束 |
 | --- | --- | --- |
-| 天气/海浪 | Windy API Provider | 接入前确认套餐字段、覆盖、配额和许可 |
-| 备选天气 | Open-Meteo 或其他合规服务 | 通过同一 Provider 契约接入 |
+| 常规天气 | Open-Meteo Weather API | MVP 默认；上线前确认非商业/商业条款和实际配额 |
+| 海浪/涌浪 | Open-Meteo Marine API | MVP 默认；与 Weather 批次独立保存和时间对齐 |
+| 专业海洋增强 | Stormglass.io | 默认关闭；按预算用于多来源、海温、洋流或潮汐增强 |
+| 潮汐 | WorldTides | P1 可选；按 Credit 预算、长 TTL 缓存和额度告警运行 |
+| 原始模型/观测 | NOAA/NCEP WW3、NDBC | v2.0 后台文件管线和校准数据，不进入 MVP 热路径 |
 | 地图 | OpenStreetMap + Leaflet | 遵守瓦片使用政策，生产可配置服务商 |
 | AI | 可插拔 LLM Provider | 可完全关闭，超时后规则降级 |
 | 数据库 | PostgreSQL | EF Core 迁移管理 |
@@ -187,6 +206,7 @@ public sealed record MarineForecastPoint(
 - `NFR-010` 生产月可用性目标 >= 99.5%。
 - `NFR-011` 外部 Provider 使用超时、有限重试、熔断和缓存降级。
 - `NFR-012` 健康检查区分存活、就绪和外部依赖状态。
+- `NFR-013` Provider 路由必须受日/月预算、剩余额度和功能开关控制，付费 fallback 不得无上限自动触发。
 
 ### 10.3 安全与隐私
 
@@ -225,9 +245,13 @@ public sealed record MarineForecastPoint(
 | AC-006 | Provider 超时但缓存仍有效 | 返回缓存结果，显示缓存年龄和降级状态 |
 | AC-007 | 缺少浪高和涌浪 | 返回低置信度或无法判断，不用 0 代替 |
 | AC-008 | 17:00 后风险连续升高 | 推荐窗口截止早于风险时点并给出返航建议 |
+| AC-009 | Open-Meteo Weather 新鲜但 Marine 使用旧缓存 | 分别显示两个批次时间，整体置信度不能只按较新批次计算 |
+| AC-010 | WorldTides 不可用 | 基础海况继续返回，潮汐相关结论明确降级 |
+| AC-011 | Stormglass 关闭且 Open-Meteo 关键字段缺失 | 不产生付费调用，返回 Partial/Unknown 和缺失原因 |
 
 ## 12. 变更记录
 
 | 版本 | 日期 | 变更说明 |
 | --- | --- | --- |
 | 1.0 | 2026-07-13 | 重构为可实施、可测试且具安全边界的需求规格 |
+| 1.1 | 2026-07-13 | 切换为 Open-Meteo 主源并引入多来源批次追溯需求 |

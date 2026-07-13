@@ -17,10 +17,10 @@
 
 | 镜像 | 基础镜像 | 端口 | 用户 |
 | --- | --- | --- | --- |
-| `marine-insight-web` | `mcr.microsoft.com/dotnet/aspnet:9.0` | 8080 | 非 root |
-| `marine-insight-worker` | `mcr.microsoft.com/dotnet/runtime:9.0` | 无 | 非 root |
+| `marine-insight-web` | `mcr.microsoft.com/dotnet/aspnet:10.0` | 8080 | 非 root |
+| `marine-insight-worker` | `mcr.microsoft.com/dotnet/runtime:10.0` | 无 | 非 root |
 
-构建阶段使用对应 `sdk:9.0`，先复制项目文件并还原，再复制源码发布，提高层缓存命中。固定到受控补丁版本或镜像摘要，并由依赖更新流程定期升级。
+构建阶段使用对应 `sdk:10.0`，先复制项目文件并还原，再复制源码发布，提高层缓存命中。固定到受控补丁版本或镜像摘要，并由依赖更新流程定期升级。
 
 ## 4. Dockerfile 约定
 
@@ -60,8 +60,12 @@
 | `ConnectionStrings__MarineInsight` | 是 | PostgreSQL 连接 |
 | `Redis__Enabled` | 否 | 是否启用 Redis |
 | `Redis__ConnectionString` | 条件 | Redis 连接 |
-| `ForecastProviders__Windy__Enabled` | 否 | Windy 开关 |
-| `ForecastProviders__Windy__ApiKey` | 条件 | Secret 注入 |
+| `ForecastProviders__OpenMeteo__Enabled` | 否 | Open-Meteo 主源开关 |
+| `ForecastProviders__OpenMeteo__ApiKey` | 条件 | 商业套餐使用时注入 |
+| `ForecastProviders__Stormglass__Enabled` | 否 | 专业增强开关，默认关闭 |
+| `ForecastProviders__Stormglass__ApiKey` | 条件 | 启用时注入 |
+| `TideProviders__WorldTides__Enabled` | 否 | 潮汐开关 |
+| `TideProviders__WorldTides__ApiKey` | 条件 | 启用时注入 |
 | `AI__Enabled` | 否 | AI 开关 |
 | `AI__ApiKey` | 条件 | Secret 注入 |
 | `OpenTelemetry__Endpoint` | 否 | OTel Collector 地址 |
@@ -118,7 +122,8 @@ Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和�
 | 现象 | 检查 | 处理 |
 | --- | --- | --- |
 | Web 不就绪 | `docker compose ps/logs`、数据库和配置健康 | 修复 Secret/迁移/连接，不反复盲目重启 |
-| 查询持续 503 | Provider 熔断、配额、缓存和网络 | 启用有效缓存/备选源，确认 API Key |
+| 查询持续 503 | Open-Meteo Weather/Marine、缓存和网络 | 分域检查端点，使用有效缓存；不得自动无限调用 Stormglass |
+| 潮汐为空 | WorldTides 开关、Credit、缓存和目标坐标 | 基础海况继续运行，补充额度或修复配置 |
 | Redis 错误 | Redis 健康和连接数 | 允许 Web 绕过缓存，修复后观察命中率 |
 | 数据库磁盘增长 | 表保留、日志、备份位置 | 执行归档清理和容量扩展 |
 | SignalR 断线 | 代理 WebSocket、超时和资源 | 修正代理并检查 Web 负载 |
@@ -129,3 +134,4 @@ Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和�
 | 版本 | 日期 | 变更说明 |
 | --- | --- | --- |
 | 1.0 | 2026-07-13 | 定义非 root 镜像、Compose 拓扑、Secret 和回滚规范 |
+| 1.1 | 2026-07-13 | 升级 .NET 10 镜像并替换数据源环境变量 |

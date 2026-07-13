@@ -14,7 +14,7 @@ v1.0 默认：
 - 应用外壳和非交互内容使用静态 SSR。
 - Dashboard、地图、图表、收藏和设置使用 Interactive Server。
 - 交互连接中断时保留已渲染结果，并提供重连/刷新状态。
-- 对外 HTTP API 与组件用例复用 Application 层，不在组件中直接调用 Windy。
+- 对外 HTTP API 与组件用例复用 Application 层，不在组件中直接调用 Open-Meteo、Stormglass 或 WorldTides。
 
 若后续 PWA 需要更强离线能力，再评估 Interactive WebAssembly/Auto，不在 MVP 同时维护两套复杂状态。
 
@@ -44,7 +44,7 @@ Components/
     ├── AsyncStateView.razor
     ├── RiskBadge.razor
     ├── MetricValue.razor
-    ├── DataFreshness.razor
+    ├── DataSourceStatusList.razor
     └── EmptyState.razor
 ```
 
@@ -67,13 +67,13 @@ Components/
 | `ForecastQueryBar` | `Query`, `OnSubmit`, `IsBusy` | 地点、时间、范围和活动输入 |
 | `LocationSearchBox` | `Value`, `OnSelected`, `SearchAsync` | 防抖搜索和候选键盘导航 |
 | `ActivitySelector` | `Selected`, `OnChanged` | 活动分段切换 |
-| `RiskSummary` | `Overall`, `TopRisks`, `Freshness` | 综合结论和硬性警示 |
+| `RiskSummary` | `Overall`, `TopRisks`, `SourceQuality` | 综合结论和硬性警示 |
 | `ActivityScoreList` | `Items`, `Selected`, `OnSelected` | 活动评分切换 |
 | `MetricGrid` | `ForecastPoint`, `RiskContributions` | 稳定网格展示关键指标 |
 | `ForecastTrendTabs` | `Hourly`, `SelectedMetric` | 风、浪、分数趋势 |
 | `RecommendationTimeline` | `Windows`, `RiskTurningPoints` | 推荐窗口和返航截止 |
 | `HourlyDetailPanel` | `Assessment`, `IsOpen`, `OnClose` | 完整指标和规则贡献 |
-| `DataFreshness` | `IssuedAt`, `FetchedAt`, `CacheStatus`, `Quality` | 来源与时效状态 |
+| `DataSourceStatusList` | `Sources` | 分数据域展示 Provider、模型、时效、缓存与质量 |
 | `LeafletMapPicker` | `Center`, `SelectedPoint`, `OnPointChanged` | 地图选点 |
 
 ## 6. 组件接口约定
@@ -155,3 +155,4 @@ public sealed partial class RiskSummary
 | 版本 | 日期 | 变更说明 |
 | --- | --- | --- |
 | 1.0 | 2026-07-13 | 定义 Blazor 渲染模式、组件边界、状态和测试策略 |
+| 1.1 | 2026-07-13 | 更新为多 Provider 数据源边界 |

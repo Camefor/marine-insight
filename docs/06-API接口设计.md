@@ -2,7 +2,7 @@
 
 ## 1. 设计原则
 
-- 对外暴露业务资源，不暴露 Windy 等 Provider 的原始 DTO。
+- 对外暴露业务资源，不暴露 Open-Meteo、Stormglass 等 Provider 的原始 DTO。
 - API 版本、算法版本和数据来源分别表达，避免概念混用。
 - 查询结果可缓存、可追踪；创建收藏等写操作具备幂等与授权校验。
 - 错误采用 RFC 9457 `ProblemDetails`，业务错误码保持稳定。
@@ -86,21 +86,38 @@
 ```json
 {
   "analysisId": "82f9ff76-bb11-4456-93e5-78d669e609ea",
-  "forecastBatchId": "35d4af68-6297-46d2-bc7d-fc0d62bb79bd",
+  "sourceBatchIds": [
+    "35d4af68-6297-46d2-bc7d-fc0d62bb79bd",
+    "bea327c7-6039-43b9-81f1-c1559a0c4987"
+  ],
   "location": {
     "displayName": "东极岛",
     "latitude": 30.194,
     "longitude": 122.687,
     "timeZone": "Asia/Shanghai"
   },
-  "data": {
-    "provider": "windy",
-    "model": "ecmwf",
-    "issuedAt": "2026-07-14T20:00:00Z",
-    "fetchedAt": "2026-07-15T00:01:18Z",
-    "cacheStatus": "hit",
-    "quality": "valid"
-  },
+  "sources": [
+    {
+      "batchId": "35d4af68-6297-46d2-bc7d-fc0d62bb79bd",
+      "dataDomain": "weather",
+      "provider": "open-meteo",
+      "model": "best-match",
+      "issuedAt": "2026-07-14T20:00:00Z",
+      "fetchedAt": "2026-07-15T00:01:18Z",
+      "cacheStatus": "hit",
+      "quality": "valid"
+    },
+    {
+      "batchId": "bea327c7-6039-43b9-81f1-c1559a0c4987",
+      "dataDomain": "marine",
+      "provider": "open-meteo",
+      "model": "best-match",
+      "issuedAt": "2026-07-14T18:00:00Z",
+      "fetchedAt": "2026-07-15T00:01:19Z",
+      "cacheStatus": "miss",
+      "quality": "valid"
+    }
+  ],
   "overall": {
     "score": 82,
     "riskLevel": "good",
@@ -134,7 +151,7 @@
 }
 ```
 
-`hourly` 可按产品性能策略返回摘要，完整逐小时点位通过 `forecastBatchId` 分页或独立获取。
+`hourly` 可按产品性能策略返回组装后的摘要。完整原始标准点位通过 `sourceBatchIds` 对应的 `/forecast-batches/{id}/points` 分别获取，每个指标仍携带来源引用。
 
 ## 6. 地点搜索
 
@@ -183,7 +200,7 @@
 ## 9. 缓存与条件请求
 
 - 地点搜索可缓存 24 小时；预报按 Provider 更新节奏缓存 10-30 分钟。
-- 分析响应的 ETag 由预报批次、算法版本、活动和单位偏好组成。
+- 分析响应的 ETag 由来源批次集合哈希、来源选择策略、算法版本、活动和单位偏好组成。
 - 客户端可发送 `If-None-Match`；服务端返回 `304` 时不重复传输结果。
 - 任何缓存响应都必须保留原数据 `fetchedAt`，不能将命中时间伪装为数据时间。
 
@@ -210,3 +227,4 @@
 | 版本 | 日期 | 变更说明 |
 | --- | --- | --- |
 | 1.0 | 2026-07-13 | 定义版本化业务 API、ProblemDetails 和分析响应 |
+| 1.1 | 2026-07-13 | 分析响应改为返回 Open-Meteo 等多个来源批次及数据域 |
