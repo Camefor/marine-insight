@@ -2,70 +2,156 @@
 
 ## 1. 设计目标
 
-TODO：说明组件复用、状态管理、性能和可测试性目标。
+- 组件围绕用户操作和业务投影拆分，避免一个 Dashboard 承担全部状态。
+- 领域模型不直接暴露给 Razor，页面使用 Application Query DTO/ViewModel。
+- 支持 Blazor Web App 的静态 SSR + Interactive Server 渐进交互。
+- 加载、错误、取消和降级状态具有统一组件契约。
 
-## 2. 组件分层
+## 2. 渲染模式
 
-| 层级 | 职责 | 示例 |
-| --- | --- | --- |
-| 页面组件 | TODO | TODO |
-| 业务组件 | TODO | TODO |
-| 基础组件 | TODO | TODO |
-| 布局组件 | TODO | TODO |
+v1.0 默认：
+
+- 应用外壳和非交互内容使用静态 SSR。
+- Dashboard、地图、图表、收藏和设置使用 Interactive Server。
+- 交互连接中断时保留已渲染结果，并提供重连/刷新状态。
+- 对外 HTTP API 与组件用例复用 Application 层，不在组件中直接调用 Windy。
+
+若后续 PWA 需要更强离线能力，再评估 Interactive WebAssembly/Auto，不在 MVP 同时维护两套复杂状态。
 
 ## 3. 目录结构
 
 ```text
 Components/
 ├── Layout/
+│   ├── MainLayout.razor
+│   ├── AppNavigation.razor
+│   └── ConnectionStatus.razor
 ├── Pages/
+│   ├── Dashboard.razor
+│   ├── MapPicker.razor
+│   ├── Favorites.razor
+│   ├── QueryHistory.razor
+│   ├── Settings.razor
+│   └── Admin/
 ├── Features/
+│   ├── ForecastQuery/
+│   ├── MarineAnalysis/
+│   ├── ForecastCharts/
+│   ├── LocationPicker/
+│   ├── Favorites/
+│   └── UserSettings/
 └── Shared/
+    ├── AsyncStateView.razor
+    ├── RiskBadge.razor
+    ├── MetricValue.razor
+    ├── DataFreshness.razor
+    └── EmptyState.razor
 ```
 
-## 4. 命名规范
+每个复杂组件使用同名 `.razor.cs` 和 `.razor.css`；简单展示组件可保持单文件。
 
-- 组件名称：TODO。
-- 参数名称：TODO。
-- 事件回调：TODO。
-- CSS 隔离文件：TODO。
+## 4. 组件分层
 
-## 5. 组件接口模板
+| 层级 | 职责 | 示例 |
+| --- | --- | --- |
+| 页面组件 | 路由、查询参数、页面级编排 | `Dashboard`, `Favorites` |
+| Feature 容器 | 获取数据、管理局部状态、组合业务组件 | `MarineAnalysisPanel` |
+| 业务展示组件 | 展示明确业务概念，无数据访问 | `RiskSummary`, `ActivityScoreList` |
+| 基础组件 | 通用状态、格式和交互 | `AsyncStateView`, `MetricValue` |
+| JS 互操作适配 | 地图、图表等第三方生命周期 | `LeafletMap`, `ForecastChart` |
 
-| 参数/事件 | 类型 | 必填 | 默认值 | 说明 |
-| --- | --- | --- | --- | --- |
-| TODO | TODO | TODO | TODO | TODO |
+## 5. 核心组件清单
 
-## 6. 状态管理
+| 组件 | 关键参数/事件 | 职责 |
+| --- | --- | --- |
+| `ForecastQueryBar` | `Query`, `OnSubmit`, `IsBusy` | 地点、时间、范围和活动输入 |
+| `LocationSearchBox` | `Value`, `OnSelected`, `SearchAsync` | 防抖搜索和候选键盘导航 |
+| `ActivitySelector` | `Selected`, `OnChanged` | 活动分段切换 |
+| `RiskSummary` | `Overall`, `TopRisks`, `Freshness` | 综合结论和硬性警示 |
+| `ActivityScoreList` | `Items`, `Selected`, `OnSelected` | 活动评分切换 |
+| `MetricGrid` | `ForecastPoint`, `RiskContributions` | 稳定网格展示关键指标 |
+| `ForecastTrendTabs` | `Hourly`, `SelectedMetric` | 风、浪、分数趋势 |
+| `RecommendationTimeline` | `Windows`, `RiskTurningPoints` | 推荐窗口和返航截止 |
+| `HourlyDetailPanel` | `Assessment`, `IsOpen`, `OnClose` | 完整指标和规则贡献 |
+| `DataFreshness` | `IssuedAt`, `FetchedAt`, `CacheStatus`, `Quality` | 来源与时效状态 |
+| `LeafletMapPicker` | `Center`, `SelectedPoint`, `OnPointChanged` | 地图选点 |
 
-TODO：说明本地状态、级联状态、跨页面状态和服务端状态的边界。
+## 6. 组件接口约定
 
-## 7. 数据加载
+- 参数使用不可变 DTO 或只读集合，禁止组件修改父级传入对象。
+- 状态变化使用 `EventCallback<T>`，事件名使用 `OnXxx`。
+- 可取消异步事件传入页面级 `CancellationToken` 或由容器管理 `CancellationTokenSource`。
+- 展示组件不注入 Repository、DbContext 或 Provider。
+- 需要错误边界的第三方组件外包裹 `ErrorBoundary`，但业务错误由显式状态展示。
 
-TODO：说明初始化、刷新、取消请求、加载状态和错误重试策略。
+示例：
 
-## 8. 表单与验证
+```csharp
+public sealed partial class RiskSummary
+{
+    [Parameter, EditorRequired]
+    public required OverallAssessmentViewModel Overall { get; set; }
 
-TODO：说明表单模型、验证规则、提交状态和错误展示。
+    [Parameter]
+    public IReadOnlyList<RiskFactorViewModel> TopRisks { get; set; } = [];
+}
+```
 
-## 9. 性能规范
+## 7. 状态管理
 
-- 避免不必要的重复渲染。
-- 大列表采用分页或虚拟化。
-- 长任务支持取消。
-- TODO：补充性能基线。
+| 状态 | 位置 | 生命周期 |
+| --- | --- | --- |
+| 查询表单 | `DashboardState`（Scoped） | 当前交互会话 |
+| 当前分析结果 | Feature 容器/Scoped Store | 切页可保留，刷新可恢复查询参数 |
+| 用户设置 | `UserPreferenceState` | 登录会话 + 服务端持久化 |
+| 收藏列表 | 页面 Query + 小型缓存 | 按需刷新 |
+| 图表 Hover/Tab | 组件本地状态 | 组件生命周期 |
+| Provider/算法管理 | 管理页面本地状态 | 页面生命周期 |
 
-## 10. 样式与可访问性
+不引入全局状态框架作为 MVP 前置条件。跨组件状态先使用 Scoped State Container 和不可变快照；复杂度真实增加后再评估 Fluxor。
 
-TODO：说明 CSS 隔离、主题、键盘交互和 ARIA 约定。
+## 8. 数据加载与取消
 
-## 11. 组件测试
+- `OnInitializedAsync` 只加载页面必需数据；图表和历史按可见性延迟加载。
+- 新查询开始时取消上一请求，防止晚返回结果覆盖新条件。
+- 使用单调递增请求版本或 QueryId，应用结果前检查是否仍为当前请求。
+- 首次加载显示同尺寸骨架；刷新保留旧结果并显示局部忙状态。
+- 组件释放时取消请求并释放 JS 对象引用。
 
-TODO：说明组件单元测试、交互测试和视觉回归范围。
+## 9. 表单与验证
 
-## 12. 变更记录
+- 使用 `EditForm` 和独立 Query Input Model，不直接绑定领域实体。
+- 经纬度、时间范围、活动类型在客户端提供即时反馈，服务端再次验证。
+- 搜索候选遵循组合框键盘交互和 ARIA 约定。
+- 提交期间禁用重复提交，但保留取消按钮。
+- 服务端 `ProblemDetails.errors` 映射到字段或页面级错误区域。
 
-| 版本 | 日期 | 变更说明 | 负责人 |
-| --- | --- | --- | --- |
-| 0.1 | TODO | 初始化文档 | TODO |
+## 10. JS 互操作
 
+- Leaflet 和 ApexCharts 通过小型 ES Module 封装，不在多个组件复制全局 JS。
+- 组件初始化后创建实例，参数变化执行增量更新，Dispose 时销毁。
+- JS 回调进入 .NET 前验证数据范围，避免把第三方对象直接传入领域逻辑。
+- 地图和图表加载失败时提供列表/输入替代能力，页面仍可查询。
+
+## 11. 性能规范
+
+- 使用 `@key` 保持逐小时项和风险项身份稳定。
+- 对 168 小时列表使用分页、虚拟化或图表聚合，不一次渲染大量复杂 DOM。
+- 避免在 Razor 渲染期间重复排序、单位换算和创建集合，提前生成 ViewModel。
+- 只在参数真实变化时刷新第三方图表。
+- 指标网格和工具栏设置稳定尺寸，加载文本不得改变整体布局。
+- 通过浏览器性能工具检查重渲染、SignalR 负载和首屏交互时间。
+
+## 12. 测试
+
+- bUnit：参数渲染、风险状态、缺失数据、事件回调和授权视图。
+- 单元测试：State Container 的取消、请求版本和错误状态。
+- Playwright：地点查询、活动切换、小时详情、收藏和移动端布局。
+- 视觉回归：360x800、768x1024、1440x900，检查文字截断、重叠和图表非空。
+- JS 互操作测试：地图选点、图表更新、Dispose 和失败降级。
+
+## 13. 变更记录
+
+| 版本 | 日期 | 变更说明 |
+| --- | --- | --- |
+| 1.0 | 2026-07-13 | 定义 Blazor 渲染模式、组件边界、状态和测试策略 |
