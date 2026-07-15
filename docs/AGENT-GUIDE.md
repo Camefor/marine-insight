@@ -127,11 +127,11 @@
 | 当前任务 ID | 无 |
 | 当前状态 | `IDLE` |
 | 当前目标 | 等待用户指定下一项；`MI-0002`、`MI-0003`、`MI-0004`由用户人工处理并保持 TODO |
-| 最后完成动作 | 定义 Weather/Marine/Tide Provider 端口、统一预报批次/点位/指标/质量模型和稳定 Provider 错误模型 |
+| 最后完成动作 | 完成 `MI-0007`：接入 PostgreSQL/SQLite 配置、EF Core 持久化映射、首个迁移和运行时注册 |
 | 下一步动作 | 等待用户指定下一项，继续 RoadMap 后续工程任务 |
-| 涉及文件 | `src/MarineInsight.Domain/Forecast/**`、`src/MarineInsight.Application/Forecast/**`、`src/MarineInsight.Application/Errors/**`、`tests/MarineInsight.Domain.Tests/ForecastModelTests.cs`、`tests/MarineInsight.Application.Tests/ProviderContractTests.cs`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | `dotnet build` 0 错误；`dotnet test` Domain 6、Application 6、Infrastructure 1、Web 1 全部通过；`dotnet format --verify-no-changes`、`git diff --check` 和 BOM/CRLF 检查通过；仅有 NuGet 漏洞审计源不可达的 NU1900 警告 |
-| 阻塞/待确认 | 无代码阻塞；本次未处理用户自行人工验证的 `MI-0002`、`MI-0003`、`MI-0004` |
+| 涉及文件 | `src/MarineInsight.Infrastructure/Persistence/**`、`src/MarineInsight.Infrastructure/MarineInsight.Infrastructure.csproj`、`src/MarineInsight.Web/Program.cs`、`src/MarineInsight.Web/appsettings.Development.json`、`tests/MarineInsight.Infrastructure.Tests/**`、`docs/05-数据库设计.md`、`docs/AGENT-GUIDE.md` |
+| 验证结果 | `dotnet build` 0 错误；`dotnet test` 17/17 通过；SQLite 内存迁移和 SQLite/PostgreSQL Provider 选择测试通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告；Web host 进程探针因当前 PowerShell `Start-Process` 的重复 PATH 环境键未完成 |
+| 阻塞/待确认 | 无代码阻塞；本次不处理用户自行人工验证的 `MI-0002`、`MI-0003`、`MI-0004`；未连接真实 PostgreSQL 服务执行集成迁移 |
 | 最后更新 | 2026-07-15 |
 
 <!-- agent-state:end -->
@@ -142,7 +142,6 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0007` | P0 | `TODO` | 建立 PostgreSQL/SQLite 基础配置和首个迁移 | 本地配置可用，迁移可验证且不泄露密钥 |
 | [ ] | `MI-0008` | P0 | `TODO` | 建立健康检查、结构化日志和 OpenTelemetry Trace | 基础运行状态可观测，敏感信息不进入日志 |
 
 ### 8.2 暂停/阻塞任务恢复详情
@@ -171,6 +170,7 @@
 | [x] | `MI-0001` | 2026-07-13 | 建立 Agent 主引导、任务状态与跨会话恢复机制 | 根目录自动入口和 docs 主台账已建立；本地链接、Git 差异、UTF-8 BOM 与 CRLF 已验证 |
 | [x] | `MI-0005` | 2026-07-15 | 建立 .NET 10 解决方案、分层项目、测试项目、EditorConfig 与 CI | `MarineInsight.slnx` 包含 4 个运行项目和 4 个测试项目；依赖方向符合 SAD；构建、4 个基础测试、格式、差异和 Web HTTP 检查通过 |
 | [x] | `MI-0006` | 2026-07-15 | 定义 Provider 端口、标准预报模型、质量状态和错误模型 | Domain 标准模型和不变量、Application Weather/Marine/Tide 端口、Provider 错误层及契约测试已完成；构建和 14 个测试通过 |
+| [x] | `MI-0007` | 2026-07-15 | 建立 PostgreSQL/SQLite 基础配置和首个迁移 | Infrastructure 已接入 EF Core 10、SQLite/PostgreSQL Provider、四张预报存储表和首个迁移；Web 已按配置注册 DbContext；SQLite 迁移及两种 Provider 选择测试通过；未执行真实 PostgreSQL 集成迁移；Web host 进程探针受当前 PowerShell 环境限制未完成 |
 
 ### 9.2 取消任务
 
@@ -182,20 +182,21 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-15 | `MI-0007` | 建立 PostgreSQL/SQLite 基础配置、EF Core 持久化映射、四张预报存储表、首个迁移，并接入 Web DI | `dotnet build` 0 错误；`dotnet test` 17/17 通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；有 NU1900、NU1903 警告；未执行真实 PostgreSQL 集成迁移；Web host 进程探针因 PowerShell `Start-Process` 重复 PATH 环境键未完成 | 等待用户指定下一项；`MI-0002` 至 `MI-0004`由用户人工处理 |
 | 2026-07-15 | `MI-0006` | 定义标准 ForecastBatch/ForecastPoint/MetricSource/质量模型、Weather/Marine/Tide 端口和 Provider 错误层 | `dotnet build` 0 错误；`dotnet test` 14/14 通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；有 4 个 NU1900 审计源警告 | 等待用户指定下一项；`MI-0002` 至 `MI-0004`由用户人工处理 |
 | 2026-07-15 | `MI-0005` | 建立 .NET 10 模块化单体工程骨架和 CI | `dotnet restore` 成功但有 8 个 NU1900 审计源警告；`dotnet build`、`dotnet test`（4/4）、`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；Web 首页 HTTP 200 | 等待用户指定下一项；按 RoadMap 默认选择 `MI-0002` |
 | 2026-07-13 | `MI-0001` | 建立统一 Agent 入口、文档路由、待办/已办台账及中断恢复协议 | 本地链接全部有效；`git diff --check`、UTF-8 BOM 与 CRLF 检查通过 | 按用户指令选择 `MI-0002` 或其他新任务 |
 
 ## 11. 台账维护检查
 
-- [ ] 是否只有一个 `IN_PROGRESS` 任务？
-- [ ] 当前状态、任务清单和实际 Git 差异是否一致？
-- [ ] 未完成任务是否写明了可执行的下一步？
-- [ ] 每个 `PAUSED` / `BLOCKED` 任务是否保留独立恢复详情？
-- [ ] 完成任务是否记录了验证结果与文档影响？
-- [ ] `CANCELLED` 任务是否已归档并记录取消依据？
-- [ ] 本次会话是否追加了会话记录？
-- [ ] 本次修改的文本文件是否符合 UTF-8 with BOM 与 CRLF？
+- [x] 是否只有一个 `IN_PROGRESS` 任务？
+- [x] 当前状态、任务清单和实际 Git 差异是否一致？
+- [x] 未完成任务是否写明了可执行的下一步？
+- [x] 每个 `PAUSED` / `BLOCKED` 任务是否保留独立恢复详情？
+- [x] 完成任务是否记录了验证结果与文档影响？
+- [x] `CANCELLED` 任务是否已归档并记录取消依据？
+- [x] 本次会话是否追加了会话记录？
+- [x] 本次修改的文本文件是否符合 UTF-8 with BOM 与 CRLF？
 
 以上是每次收尾的检查模板，不代表当前检查尚未执行；实际结果应写入“当前执行状态”和当次会话记录。
 

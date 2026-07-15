@@ -17,3 +17,7 @@ csharp_style_namespace_declarations = file_scoped:suggestion
 
 [*.{csproj,props,targets}]
 indent_size = 2
+
+# EF Core generates index column arrays in migration artifacts.
+[**/Persistence/Migrations/*.cs]
+dotnet_diagnostic.CA1861.severity = none

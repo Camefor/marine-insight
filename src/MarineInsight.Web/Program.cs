@@ -1,6 +1,10 @@
-﻿using MarineInsight.Web.Components;
+﻿using MarineInsight.Infrastructure.Persistence;
+using MarineInsight.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Keep provider selection in configuration so local SQLite and production PostgreSQL use the same boundary.
+builder.Services.AddMarineInsightPersistence(builder.Configuration);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
