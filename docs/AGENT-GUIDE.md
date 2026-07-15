@@ -126,12 +126,12 @@
 | --- | --- |
 | 当前任务 ID | 无 |
 | 当前状态 | `IDLE` |
-| 当前目标 | 等待用户指定下一项；若按 RoadMap 继续，默认从 `MI-0002` 开始 |
-| 最后完成动作 | 按 SAD 建立 .NET 10 模块化单体解决方案、四个运行项目、四个测试项目、EditorConfig 和 CI |
-| 下一步动作 | 等待用户指定下一项；按 RoadMap 继续时执行 `MI-0002` |
-| 涉及文件 | `global.json`、`.editorconfig`、`.gitignore`、`Directory.Build.props`、`.github/workflows/dotnet.yml`、`MarineInsight.slnx`、`src/`、`tests/`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | `dotnet restore` 成功（NuGet 漏洞源不可达产生 NU1900 警告）；`dotnet build` 0 错误；`dotnet test` 四个测试全部通过；`dotnet format --verify-no-changes`、`git diff --check` 和 BOM/CRLF 检查通过；Web 首页 HTTP 200 |
-| 阻塞/待确认 | 无代码阻塞；NuGet 漏洞审计源当前不可达，恢复和构建仍已成功 |
+| 当前目标 | 等待用户指定下一项；`MI-0002`、`MI-0003`、`MI-0004`由用户人工处理并保持 TODO |
+| 最后完成动作 | 定义 Weather/Marine/Tide Provider 端口、统一预报批次/点位/指标/质量模型和稳定 Provider 错误模型 |
+| 下一步动作 | 等待用户指定下一项，继续 RoadMap 后续工程任务 |
+| 涉及文件 | `src/MarineInsight.Domain/Forecast/**`、`src/MarineInsight.Application/Forecast/**`、`src/MarineInsight.Application/Errors/**`、`tests/MarineInsight.Domain.Tests/ForecastModelTests.cs`、`tests/MarineInsight.Application.Tests/ProviderContractTests.cs`、`docs/AGENT-GUIDE.md` |
+| 验证结果 | `dotnet build` 0 错误；`dotnet test` Domain 6、Application 6、Infrastructure 1、Web 1 全部通过；`dotnet format --verify-no-changes`、`git diff --check` 和 BOM/CRLF 检查通过；仅有 NuGet 漏洞审计源不可达的 NU1900 警告 |
+| 阻塞/待确认 | 无代码阻塞；本次未处理用户自行人工验证的 `MI-0002`、`MI-0003`、`MI-0004` |
 | 最后更新 | 2026-07-15 |
 
 <!-- agent-state:end -->
@@ -142,10 +142,6 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0002` | P0 | `TODO` | 验证 Open-Meteo Weather/Marine 的许可、P0 字段与目标区域可用性 | [RoadMap 阶段 0](./21-开发RoadMap.md#3-阶段-0第-1-周)；形成明确可用性结论或降级范围 |
-| [ ] | `MI-0003` | P0 | `TODO` | 用代表坐标验证双端点并保存脱敏契约样本 | 校验单位、时间轴、模型、网格点和方向语义，样本可自动解析 |
-| [ ] | `MI-0004` | P0 | `TODO` | 验证查询调用数、缓存命中与成本模型 | 覆盖 24h、72h、7d 查询并记录测量结果 |
-| [ ] | `MI-0006` | P0 | `TODO` | 定义 Provider 端口、标准预报模型、质量状态和错误模型 | Weather/Marine/Tide 契约与设计文档一致 |
 | [ ] | `MI-0007` | P0 | `TODO` | 建立 PostgreSQL/SQLite 基础配置和首个迁移 | 本地配置可用，迁移可验证且不泄露密钥 |
 | [ ] | `MI-0008` | P0 | `TODO` | 建立健康检查、结构化日志和 OpenTelemetry Trace | 基础运行状态可观测，敏感信息不进入日志 |
 
@@ -174,6 +170,7 @@
 | --- | --- | --- | --- | --- |
 | [x] | `MI-0001` | 2026-07-13 | 建立 Agent 主引导、任务状态与跨会话恢复机制 | 根目录自动入口和 docs 主台账已建立；本地链接、Git 差异、UTF-8 BOM 与 CRLF 已验证 |
 | [x] | `MI-0005` | 2026-07-15 | 建立 .NET 10 解决方案、分层项目、测试项目、EditorConfig 与 CI | `MarineInsight.slnx` 包含 4 个运行项目和 4 个测试项目；依赖方向符合 SAD；构建、4 个基础测试、格式、差异和 Web HTTP 检查通过 |
+| [x] | `MI-0006` | 2026-07-15 | 定义 Provider 端口、标准预报模型、质量状态和错误模型 | Domain 标准模型和不变量、Application Weather/Marine/Tide 端口、Provider 错误层及契约测试已完成；构建和 14 个测试通过 |
 
 ### 9.2 取消任务
 
@@ -185,6 +182,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-15 | `MI-0006` | 定义标准 ForecastBatch/ForecastPoint/MetricSource/质量模型、Weather/Marine/Tide 端口和 Provider 错误层 | `dotnet build` 0 错误；`dotnet test` 14/14 通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；有 4 个 NU1900 审计源警告 | 等待用户指定下一项；`MI-0002` 至 `MI-0004`由用户人工处理 |
 | 2026-07-15 | `MI-0005` | 建立 .NET 10 模块化单体工程骨架和 CI | `dotnet restore` 成功但有 8 个 NU1900 审计源警告；`dotnet build`、`dotnet test`（4/4）、`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；Web 首页 HTTP 200 | 等待用户指定下一项；按 RoadMap 默认选择 `MI-0002` |
 | 2026-07-13 | `MI-0001` | 建立统一 Agent 入口、文档路由、待办/已办台账及中断恢复协议 | 本地链接全部有效；`git diff --check`、UTF-8 BOM 与 CRLF 检查通过 | 按用户指令选择 `MI-0002` 或其他新任务 |
 
