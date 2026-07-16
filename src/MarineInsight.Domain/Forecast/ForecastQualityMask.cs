@@ -13,5 +13,6 @@ public enum ForecastQualityMask
     InvalidValue = 1 << 6,
     ParseFailed = 1 << 7,
     DirectionSemanticsUnknown = 1 << 8,
-    ProviderUnavailable = 1 << 9
+    ProviderUnavailable = 1 << 9,
+    ModelUnsupported = 1 << 10
 }

@@ -22,4 +22,10 @@
     <ProjectReference Include="..\..\src\MarineInsight.Infrastructure\MarineInsight.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestData\OpenMeteo\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

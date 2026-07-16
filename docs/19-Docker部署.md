@@ -61,6 +61,11 @@
 | `Redis__Enabled` | 否 | 是否启用 Redis |
 | `Redis__ConnectionString` | 条件 | Redis 连接 |
 | `ForecastProviders__OpenMeteo__Enabled` | 否 | Open-Meteo 主源开关 |
+| `ForecastProviders__OpenMeteo__WeatherBaseUrl` | 否 | Weather API 地址 |
+| `ForecastProviders__OpenMeteo__MarineBaseUrl` | 否 | Marine API 地址 |
+| `ForecastProviders__OpenMeteo__WeatherModel` | 否 | Weather 请求模型，默认 `best_match` |
+| `ForecastProviders__OpenMeteo__MarineModel` | 否 | Marine 请求模型，默认 `best_match` |
+| `ForecastProviders__OpenMeteo__Timeout` | 否 | Provider 请求超时，默认 15 秒 |
 | `ForecastProviders__OpenMeteo__ApiKey` | 条件 | 商业套餐使用时注入 |
 | `ForecastProviders__Stormglass__Enabled` | 否 | 专业增强开关，默认关闭 |
 | `ForecastProviders__Stormglass__ApiKey` | 条件 | 启用时注入 |

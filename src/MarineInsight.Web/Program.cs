@@ -1,4 +1,5 @@
 ﻿using MarineInsight.Infrastructure.Persistence;
+using MarineInsight.Infrastructure.Providers.OpenMeteo;
 using MarineInsight.Web.Components;
 using MarineInsight.Web.Health;
 using MarineInsight.Web.Observability;
@@ -29,6 +30,7 @@ builder.Host.UseSerilog((context, _, loggerConfiguration) =>
 
 // Keep provider selection in configuration so local SQLite and production PostgreSQL use the same boundary.
 builder.Services.AddMarineInsightPersistence(builder.Configuration);
+builder.Services.AddOpenMeteoForecastProviders(builder.Configuration);
 builder.Services.AddMarineInsightTelemetry(builder.Configuration);
 builder.Services
     .AddHealthChecks()
