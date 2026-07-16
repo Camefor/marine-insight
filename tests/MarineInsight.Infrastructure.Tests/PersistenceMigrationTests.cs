@@ -1,4 +1,5 @@
-﻿using MarineInsight.Infrastructure.Persistence;
+﻿using MarineInsight.Application.Forecast.Ports;
+using MarineInsight.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -50,6 +51,8 @@ public sealed class PersistenceMigrationTests
         var dbContext = scope.ServiceProvider.GetRequiredService<MarineInsightDbContext>();
 
         Assert.Equal("Microsoft.EntityFrameworkCore.Sqlite", dbContext.Database.ProviderName);
+        Assert.IsType<ForecastBatchRepository>(
+            scope.ServiceProvider.GetRequiredService<IForecastBatchRepository>());
     }
 
     [Fact]

@@ -54,6 +54,8 @@ flowchart LR
 - 值对象：`ProviderIdentity`、`ForecastMetricSet`、`DataQuality`。
 - 不变式：同一批次中地点、Provider、数据域、模型和发布时间一致；预报时间唯一且升序；缺失值使用空值而不是 0。
 - 批次创建后不可修改指标，只能创建新批次，保证分析可复现。
+- 持久化由 Application 的 `IForecastBatchRepository` 负责追加和读取；由于 Provider 批次以坐标表达地点，追加时显式传入 `locationId`，避免把数据库身份耦合进 Provider 端口。
+- `AppendAsync` 只追加完整批次图；`GetByIdAsync` 和 `FindAsync` 读取点位及逐指标来源引用。批次级缺失指标由逐点缺失位图恢复，缺失值始终保持为空，不补零。
 
 ### 4.3 ForecastSnapshot 分析输入模型
 
@@ -123,7 +125,7 @@ flowchart LR
 | 接口 | 聚合/用途 | 主要操作 |
 | --- | --- | --- |
 | `ILocationRepository` | Location | 查找、保存、附近查询 |
-| `IForecastBatchRepository` | ForecastBatch | 按地点/Provider/时间读取和追加 |
+| `IForecastBatchRepository` | ForecastBatch | 按地点/Provider/数据域/UTC 范围读取和追加（24/72/168 小时） |
 | `IAnalysisReportRepository` | AnalysisReport | 保存、按查询读取、历史对比 |
 | `IAlgorithmVersionRepository` | AlgorithmVersion | 草稿、发布版本和回滚读取 |
 | `IWeatherForecastProvider` | 常规天气端口 | 获取指定地点和时间范围的 Weather 预报 |
@@ -155,3 +157,4 @@ flowchart LR
 | 1.0 | 2026-07-13 | 定义核心域、聚合、不变式和 Provider 防腐层 |
 | 1.1 | 2026-07-13 | 增加 ForecastSnapshot 和 Weather/Marine/Tide 多来源批次模型 |
 | 1.2 | 2026-07-16 | 落地 ForecastSnapshot、来源批次引用、质量传递和 UTC 时间轴组装不变式 |
+| 1.3 | 2026-07-16 | 增加 ForecastBatch Application 仓储端口、EF 追加/读取实现及来源和质量映射 |

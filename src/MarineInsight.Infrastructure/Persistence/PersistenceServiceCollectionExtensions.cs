@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MarineInsight.Application.Forecast.Ports;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MarineInsight.Infrastructure.Persistence;
@@ -27,6 +28,7 @@ public static class PersistenceServiceCollectionExtensions
 
         services.AddDbContext<MarineInsightDbContext>(options =>
             options.UseMarineInsightDatabase(provider, connectionString));
+        services.AddScoped<IForecastBatchRepository, ForecastBatchRepository>();
 
         return services;
     }

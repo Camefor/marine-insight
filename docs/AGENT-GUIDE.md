@@ -127,10 +127,10 @@
 | 当前任务 ID | 无 |
 | 当前状态 | `IDLE` |
 | 当前目标 | 等待用户指定 RoadMap 下一项；`MI-0002`、`MI-0003`、`MI-0004`由用户人工处理并保持 TODO |
-| 最后完成动作 | 完成 `MI-0010`：实现 ForecastSnapshot 领域模型、UTC 时间轴组装、显式来源选择和质量传递 |
+| 最后完成动作 | 完成 `MI-0011`：实现 ForecastBatch Application 仓储端口、EF 追加/读取、完整领域映射及 24/72/168 小时 SQLite 集成测试 |
 | 下一步动作 | 等待用户指定下一项，继续 RoadMap 后续工程任务；不接管 `MI-0002`、`MI-0003`、`MI-0004` |
-| 涉及文件 | `src/MarineInsight.Domain/Forecast/ForecastSnapshot*.cs`、`src/MarineInsight.Domain/Forecast/SnapshotQuality.cs`、`src/MarineInsight.Domain/Forecast/SourceBatchReference.cs`、`src/MarineInsight.Application/Forecast/ForecastSnapshotAssembler.cs`、`src/MarineInsight.Application/Forecast/ForecastSnapshotAssemblyOptions.cs`、`src/MarineInsight.Web/Program.cs`、`tests/MarineInsight.Domain.Tests/ForecastSnapshotModelTests.cs`、`tests/MarineInsight.Application.Tests/ForecastSnapshotAssemblerTests.cs`、`docs/04-领域模型设计(DDD).md`、`docs/07-天气数据源设计.md`、`docs/20-测试方案.md`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | `dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet test MarineInsight.slnx --no-build --configuration Release` 43/43 通过；`dotnet format --verify-no-changes`、`git diff --check`、13 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告 |
+| 涉及文件 | `src/MarineInsight.Application/Forecast/Ports/IForecastBatchRepository.cs`、`src/MarineInsight.Infrastructure/Persistence/ForecastBatchRepository.cs`、`src/MarineInsight.Infrastructure/Persistence/ForecastBatchPersistenceMapper.cs`、`src/MarineInsight.Infrastructure/Persistence/PersistenceServiceCollectionExtensions.cs`、`tests/MarineInsight.Infrastructure.Tests/ForecastBatchRepositoryTests.cs`、`tests/MarineInsight.Infrastructure.Tests/PersistenceMigrationTests.cs`、`docs/04-领域模型设计(DDD).md`、`docs/05-数据库设计.md`、`docs/20-测试方案.md`、`docs/21-开发RoadMap.md`、`docs/AGENT-GUIDE.md` |
+| 验证结果 | `dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet test MarineInsight.slnx --no-build --configuration Release` 47/47 通过；`dotnet format --verify-no-changes`、`git diff --check`、11 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告 |
 | 阻塞/待确认 | 无代码阻塞；本次不处理用户自行人工验证的 `MI-0002`、`MI-0003`、`MI-0004`；尚未连接真实 PostgreSQL 服务执行集成迁移 |
 | 最后更新 | 2026-07-16 |
 
@@ -175,6 +175,7 @@
 | [x] | `MI-0008` | 2026-07-15 | 建立健康检查、结构化日志和 OpenTelemetry Trace | Web 提供 `/health/live`、`/health/ready` 和数据库有界连接检查；Serilog 输出结构化 JSON 并脱敏 API Key/Token/Authorization/密码/连接字符串/精确位置；接入 W3C Trace、ASP.NET Core/HttpClient/Runtime instrumentation，OTLP 地址可选；设计、部署和 Docker 文档已同步 |
 | [x] | `MI-0009` | 2026-07-16 | 实现 Open-Meteo Weather/Marine Provider、DTO、防腐映射、质量校验和契约测试 | Weather/Marine 使用独立批次；请求和响应统一 UTC、单位和方向，保留实际网格坐标；缺失、模型不支持、非法值、契约错误和 HTTP 故障分别处理；固定 JSON、错误路径、超时、DI 和真实只读接口核对通过；天气/部署文档已同步 |
 | [x] | `MI-0010` | 2026-07-16 | 实现 ForecastSnapshot 领域模型、UTC 时间轴组装和显式来源选择策略 | 新增 Snapshot/Point/Quality/SourceBatchReference；Assembler 支持 Weather/Marine/Tide 独立批次、最大最近点差、同域批次选择、同指标选择、来源实际时间和 Stale/Partial/Unknown/TimeGap 传递；Web 已注册组装器，DDD/数据源/测试文档已同步 |
+| [x] | `MI-0011` | 2026-07-16 | 实现 ForecastBatch 持久化查询边界，以及 24/72/168 小时预报批次的保存和读取用例 | Application 增加 `IForecastBatchRepository`；Infrastructure 追加写入并按地点/Provider/数据域/UTC 覆盖范围读取，完整映射点位、质量、缺失指标和逐指标来源；注册 Scoped 仓储并同步 DDD/数据库/测试/RoadMap 文档 |
 
 ### 9.2 取消任务
 
@@ -186,6 +187,8 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-16 | `MI-0011` | 完成 ForecastBatch 仓储端口、EF 追加/读取和领域映射；支持 24/72/168 小时范围，保留空值、质量、缺失位图和指标来源；SQLite 对 `DateTimeOffset` 范围查询采用受限候选集本地判断 | `dotnet build` 0 错误；`dotnet test` 47/47 通过；`dotnet format --verify-no-changes`、`git diff --check`、11 个非 JSON/YAML 文本 BOM/CRLF 检查通过；有 NU1900、NU1903 警告；未连接真实 PostgreSQL | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
+| 2026-07-16 | `MI-0011` | 启动任务；完成台账、工作区、数据库实体/映射/迁移和相关设计文档核对，确认当前无已有 ForecastBatch 仓储实现 | 尚未运行本任务验证 | 实现 Application 仓储端口、EF 仓储和领域映射，补充保存/读取测试；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0010` | 完成 ForecastSnapshot、ForecastSnapshotPoint、SnapshotQuality、SourceBatchReference 和 Application ForecastSnapshotAssembler；实现 UTC 时间并集、最近点上限、显式批次/指标 Provider 选择、来源追溯和质量传递，并注册 Web DI | `dotnet build` 0 错误；`dotnet test` 43/43 通过；`dotnet format --verify-no-changes`、`git diff --check`、13 个非 JSON/YAML 文本 BOM/CRLF 检查通过；有 NU1900、NU1903 警告 | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0009` | 完成 Open-Meteo Weather/Marine Provider、DTO、防腐映射、质量校验、HTTP 异常映射、DI 注册和固定契约样本；保留 `ModelUnsupported` 质量标记并同步设计/部署文档 | `dotnet build` 0 错误；`dotnet test` 35/35 通过；真实 Weather/Marine 只读请求成功；`dotnet format --verify-no-changes`、`git diff --check`、16 个非 JSON/YAML 文本 BOM/CRLF 检查通过；有 NU1900、NU1903 警告 | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-15 | `MI-0008` | 建立 `/health/live`、`/health/ready`、数据库有界连接检查、Serilog JSON 结构化日志、W3C Trace、OTLP 可选导出、UTC 时间字段和敏感信息脱敏，并同步日志/部署文档 | `dotnet build` 0 错误；`dotnet test` 23/23 通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；有 NU1900 审计源和 NU1903 SQLite 漏洞警告；未连接真实 PostgreSQL | 等待用户指定下一项；`MI-0002` 至 `MI-0004`由用户人工处理 |
