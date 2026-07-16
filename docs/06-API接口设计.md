@@ -81,6 +81,8 @@
 
 约束：`hours` 仅允许 `24`、`72`、`168`；经纬度必须成对出现；活动类型必须来自服务端枚举。
 
+当前 `MI-0013` 查询骨架只接受坐标作为地点输入；仅提供 `locationId` 会返回 `400 VALIDATION_FAILED`。`activities` 和 `units` 已保留为协议字段，但当前 metrics-only 响应不会执行活动评分或单位偏好转换。
+
 ### 5.2 响应
 
 ```json
@@ -153,6 +155,55 @@
 
 `hourly` 可按产品性能策略返回组装后的摘要。完整原始标准点位通过 `sourceBatchIds` 对应的 `/forecast-batches/{id}/points` 分别获取，每个指标仍携带来源引用。
 
+### 5.3 当前 metrics-only 响应
+
+`MI-0013` 已实现 `POST /api/v1/marine-analyses` 的坐标查询骨架。当前响应使用以下稳定字段，不返回 `overall.score`、活动分数、风险规则、推荐窗口或分析持久化标识：
+
+```json
+{
+  "analysisStatus": "metricsOnly",
+  "analysisId": "82f9ff76-bb11-4456-93e5-78d669e609ea",
+  "location": { "latitude": 30.194, "longitude": 122.687 },
+  "range": {
+    "from": "2026-07-15T00:00:00Z",
+    "to": "2026-07-18T00:00:00Z",
+    "hours": 72
+  },
+  "sources": [
+    {
+      "batchId": "35d4af68-6297-46d2-bc7d-fc0d62bb79bd",
+      "dataDomain": "weather",
+      "provider": "open-meteo",
+      "model": "best-match",
+      "issuedAt": "2026-07-14T20:00:00Z",
+      "fetchedAt": "2026-07-15T00:01:18Z",
+      "cacheStatus": "miss",
+      "quality": { "status": "valid", "freshness": "fresh" }
+    }
+  ],
+  "quality": {
+    "status": "partial",
+    "freshness": "fresh",
+    "completeness": 0.95,
+    "flags": [],
+    "missingMetrics": [],
+    "missingDomains": []
+  },
+  "hourly": [
+    {
+      "forecastTime": "2026-07-15T00:00:00Z",
+      "metrics": { "windSpeedMs": 4.2, "waveHeightM": 0.6 },
+      "quality": { "status": "valid", "freshness": "fresh" },
+      "sources": []
+    }
+  ],
+  "disclaimer": "结果仅供辅助决策，请以官方预警和现场管理为准。",
+  "traceId": "00-..."
+}
+```
+
+`sources[].cacheStatus` 为 `hit`、`miss` 或 `stale`；当 Provider 在 Stale 窗口内失败时，响应保留旧批次并通过 `quality.freshness` 与质量 flags 表达降级。
+
 ## 6. 地点搜索
 
 `GET /api/v1/locations/search?q=东极岛&limit=10`
@@ -191,6 +242,7 @@
 | `VALIDATION_FAILED` | 400 | 参数或业务输入无效 |
 | `LOCATION_NOT_FOUND` | 404 | 地点不存在 |
 | `ANALYSIS_NOT_FOUND` | 404 | 分析结果不存在或不可访问 |
+| `VALIDATION_FAILED` | 400 | 请求体、坐标或小时范围不符合契约 |
 | `FORECAST_INSUFFICIENT` | 422 | 关键字段不足，无法可靠分析 |
 | `FAVORITE_ALREADY_EXISTS` | 409 | 重复收藏 |
 | `RATE_LIMITED` | 429 | 请求超过配额 |
@@ -228,3 +280,4 @@
 | --- | --- | --- |
 | 1.0 | 2026-07-13 | 定义版本化业务 API、ProblemDetails 和分析响应 |
 | 1.1 | 2026-07-13 | 分析响应改为返回 Open-Meteo 等多个来源批次及数据域 |
+| 1.2 | 2026-07-16 | 增加 `POST /api/v1/marine-analyses` metrics-only 查询骨架、质量/来源/缓存投影和坐标校验契约 |

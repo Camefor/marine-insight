@@ -32,6 +32,8 @@ public sealed class OpenMeteoWeatherProvider : OpenMeteoForecastProvider, IWeath
 
     public string ProviderCode => ProviderCodeValue;
 
+    public ProviderIdentity Identity => new(ProviderCodeValue, Options.WeatherModel);
+
     public async Task<ProviderForecastResult> GetWeatherAsync(
         GeoPoint location,
         ForecastRange range,

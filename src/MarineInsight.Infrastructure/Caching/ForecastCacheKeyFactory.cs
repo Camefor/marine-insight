@@ -1,4 +1,5 @@
 ﻿using MarineInsight.Application.Forecast;
+using MarineInsight.Application.Forecast.Ports;
 using MarineInsight.Domain.Forecast;
 using Microsoft.Extensions.Options;
 
@@ -7,7 +8,7 @@ namespace MarineInsight.Infrastructure.Caching;
 /// <summary>
 /// Keeps environment, coordinate precision, and normalizer version consistent for all callers.
 /// </summary>
-public sealed class ForecastCacheKeyFactory
+public sealed class ForecastCacheKeyFactory : IForecastCacheKeyFactory
 {
     private readonly IOptions<ForecastCacheOptions> _options;
 

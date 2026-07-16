@@ -38,6 +38,9 @@ public static class CacheServiceCollectionExtensions
         services.AddSingleton<IForecastBatchCache, MemoryForecastBatchCache>();
         services.AddSingleton<ForecastBatchCacheCoordinator>();
         services.AddSingleton<ForecastCacheKeyFactory>();
+        // Keep the concrete registration available for diagnostics while the application layer consumes the port.
+        services.AddSingleton<IForecastCacheKeyFactory>(
+            serviceProvider => serviceProvider.GetRequiredService<ForecastCacheKeyFactory>());
 
         return services;
     }

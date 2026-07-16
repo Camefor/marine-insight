@@ -2,6 +2,8 @@
 
 public static class MarineInsightErrorCodes
 {
+    public const string ValidationFailed = "VALIDATION_FAILED";
+
     public const string ForecastInsufficient = "FORECAST_INSUFFICIENT";
 
     public const string ProviderUnavailable = "PROVIDER_UNAVAILABLE";

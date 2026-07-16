@@ -88,7 +88,10 @@ public readonly record struct ForecastCacheKey
         ArgumentNullException.ThrowIfNull(batch);
 
         return batch.DataDomain == DataDomain
-            && batch.Provider == Provider
+            // Some providers resolve a configured model such as "best_match" to a
+            // concrete response model. The configured model remains the cache namespace;
+            // the concrete response model is preserved in the batch for traceability.
+            && string.Equals(batch.Provider.ProviderCode, Provider.ProviderCode, StringComparison.OrdinalIgnoreCase)
             && batch.Range == Range
             && NormalizeLocation(batch.RequestedLocation, CoordinatePrecision) == GridLocation;
     }

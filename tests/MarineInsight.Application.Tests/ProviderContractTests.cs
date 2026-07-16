@@ -93,6 +93,8 @@ public sealed class ProviderContractTests
     {
         public string ProviderCode => "fake-weather";
 
+        public ProviderIdentity Identity => new(ProviderCode, "test-model");
+
         public Task<ProviderForecastResult> GetWeatherAsync(
             GeoPoint location,
             ForecastRange range,

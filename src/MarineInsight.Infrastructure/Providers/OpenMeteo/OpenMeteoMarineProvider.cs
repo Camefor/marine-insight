@@ -33,6 +33,8 @@ public sealed class OpenMeteoMarineProvider : OpenMeteoForecastProvider, IMarine
 
     public string ProviderCode => ProviderCodeValue;
 
+    public ProviderIdentity Identity => new(ProviderCodeValue, Options.MarineModel);
+
     public async Task<ProviderForecastResult> GetMarineAsync(
         GeoPoint location,
         ForecastRange range,
