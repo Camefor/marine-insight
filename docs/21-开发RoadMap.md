@@ -43,13 +43,13 @@
 
 ### 任务
 
-- 实现预置地点、地名搜索和经纬度查询。
+- 已完成 `MI-0014`：实现预置地点目录、地名搜索、附近地点查询和分析 `locationId` 解析；收藏和外部地理编码仍不在本项范围。
 - 实现 `OpenMeteoWeatherProvider`、`OpenMeteoMarineProvider`、分域标准化和质量校验。
 - 实现 `ForecastSnapshotAssembler`，按 UTC 合并多个来源批次并保留指标级来源。
 - 实现 24h/72h/7d 预报批次与逐小时存储。
 - 通过 `IForecastBatchRepository` 追加并读取 24/72/168 小时批次，保留点位质量、缺失指标和逐指标来源引用。
 - 实现 L1 缓存、可选 Redis 契约、单航班回源和 Stale 降级。当前已完成标准预报 L1 `IMemoryCache`、版本化键、可替换缓存端口和单航班协调器；Redis 适配器和 L2 分布式锁仍待后续多实例任务。
-- 建立 `POST /api/v1/marine-analyses` 的 metrics-only 查询骨架，返回逐小时指标、质量摘要、来源批次和缓存状态；评分、活动分析、地点名称解析和分析持久化留待后续任务。
+- 建立 `POST /api/v1/marine-analyses` 的 metrics-only 查询骨架，返回逐小时指标、质量摘要、来源批次和缓存状态；评分、活动分析和分析持久化留待后续任务。
 - 实现 Blazor Dashboard 查询栏、数据来源状态和关键指标网格。
 - 建立 Provider 契约测试和 API 集成测试。
 

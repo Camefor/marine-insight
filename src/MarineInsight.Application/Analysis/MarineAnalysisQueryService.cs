@@ -53,7 +53,7 @@ public sealed class MarineAnalysisQueryService
             [weather.Batch, marine.Batch],
             query.Range);
 
-        return new MarineAnalysisQueryResult(snapshot, weather, marine);
+        return new MarineAnalysisQueryResult(query, snapshot, weather, marine);
     }
 
     private Task<ForecastCacheResult> LoadWeatherAsync(

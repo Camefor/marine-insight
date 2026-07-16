@@ -44,7 +44,10 @@ public sealed record MarineAnalysisResponse(
 
 public sealed record MarineAnalysisLocationResponse(
     double Latitude,
-    double Longitude);
+    double Longitude,
+    Guid? LocationId = null,
+    string? DisplayName = null,
+    string? TimeZone = null);
 
 public sealed record MarineAnalysisRangeResponse(
     DateTimeOffset From,

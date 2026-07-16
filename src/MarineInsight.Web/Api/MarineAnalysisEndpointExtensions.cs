@@ -2,6 +2,7 @@
 using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Errors;
 using MarineInsight.Application.Forecast;
+using MarineInsight.Application.Locations;
 using MarineInsight.Domain.Forecast;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -31,16 +32,26 @@ public static class MarineAnalysisEndpointExtensions
     private static async Task<IResult> HandleAsync(
         MarineAnalysisRequest? request,
         MarineAnalysisQueryService queryService,
+        LocationQueryService locationQueryService,
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var traceId = GetTraceId(httpContext);
         httpContext.Response.Headers["Trace-Id"] = traceId;
 
-        if (!TryCreateQuery(request, out var query, out var validationErrors))
+        var queryCreation = await CreateQueryAsync(
+            request,
+            locationQueryService,
+            cancellationToken);
+        if (queryCreation.MissingLocationId is { } missingLocationId)
+        {
+            return CreateLocationNotFoundProblem(missingLocationId, traceId);
+        }
+
+        if (queryCreation.Query is null)
         {
             return Results.ValidationProblem(
-                validationErrors,
+                queryCreation.Errors,
                 statusCode: StatusCodes.Status400BadRequest,
                 title: "Request validation failed.",
                 type: "https://marine-insight.local/problems/validation-failed",
@@ -53,13 +64,81 @@ public static class MarineAnalysisEndpointExtensions
 
         try
         {
-            var result = await queryService.ExecuteAsync(query!, cancellationToken);
+            var result = await queryService.ExecuteAsync(queryCreation.Query, cancellationToken);
             return Results.Ok(Project(result, traceId));
         }
         catch (ProviderException exception)
         {
             return CreateProviderProblem(exception, traceId);
         }
+    }
+
+    private static async Task<QueryCreationResult> CreateQueryAsync(
+        MarineAnalysisRequest? request,
+        LocationQueryService locationQueryService,
+        CancellationToken cancellationToken)
+    {
+        if (request?.Location?.LocationId is null ||
+            request.Location.Latitude.HasValue ||
+            request.Location.Longitude.HasValue)
+        {
+            return TryCreateCoordinateQuery(request);
+        }
+
+        var locationId = request.Location.LocationId.Value;
+
+        if (locationId == Guid.Empty)
+        {
+            return new QueryCreationResult(
+                null,
+                new Dictionary<string, string[]>(StringComparer.Ordinal)
+                {
+                    ["location"] = ["LocationId must be a non-empty UUID."]
+                },
+                null);
+        }
+
+        var location = await locationQueryService.GetByIdAsync(locationId, cancellationToken);
+        if (location is null)
+        {
+            return new QueryCreationResult(
+                null,
+                new Dictionary<string, string[]>(StringComparer.Ordinal),
+                locationId);
+        }
+
+        // Resolve the catalog id once at the API boundary. Forecast providers continue
+        // to receive only the normalized GeoPoint while the selected metadata is retained
+        // for the response projection.
+        var resolvedRequest = request with
+        {
+            Location = request.Location with
+            {
+                LocationId = null,
+                Latitude = location.Latitude,
+                Longitude = location.Longitude
+            }
+        };
+        var coordinateResult = TryCreateCoordinateQuery(resolvedRequest);
+        if (coordinateResult.Query is null)
+        {
+            return coordinateResult;
+        }
+
+        return coordinateResult with
+        {
+            Query = new MarineAnalysisQuery(
+                coordinateResult.Query.Location,
+                coordinateResult.Query.Range,
+                location)
+        };
+    }
+
+    private static QueryCreationResult TryCreateCoordinateQuery(MarineAnalysisRequest? request)
+    {
+        return TryCreateQuery(request, out var query, out var errors)
+            ? new QueryCreationResult(query, errors, null)
+            : new QueryCreationResult(null, errors, null);
     }
 
     private static bool TryCreateQuery(
@@ -147,6 +226,11 @@ public static class MarineAnalysisEndpointExtensions
         }
     }
 
+    private sealed record QueryCreationResult(
+        MarineAnalysisQuery? Query,
+        Dictionary<string, string[]> Errors,
+        Guid? MissingLocationId);
+
     private static MarineAnalysisResponse Project(
         MarineAnalysisQueryResult result,
         string traceId)
@@ -192,7 +276,10 @@ public static class MarineAnalysisEndpointExtensions
             result.Snapshot.SnapshotId,
             new MarineAnalysisLocationResponse(
                 result.Snapshot.RequestedLocation.Latitude,
-                result.Snapshot.RequestedLocation.Longitude),
+                result.Snapshot.RequestedLocation.Longitude,
+                result.Query.LocationMetadata?.Id,
+                result.Query.LocationMetadata?.DisplayName,
+                result.Query.LocationMetadata?.TimeZoneId),
             new MarineAnalysisRangeResponse(
                 result.Snapshot.Range.StartUtc,
                 result.Snapshot.Range.EndUtc,
@@ -275,6 +362,20 @@ public static class MarineAnalysisEndpointExtensions
 
     private static string GetTraceId(HttpContext httpContext) =>
         Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
+    private static IResult CreateLocationNotFoundProblem(
+        Guid locationId,
+        string traceId) =>
+        Results.Problem(
+            statusCode: StatusCodes.Status404NotFound,
+            title: "Location was not found.",
+            detail: $"No location exists for id '{locationId}'.",
+            type: "https://marine-insight.local/problems/location-not-found",
+            extensions: new Dictionary<string, object?>
+            {
+                ["code"] = MarineInsightErrorCodes.LocationNotFound,
+                ["traceId"] = traceId
+            });
 
     private static IResult CreateProviderProblem(
         ProviderException exception,

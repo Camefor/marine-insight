@@ -5,8 +5,10 @@ using MarineInsight.Application.Errors;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Forecast.Ports;
 using MarineInsight.Domain.Forecast;
+using MarineInsight.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -76,6 +78,79 @@ public sealed class MarineAnalysisApiTests
     }
 
     [Fact]
+    public async Task LocationIdQueryResolvesCatalogMetadata()
+    {
+        using var factory = new ApiTestApplicationFactory();
+        using var client = factory.CreateClient();
+        await factory.MigrateDatabaseAsync();
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/v1/marine-analyses",
+            new
+            {
+                location = new { locationId = "8a477d67-73fa-4f43-b954-cd29d238a89d" },
+                from = "2026-07-16T00:00:00Z",
+                hours = 24
+            });
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var location = document.RootElement.GetProperty("location");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("东极岛", location.GetProperty("displayName").GetString());
+        Assert.Equal("Asia/Shanghai", location.GetProperty("timeZone").GetString());
+        Assert.Equal(
+            "8a477d67-73fa-4f43-b954-cd29d238a89d",
+            location.GetProperty("locationId").GetString());
+        Assert.Equal(30.194, location.GetProperty("latitude").GetDouble());
+    }
+
+    [Fact]
+    public async Task UnknownLocationIdReturnsLocationNotFoundProblemDetails()
+    {
+        using var factory = new ApiTestApplicationFactory();
+        using var client = factory.CreateClient();
+        await factory.MigrateDatabaseAsync();
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/v1/marine-analyses",
+            new
+            {
+                location = new { locationId = "11111111-1111-1111-1111-111111111111" },
+                from = "2026-07-16T00:00:00Z",
+                hours = 24
+            });
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("LOCATION_NOT_FOUND", document.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task LocationIdAndCoordinatesCannotBeCombined()
+    {
+        using var factory = new ApiTestApplicationFactory();
+        using var client = factory.CreateClient();
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/v1/marine-analyses",
+            new
+            {
+                location = new
+                {
+                    locationId = "8a477d67-73fa-4f43-b954-cd29d238a89d",
+                    latitude = 30.194,
+                    longitude = 122.687
+                },
+                from = "2026-07-16T00:00:00Z",
+                hours = 24
+            });
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("VALIDATION_FAILED", document.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
     public async Task ProviderFailureReturnsProblemDetailsWithTraceId()
     {
         using var factory = new ApiTestApplicationFactory();
@@ -100,7 +175,7 @@ public sealed class MarineAnalysisApiTests
         activities = new[] { "boat" }
     };
 
-    private sealed class ApiTestApplicationFactory : WebApplicationFactory<Program>
+    internal sealed class ApiTestApplicationFactory : WebApplicationFactory<Program>
     {
         private readonly string _databasePath = Path.Combine(
             Path.GetTempPath(),
@@ -115,6 +190,13 @@ public sealed class MarineAnalysisApiTests
         public FakeWeatherProvider Weather { get; }
 
         public FakeMarineProvider Marine { get; }
+
+        public async Task MigrateDatabaseAsync()
+        {
+            using var scope = Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<MarineInsightDbContext>();
+            await dbContext.Database.MigrateAsync();
+        }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {

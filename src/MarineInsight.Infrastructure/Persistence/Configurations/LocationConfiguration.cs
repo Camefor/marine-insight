@@ -1,4 +1,5 @@
-﻿using MarineInsight.Infrastructure.Persistence.Entities;
+﻿using MarineInsight.Domain.Location;
+using MarineInsight.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -52,5 +53,44 @@ public sealed class LocationConfiguration : IEntityTypeConfiguration<LocationEnt
             location.Latitude,
             location.Longitude
         }).IsUnique();
+
+        // Preset rows are deterministic catalog data and are applied only through migrations.
+        builder.HasData(
+            new LocationEntity
+            {
+                Id = new Guid("8a477d67-73fa-4f43-b954-cd29d238a89d"),
+                NormalizedName = "东极岛",
+                DisplayName = "东极岛",
+                Latitude = 30.194m,
+                Longitude = 122.687m,
+                TimeZoneId = "Asia/Shanghai",
+                LocationType = (short)LocationType.Island,
+                IsPreset = true,
+                CreatedAtUtc = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)
+            },
+            new LocationEntity
+            {
+                Id = new Guid("70cfb8c4-7af7-4c43-8f38-9a27e7cc2de7"),
+                NormalizedName = "嵊泗列岛",
+                DisplayName = "嵊泗列岛",
+                Latitude = 30.727m,
+                Longitude = 122.451m,
+                TimeZoneId = "Asia/Shanghai",
+                LocationType = (short)LocationType.Island,
+                IsPreset = true,
+                CreatedAtUtc = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)
+            },
+            new LocationEntity
+            {
+                Id = new Guid("d6ac8e90-44ae-4d1f-88b9-8b73db7af6a1"),
+                NormalizedName = "普陀山",
+                DisplayName = "普陀山",
+                Latitude = 30.010m,
+                Longitude = 122.388m,
+                TimeZoneId = "Asia/Shanghai",
+                LocationType = (short)LocationType.Island,
+                IsPreset = true,
+                CreatedAtUtc = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)
+            });
     }
 }

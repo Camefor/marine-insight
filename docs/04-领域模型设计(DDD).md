@@ -46,6 +46,8 @@ flowchart LR
 - 聚合根：`Location`。
 - 值对象：`GeoPoint`、`TimeZoneId`、`CoastOrientation`。
 - 不变式：纬度 `[-90, 90]`、经度 `[-180, 180]`；规范名称不能为空；岸线朝向允许未知。
+- Application 通过 `ILocationRepository` 只读访问预置地点；搜索按规范化名称匹配，附近查询按球面距离排序，不把外部地理编码 Provider 引入领域边界。
+- `MarineAnalysisQuery` 可保留选中 `Location` 的 ID、展示名称和时区元数据；Provider 端口仍只接收 `GeoPoint`，避免基础设施身份泄漏到数据源适配层。
 
 ### 4.2 ForecastBatch 聚合
 

@@ -124,14 +124,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0013` |
+| 当前任务 ID | `MI-0014` |
 | 当前状态 | `DONE` |
-| 当前目标 | 建立 `POST /api/v1/marine-analyses` 指标与质量摘要查询骨架，串联 Weather/Marine Provider、L1 缓存和 ForecastSnapshot；`MI-0002`、`MI-0003`、`MI-0004`由用户人工处理并保持 TODO |
-| 最后完成动作 | 完成 `MI-0013`：实现 metrics-only Application 查询、Weather/Marine 并行编排、Provider 身份缓存键、Web endpoint、指标/质量/来源/缓存投影、ProblemDetails 和 API 集成测试；修复缓存键工厂接口的 Web DI 别名注册 |
+| 当前目标 | 建立只读地点目录查询边界，支持预置地点搜索、附近地点查询，并为 `POST /api/v1/marine-analyses` 接入 `locationId`；`MI-0002`、`MI-0003`、`MI-0004`由用户人工处理并保持 TODO |
+| 最后完成动作 | 完成 `MI-0014`：实现 Location 领域模型、只读 EF 仓储、预置地点迁移、地点搜索/附近 API、分析 `locationId` 解析及地点元数据投影；同步 API、DDD、数据库、异常、测试和 RoadMap 文档 |
 | 下一步动作 | 等待用户指定下一项；不接管 `MI-0002`、`MI-0003`、`MI-0004` |
-| 涉及文件 | `src/MarineInsight.Application/Analysis/`、`src/MarineInsight.Application/Forecast/Ports/`、`src/MarineInsight.Infrastructure/Caching/`、`src/MarineInsight.Web/Api/`、`src/MarineInsight.Web/Program.cs`、相关测试和 API/异常/测试/RoadMap 文档 |
-| 验证结果 | `dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet test MarineInsight.slnx --no-build --configuration Release` 63/63 通过；`dotnet format --verify-no-changes`、`git diff --check` 和本次变更文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告；真实 PostgreSQL/Redis 未连接 |
-| 阻塞/待确认 | 无代码阻塞；本次不处理用户自行人工验证的 `MI-0002`、`MI-0003`、`MI-0004`；尚未连接真实 PostgreSQL 服务执行集成迁移 |
+| 涉及文件 | `src/MarineInsight.Domain/Location/`、`src/MarineInsight.Application/Locations/`、`src/MarineInsight.Infrastructure/Persistence/`、`src/MarineInsight.Web/Api/`、相关测试和地点/API/数据库/DDD/测试/RoadMap 文档 |
+| 验证结果 | `dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet test MarineInsight.slnx --no-restore --configuration Release` 75/75 通过；`dotnet format --verify-no-changes`、`git diff --check`、本次 31 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告；真实 PostgreSQL/Redis 未连接 |
+| 阻塞/待确认 | 无代码阻塞；地点查询只使用已有 `locations` 表，不接入外部地理编码；本次不处理用户自行人工验证的 `MI-0002`、`MI-0003`、`MI-0004` |
 | 最后更新 | 2026-07-16 |
 
 <!-- agent-state:end -->
@@ -179,6 +179,7 @@
 
 | [x] | `MI-0012` | 2026-07-16 | 建立标准预报 L1 缓存边界、版本化缓存键、单航班回源和 Stale 降级 | Application 增加 `ForecastCacheKey`、`ForecastCachePolicy`、`IForecastBatchCache` 和 `ForecastBatchCacheCoordinator`；Infrastructure 接入 `IMemoryCache`、配置校验、键工厂和 Web DI；ProviderException 仅在窗口内回退旧值并将 Stale 质量传递到批次/点位/来源，缓存后端故障旁路；同步缓存、部署、测试和 RoadMap 文档 |
 | [x] | `MI-0013` | 2026-07-16 | 建立 `POST /api/v1/marine-analyses` 指标与质量摘要查询骨架 | Application 并行查询 Weather/Marine 并通过 L1 缓存组装 ForecastSnapshot；Web 返回 metrics-only 标准指标、逐小时质量、指标来源、批次来源和 `hit`/`miss`/`stale`；坐标与 24/72/168 小时校验返回 `VALIDATION_FAILED`，Provider 故障返回 `PROVIDER_UNAVAILABLE` ProblemDetails；补充 4 个 API 集成场景和 DI 注册；评分、活动、地点解析和持久化留待后续；同步 API/异常/测试/RoadMap 文档 |
+| [x] | `MI-0014` | 2026-07-16 | 建立地点目录查询边界和 `locationId` 分析输入 | Domain 增加 Location/LocationType 不变量；Application 增加查询端口和参数校验；Infrastructure 增加 AsNoTracking 搜索、Haversine 附近排序、三条预置地点种子和 migration；Web 提供 `/locations/search`、`/locations/nearby`，分析请求支持地点 ID、时区/名称投影和 `LOCATION_NOT_FOUND`；不接入外部地理编码和收藏 |
 
 ### 9.2 取消任务
 
@@ -190,6 +191,8 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-16 | `MI-0014` | 完成地点目录查询任务；新增 Location 领域模型、Application 查询边界、EF 只读仓储、预置数据迁移、地点搜索/附近 API，并让 metrics-only 分析支持 `locationId` 与地点元数据；同步 API/DDD/数据库/异常/测试/RoadMap 文档；不处理 `MI-0002` 至 `MI-0004` | 构建 0 错误；全量测试 75/75 通过；`dotnet format --verify-no-changes`、`git diff --check`、31 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告；未连接真实 PostgreSQL/Redis | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
+| 2026-07-16 | `MI-0014` | 启动地点目录查询任务；核对 PRD/SRS、DDD、数据库和 API 契约，确认已有 `locations` 表但没有地点查询端口或 API；范围限定为只读预置/附近查询和分析 `locationId` 输入，不接入外部地理编码或收藏 | 尚未运行本任务验证；基线 MI-0013 为构建 0 错误、63/63 测试通过 | 实现 Location 领域模型、查询端口/仓储、地点 API、`locationId` 分析解析和对应测试；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0013` | 完成 metrics-only 海况分析查询骨架；Weather/Marine 并行回源，串联版本化缓存键、L1 缓存和 ForecastSnapshot，投影指标、质量、来源和缓存状态；补充验证错误、Provider 错误和 Trace-Id；不实现评分、活动、地点名称解析和分析持久化 | `dotnet build` 0 错误；全量 `dotnet test` 63/63 通过；仍有 NU1900、NU1903 警告；真实 PostgreSQL/Redis 未连接 | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0013` | 启动任务；完成 API、SRS、SAD、DDD、权限、异常、缓存、测试和 RoadMap 基线核对，确定本项只返回 metrics-only 指标与质量摘要，不实现评分/地点名称解析/分析持久化 | 尚未运行本任务验证 | 实现 Application 查询用例、Web endpoint、ProblemDetails 映射和 API 集成测试；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0012` | 完成标准预报 L1 缓存边界；键包含环境、数据域、Provider/模型、网格坐标、UTC 小时范围和标准化版本；实现 IMemoryCache TTL、Stale 窗口、单航班刷新、缓存故障旁路和批次/点位/指标来源质量传递；同步部署与 RoadMap 文档 | `dotnet build` 0 错误；`dotnet test` 59/59 通过；`dotnet format --verify-no-changes`、`git diff --check`、28 个非 JSON/YAML 文本 BOM/CRLF 检查通过；有 NU1900、NU1903 警告；未执行真实 Redis/PostgreSQL 集成 | 下一项按用户指令选择阶段 1 查询/API 或 Dashboard；不处理 `MI-0002` 至 `MI-0004` |

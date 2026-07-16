@@ -1,5 +1,6 @@
 ﻿using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Forecast;
+using MarineInsight.Application.Locations;
 using MarineInsight.Infrastructure.Caching;
 using MarineInsight.Infrastructure.Persistence;
 using MarineInsight.Infrastructure.Providers.OpenMeteo;
@@ -38,6 +39,7 @@ builder.Services.AddMarineInsightCaching(builder.Configuration);
 builder.Services.AddOpenMeteoForecastProviders(builder.Configuration);
 builder.Services.AddSingleton<ForecastSnapshotAssembler>();
 builder.Services.AddScoped<MarineAnalysisQueryService>();
+builder.Services.AddScoped<LocationQueryService>();
 builder.Services.AddMarineInsightTelemetry(builder.Configuration);
 builder.Services
     .AddHealthChecks()
@@ -95,6 +97,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 });
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+app.MapLocationEndpoints();
 app.MapMarineAnalysisEndpoints();
 
 app.Run();

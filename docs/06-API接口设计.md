@@ -81,7 +81,7 @@
 
 约束：`hours` 仅允许 `24`、`72`、`168`；经纬度必须成对出现；活动类型必须来自服务端枚举。
 
-当前 `MI-0013` 查询骨架只接受坐标作为地点输入；仅提供 `locationId` 会返回 `400 VALIDATION_FAILED`。`activities` 和 `units` 已保留为协议字段，但当前 metrics-only 响应不会执行活动评分或单位偏好转换。
+当前 `MI-0014` 已支持预置地点的 `locationId` 输入：API 先从只读地点目录解析坐标、展示名称和 IANA 时区，再执行 metrics-only 查询；未知地点返回 `404 LOCATION_NOT_FOUND`。`locationId` 与坐标不能同时提供。`activities` 和 `units` 已保留为协议字段，但当前 metrics-only 响应不会执行活动评分或单位偏好转换。
 
 ### 5.2 响应
 
@@ -93,6 +93,7 @@
     "bea327c7-6039-43b9-81f1-c1559a0c4987"
   ],
   "location": {
+    "locationId": "8a477d67-73fa-4f43-b954-cd29d238a89d",
     "displayName": "东极岛",
     "latitude": 30.194,
     "longitude": 122.687,
@@ -204,11 +205,15 @@
 
 `sources[].cacheStatus` 为 `hit`、`miss` 或 `stale`；当 Provider 在 Stale 窗口内失败时，响应保留旧批次并通过 `quality.freshness` 与质量 flags 表达降级。
 
-## 6. 地点搜索
+## 6. 地点目录查询
 
 `GET /api/v1/locations/search?q=东极岛&limit=10`
 
-响应字段包括 `id`、`displayName`、`locationType`、`latitude`、`longitude`、`timeZone` 和 `source`。模糊候选不得自动替用户选择，重名地点必须显示行政区域或坐标。
+响应为地点数组，字段包括 `id`、`displayName`、`locationType`、`latitude`、`longitude`、`timeZone` 和 `source`。当前只查询系统预置目录，不调用外部地理编码服务；模糊候选不得自动替用户选择，重名地点必须显示行政区域或坐标。
+
+`GET /api/v1/locations/nearby?lat=30.194&lon=122.687&radiusKm=50&limit=10`
+
+附近查询要求 `lat`、`lon` 成对出现，按球面距离升序返回预置地点。`radiusKm` 默认 50，允许范围为 `(0, 500]`；`limit` 默认 10，允许范围为 `[1, 50]`。搜索文本 `q` 必填，最多 160 个字符。
 
 ## 7. 收藏接口
 
@@ -242,7 +247,6 @@
 | `VALIDATION_FAILED` | 400 | 参数或业务输入无效 |
 | `LOCATION_NOT_FOUND` | 404 | 地点不存在 |
 | `ANALYSIS_NOT_FOUND` | 404 | 分析结果不存在或不可访问 |
-| `VALIDATION_FAILED` | 400 | 请求体、坐标或小时范围不符合契约 |
 | `FORECAST_INSUFFICIENT` | 422 | 关键字段不足，无法可靠分析 |
 | `FAVORITE_ALREADY_EXISTS` | 409 | 重复收藏 |
 | `RATE_LIMITED` | 429 | 请求超过配额 |
