@@ -61,6 +61,9 @@ flowchart LR
 - 值对象：`SourceBatchReference`、`MetricSource`、`SnapshotQuality`。
 - 不变式：每个指标必须能追溯到批次、Provider 和模型；多来源同名指标必须经过显式选择策略；不能用较新的 Weather 批次掩盖过期 Marine/Tide 批次。
 - Open-Meteo Weather、Open-Meteo Marine 和可选 WorldTides 通常形成 2-3 个来源批次。
+- 当前实现由 Application 的 `ForecastSnapshotAssembler` 负责：每个数据域默认只能选择一个批次；同域多批次和合并后的同指标多来源都必须通过显式 Provider 选择策略确定。
+- 时间轴使用所选批次在请求范围内的时间并集；允许配置最大最近点差，默认 30 分钟。允许最近点匹配时保留 `MetricSource.ForecastTimeUtc` 的实际来源时间，并将 `TimeGap`/`Partial` 传递到快照质量；超过上限不跨缺口填充。
+- `ForecastSnapshotPoint`、`SnapshotQuality` 和 `SourceBatchReference` 位于 Domain，Assembler 不暴露 Provider DTO，也不改变输入 `ForecastBatch`。
 
 ### 4.4 AnalysisReport 聚合
 
@@ -151,3 +154,4 @@ flowchart LR
 | --- | --- | --- |
 | 1.0 | 2026-07-13 | 定义核心域、聚合、不变式和 Provider 防腐层 |
 | 1.1 | 2026-07-13 | 增加 ForecastSnapshot 和 Weather/Marine/Tide 多来源批次模型 |
+| 1.2 | 2026-07-16 | 落地 ForecastSnapshot、来源批次引用、质量传递和 UTC 时间轴组装不变式 |
