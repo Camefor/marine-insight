@@ -13,4 +13,6 @@ public static class MarineInsightErrorCodes
     public const string ProviderContractInvalid = "PROVIDER_CONTRACT_INVALID";
 
     public const string ProviderQuotaExceeded = "PROVIDER_QUOTA_EXCEEDED";
+
+    public const string CacheUnavailable = "CACHE_UNAVAILABLE";
 }

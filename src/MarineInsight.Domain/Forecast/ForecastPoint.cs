@@ -49,4 +49,10 @@ public sealed class ForecastPoint
     public DataQuality Quality { get; }
 
     public IReadOnlyList<MetricSource> MetricSources { get; }
+
+    public ForecastPoint AsStale() => new(
+        ForecastTimeUtc,
+        Metrics,
+        Quality.AsStale(),
+        MetricSources.Select(source => source.AsStale()));
 }

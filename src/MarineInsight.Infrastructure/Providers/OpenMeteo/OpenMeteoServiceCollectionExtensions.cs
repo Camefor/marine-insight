@@ -1,6 +1,7 @@
 ﻿using MarineInsight.Application.Forecast.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace MarineInsight.Infrastructure.Providers.OpenMeteo;
 
@@ -31,7 +32,7 @@ public static class OpenMeteoServiceCollectionExtensions
                 "ForecastProviders:OpenMeteo contains an invalid configuration.")
             .ValidateOnStart();
 
-        services.AddSingleton(TimeProvider.System);
+        services.TryAddSingleton(TimeProvider.System);
         services.AddHttpClient<OpenMeteoWeatherProvider>(client =>
         {
             client.Timeout = Timeout.InfiniteTimeSpan;

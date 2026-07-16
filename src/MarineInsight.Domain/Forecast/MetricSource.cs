@@ -40,4 +40,20 @@ public sealed record MetricSource
     public ForecastFreshness Freshness { get; }
 
     public ForecastQualityMask QualityFlags { get; }
+
+    public MetricSource AsStale()
+    {
+        var status = QualityStatus is ForecastQualityStatus.Invalid or ForecastQualityStatus.Unknown
+            ? QualityStatus
+            : ForecastQualityStatus.Stale;
+
+        return new MetricSource(
+            Metric,
+            Provider,
+            BatchId,
+            ForecastTimeUtc,
+            status,
+            ForecastFreshness.Stale,
+            QualityFlags | ForecastQualityMask.StaleData);
+    }
 }

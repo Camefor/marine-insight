@@ -82,4 +82,20 @@ public sealed class ForecastBatch
     public IReadOnlyList<ForecastPoint> Points { get; }
 
     public DataQuality Quality { get; }
+
+    /// <summary>
+    /// Marks every level of an old provider batch as stale without changing its original
+    /// fetched timestamp, values, missing metrics, or source references.
+    /// </summary>
+    public ForecastBatch AsStale() => new(
+        BatchId,
+        DataDomain,
+        Provider,
+        RequestedLocation,
+        GridLocation,
+        IssuedAtUtc,
+        FetchedAtUtc,
+        Range,
+        Points.Select(point => point.AsStale()),
+        Quality.AsStale());
 }

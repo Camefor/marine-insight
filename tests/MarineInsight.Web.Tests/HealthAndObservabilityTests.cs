@@ -1,6 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
+using MarineInsight.Application.Forecast;
+using MarineInsight.Application.Forecast.Ports;
+using MarineInsight.Infrastructure.Caching;
 using MarineInsight.Web.Observability;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -15,6 +18,18 @@ namespace MarineInsight.Web.Tests;
 
 public sealed class HealthAndObservabilityTests
 {
+    [Fact]
+    public void WebRegistersForecastCacheBoundary()
+    {
+        using var factory = new TestApplicationFactory();
+        using var scope = factory.Services.CreateScope();
+
+        Assert.IsType<MemoryForecastBatchCache>(
+            scope.ServiceProvider.GetRequiredService<IForecastBatchCache>());
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ForecastBatchCacheCoordinator>());
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ForecastCacheKeyFactory>());
+    }
+
     [Fact]
     public async Task LiveHealthEndpointDoesNotRequireDatabase()
     {

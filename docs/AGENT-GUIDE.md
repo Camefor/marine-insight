@@ -127,10 +127,10 @@
 | 当前任务 ID | 无 |
 | 当前状态 | `IDLE` |
 | 当前目标 | 等待用户指定 RoadMap 下一项；`MI-0002`、`MI-0003`、`MI-0004`由用户人工处理并保持 TODO |
-| 最后完成动作 | 完成 `MI-0011`：实现 ForecastBatch Application 仓储端口、EF 追加/读取、完整领域映射及 24/72/168 小时 SQLite 集成测试 |
-| 下一步动作 | 等待用户指定下一项，继续 RoadMap 后续工程任务；不接管 `MI-0002`、`MI-0003`、`MI-0004` |
-| 涉及文件 | `src/MarineInsight.Application/Forecast/Ports/IForecastBatchRepository.cs`、`src/MarineInsight.Infrastructure/Persistence/ForecastBatchRepository.cs`、`src/MarineInsight.Infrastructure/Persistence/ForecastBatchPersistenceMapper.cs`、`src/MarineInsight.Infrastructure/Persistence/PersistenceServiceCollectionExtensions.cs`、`tests/MarineInsight.Infrastructure.Tests/ForecastBatchRepositoryTests.cs`、`tests/MarineInsight.Infrastructure.Tests/PersistenceMigrationTests.cs`、`docs/04-领域模型设计(DDD).md`、`docs/05-数据库设计.md`、`docs/20-测试方案.md`、`docs/21-开发RoadMap.md`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | `dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet test MarineInsight.slnx --no-build --configuration Release` 47/47 通过；`dotnet format --verify-no-changes`、`git diff --check`、11 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告 |
+| 最后完成动作 | 完成 `MI-0012`：建立标准预报 L1 `IMemoryCache`、版本化缓存键、可配置新鲜/`Stale` 窗口、单航班回源、缓存故障旁路和领域质量传递 |
+| 下一步动作 | 等待用户指定下一项，继续阶段 1 查询/API 或 Dashboard 闭环；不接管 `MI-0002`、`MI-0003`、`MI-0004` |
+| 涉及文件 | `src/MarineInsight.Application/Errors/CacheUnavailableException.cs`、`src/MarineInsight.Application/Errors/MarineInsightErrorCodes.cs`、`src/MarineInsight.Application/Forecast/ForecastCacheKey.cs`、`src/MarineInsight.Application/Forecast/ForecastCachePolicy.cs`、`src/MarineInsight.Application/Forecast/ForecastCacheEntry.cs`、`src/MarineInsight.Application/Forecast/ForecastCacheResult.cs`、`src/MarineInsight.Application/Forecast/Ports/IForecastBatchCache.cs`、`src/MarineInsight.Application/Forecast/ForecastBatchCacheCoordinator.cs`、`src/MarineInsight.Domain/Forecast/DataQuality.cs`、`src/MarineInsight.Domain/Forecast/ForecastBatch.cs`、`src/MarineInsight.Domain/Forecast/ForecastPoint.cs`、`src/MarineInsight.Domain/Forecast/MetricSource.cs`、`src/MarineInsight.Infrastructure/Caching/`、`src/MarineInsight.Infrastructure/Providers/OpenMeteo/OpenMeteoServiceCollectionExtensions.cs`、`src/MarineInsight.Web/Program.cs`、`src/MarineInsight.Web/appsettings.json`、相关测试、缓存/部署/RoadMap 文档 |
+| 验证结果 | `dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet test MarineInsight.slnx --no-build --configuration Release` 59/59 通过；`dotnet format MarineInsight.slnx --no-restore --verify-no-changes` 通过；`git diff --check` 通过；28 个非 JSON/YAML 文本 UTF-8 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告 |
 | 阻塞/待确认 | 无代码阻塞；本次不处理用户自行人工验证的 `MI-0002`、`MI-0003`、`MI-0004`；尚未连接真实 PostgreSQL 服务执行集成迁移 |
 | 最后更新 | 2026-07-16 |
 
@@ -177,6 +177,8 @@
 | [x] | `MI-0010` | 2026-07-16 | 实现 ForecastSnapshot 领域模型、UTC 时间轴组装和显式来源选择策略 | 新增 Snapshot/Point/Quality/SourceBatchReference；Assembler 支持 Weather/Marine/Tide 独立批次、最大最近点差、同域批次选择、同指标选择、来源实际时间和 Stale/Partial/Unknown/TimeGap 传递；Web 已注册组装器，DDD/数据源/测试文档已同步 |
 | [x] | `MI-0011` | 2026-07-16 | 实现 ForecastBatch 持久化查询边界，以及 24/72/168 小时预报批次的保存和读取用例 | Application 增加 `IForecastBatchRepository`；Infrastructure 追加写入并按地点/Provider/数据域/UTC 覆盖范围读取，完整映射点位、质量、缺失指标和逐指标来源；注册 Scoped 仓储并同步 DDD/数据库/测试/RoadMap 文档 |
 
+| [x] | `MI-0012` | 2026-07-16 | 建立标准预报 L1 缓存边界、版本化缓存键、单航班回源和 Stale 降级 | Application 增加 `ForecastCacheKey`、`ForecastCachePolicy`、`IForecastBatchCache` 和 `ForecastBatchCacheCoordinator`；Infrastructure 接入 `IMemoryCache`、配置校验、键工厂和 Web DI；ProviderException 仅在窗口内回退旧值并将 Stale 质量传递到批次/点位/来源，缓存后端故障旁路；同步缓存、部署、测试和 RoadMap 文档 |
+
 ### 9.2 取消任务
 
 当前没有 `CANCELLED` 任务。取消任务必须保留任务 ID、取消日期、原任务目标、取消原因和用户/决策来源。
@@ -187,6 +189,8 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-16 | `MI-0012` | 完成标准预报 L1 缓存边界；键包含环境、数据域、Provider/模型、网格坐标、UTC 小时范围和标准化版本；实现 IMemoryCache TTL、Stale 窗口、单航班刷新、缓存故障旁路和批次/点位/指标来源质量传递；同步部署与 RoadMap 文档 | `dotnet build` 0 错误；`dotnet test` 59/59 通过；`dotnet format --verify-no-changes`、`git diff --check`、28 个非 JSON/YAML 文本 BOM/CRLF 检查通过；有 NU1900、NU1903 警告；未执行真实 Redis/PostgreSQL 集成 | 下一项按用户指令选择阶段 1 查询/API 或 Dashboard；不处理 `MI-0002` 至 `MI-0004` |
+| 2026-07-16 | `MI-0012` | 启动任务；完成缓存、Provider、日志、异常、开发规范、测试方案和 RoadMap 基线核对，登记 L1 缓存实现范围 | 尚未运行本任务验证 | 实现版本化 `ForecastCacheKey`、`IMemoryCache` L1、单航班回源和 Stale 质量语义；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0011` | 完成 ForecastBatch 仓储端口、EF 追加/读取和领域映射；支持 24/72/168 小时范围，保留空值、质量、缺失位图和指标来源；SQLite 对 `DateTimeOffset` 范围查询采用受限候选集本地判断 | `dotnet build` 0 错误；`dotnet test` 47/47 通过；`dotnet format --verify-no-changes`、`git diff --check`、11 个非 JSON/YAML 文本 BOM/CRLF 检查通过；有 NU1900、NU1903 警告；未连接真实 PostgreSQL | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0011` | 启动任务；完成台账、工作区、数据库实体/映射/迁移和相关设计文档核对，确认当前无已有 ForecastBatch 仓储实现 | 尚未运行本任务验证 | 实现 Application 仓储端口、EF 仓储和领域映射，补充保存/读取测试；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0010` | 完成 ForecastSnapshot、ForecastSnapshotPoint、SnapshotQuality、SourceBatchReference 和 Application ForecastSnapshotAssembler；实现 UTC 时间并集、最近点上限、显式批次/指标 Provider 选择、来源追溯和质量传递，并注册 Web DI | `dotnet build` 0 错误；`dotnet test` 43/43 通过；`dotnet format --verify-no-changes`、`git diff --check`、13 个非 JSON/YAML 文本 BOM/CRLF 检查通过；有 NU1900、NU1903 警告 | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |

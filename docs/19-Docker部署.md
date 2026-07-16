@@ -60,6 +60,11 @@
 | `ConnectionStrings__MarineInsight` | 是 | PostgreSQL 连接 |
 | `Redis__Enabled` | 否 | 是否启用 Redis |
 | `Redis__ConnectionString` | 条件 | Redis 连接 |
+| `Caching__Forecast__Environment` | 否 | 缓存环境隔离段，生产应显式设置 |
+| `Caching__Forecast__NormalizerVersion` | 否 | 标准化语义版本，改变映射后递增 |
+| `Caching__Forecast__CoordinatePrecision` | 否 | 缓存坐标精度，默认 4 位小数 |
+| `Caching__Forecast__FreshLifetime` | 否 | L1 新鲜 TTL，默认 15 分钟 |
+| `Caching__Forecast__StaleIfErrorLifetime` | 否 | Provider 失败时的旧值降级窗口，默认 2 小时 |
 | `ForecastProviders__OpenMeteo__Enabled` | 否 | Open-Meteo 主源开关 |
 | `ForecastProviders__OpenMeteo__WeatherBaseUrl` | 否 | Weather API 地址 |
 | `ForecastProviders__OpenMeteo__MarineBaseUrl` | 否 | Marine API 地址 |

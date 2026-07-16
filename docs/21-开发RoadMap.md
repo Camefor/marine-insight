@@ -48,7 +48,7 @@
 - 实现 `ForecastSnapshotAssembler`，按 UTC 合并多个来源批次并保留指标级来源。
 - 实现 24h/72h/7d 预报批次与逐小时存储。
 - 通过 `IForecastBatchRepository` 追加并读取 24/72/168 小时批次，保留点位质量、缺失指标和逐指标来源引用。
-- 实现 L1 缓存、可选 Redis 契约、单航班回源和 Stale 降级。
+- 实现 L1 缓存、可选 Redis 契约、单航班回源和 Stale 降级。当前已完成标准预报 L1 `IMemoryCache`、版本化键、可替换缓存端口和单航班协调器；Redis 适配器和 L2 分布式锁仍待后续多实例任务。
 - 建立 `POST /api/v1/marine-analyses` 的查询骨架，暂返回指标和质量摘要。
 - 实现 Blazor Dashboard 查询栏、数据来源状态和关键指标网格。
 - 建立 Provider 契约测试和 API 集成测试。
@@ -170,3 +170,4 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 1.0 | 2026-07-13 | 建立以数据可行性优先的 6 周交付计划 |
 | 1.1 | 2026-07-13 | 改为 Open-Meteo 主源、WorldTides P1、Stormglass v1.1 和 NOAA/NDBC v2.0 路线 |
 | 1.2 | 2026-07-16 | 补充 ForecastBatch 持久化仓储和 24/72/168 小时批次读写交付物 |
+| 1.3 | 2026-07-16 | 补充标准预报 L1 缓存、版本化键、单航班回源和 Stale 质量语义交付物 |

@@ -32,6 +32,24 @@ public sealed record DataQuality
 
     public IReadOnlyList<ForecastMetricName> MissingMetrics { get; }
 
+    /// <summary>
+    /// Preserves completeness and missing metrics while making cache degradation explicit.
+    /// Invalid and unknown quality states are not promoted to a more optimistic stale state.
+    /// </summary>
+    public DataQuality AsStale()
+    {
+        var status = Status is ForecastQualityStatus.Invalid or ForecastQualityStatus.Unknown
+            ? Status
+            : ForecastQualityStatus.Stale;
+
+        return new DataQuality(
+            status,
+            ForecastFreshness.Stale,
+            Completeness,
+            Flags | ForecastQualityMask.StaleData,
+            MissingMetrics);
+    }
+
     public static DataQuality Valid() => new(
         ForecastQualityStatus.Valid,
         ForecastFreshness.Fresh,
