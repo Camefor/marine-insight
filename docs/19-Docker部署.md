@@ -88,6 +88,7 @@ docker compose ps
 - PostgreSQL 使用 `pg_isready`。
 - Redis 使用 `redis-cli ping`，认证参数通过 Secret 提供。
 - Web 使用 `/health/live`；反向代理流量切换使用 `/health/ready`。
+- `/health/live` 不访问数据库或外部 Provider；`/health/ready` 只验证基础数据库连接并使用有限超时。
 - Worker 提供心跳指标或独立健康端点，长任务记录最后成功时间。
 
 Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和韧性策略。
@@ -135,3 +136,4 @@ Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和�
 | --- | --- | --- |
 | 1.0 | 2026-07-13 | 定义非 root 镜像、Compose 拓扑、Secret 和回滚规范 |
 | 1.1 | 2026-07-13 | 升级 .NET 10 镜像并替换数据源环境变量 |
+| 1.2 | 2026-07-15 | 补充 Web 存活/就绪探针的容器使用约定 |

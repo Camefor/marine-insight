@@ -127,10 +127,10 @@
 | 当前任务 ID | 无 |
 | 当前状态 | `IDLE` |
 | 当前目标 | 等待用户指定下一项；`MI-0002`、`MI-0003`、`MI-0004`由用户人工处理并保持 TODO |
-| 最后完成动作 | 完成 `MI-0007`：接入 PostgreSQL/SQLite 配置、EF Core 持久化映射、首个迁移和运行时注册 |
+| 最后完成动作 | 完成 `MI-0008`：接入健康检查、Serilog JSON 结构化日志、W3C Trace、OTLP 可选导出和敏感字段脱敏 |
 | 下一步动作 | 等待用户指定下一项，继续 RoadMap 后续工程任务 |
-| 涉及文件 | `src/MarineInsight.Infrastructure/Persistence/**`、`src/MarineInsight.Infrastructure/MarineInsight.Infrastructure.csproj`、`src/MarineInsight.Web/Program.cs`、`src/MarineInsight.Web/appsettings.Development.json`、`tests/MarineInsight.Infrastructure.Tests/**`、`docs/05-数据库设计.md`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | `dotnet build` 0 错误；`dotnet test` 17/17 通过；SQLite 内存迁移和 SQLite/PostgreSQL Provider 选择测试通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告；Web host 进程探针因当前 PowerShell `Start-Process` 的重复 PATH 环境键未完成 |
+| 涉及文件 | `src/MarineInsight.Web/Program.cs`、`src/MarineInsight.Web/MarineInsight.Web.csproj`、`src/MarineInsight.Web/appsettings*.json`、`src/MarineInsight.Web/Health/**`、`src/MarineInsight.Web/Observability/**`、`src/MarineInsight.Infrastructure/Persistence/MarineInsightDatabaseHealthCheck.cs`、`tests/MarineInsight.Web.Tests/**`、`docs/13-日志设计.md`、`docs/18-部署文档.md`、`docs/19-Docker部署.md`、`docs/AGENT-GUIDE.md` |
+| 验证结果 | `dotnet build` 0 错误；`dotnet test` 23/23 通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告 |
 | 阻塞/待确认 | 无代码阻塞；本次不处理用户自行人工验证的 `MI-0002`、`MI-0003`、`MI-0004`；未连接真实 PostgreSQL 服务执行集成迁移 |
 | 最后更新 | 2026-07-15 |
 
@@ -142,7 +142,8 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0008` | P0 | `TODO` | 建立健康检查、结构化日志和 OpenTelemetry Trace | 基础运行状态可观测，敏感信息不进入日志 |
+
+当前没有待办任务；用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
 ### 8.2 暂停/阻塞任务恢复详情
 
@@ -171,6 +172,7 @@
 | [x] | `MI-0005` | 2026-07-15 | 建立 .NET 10 解决方案、分层项目、测试项目、EditorConfig 与 CI | `MarineInsight.slnx` 包含 4 个运行项目和 4 个测试项目；依赖方向符合 SAD；构建、4 个基础测试、格式、差异和 Web HTTP 检查通过 |
 | [x] | `MI-0006` | 2026-07-15 | 定义 Provider 端口、标准预报模型、质量状态和错误模型 | Domain 标准模型和不变量、Application Weather/Marine/Tide 端口、Provider 错误层及契约测试已完成；构建和 14 个测试通过 |
 | [x] | `MI-0007` | 2026-07-15 | 建立 PostgreSQL/SQLite 基础配置和首个迁移 | Infrastructure 已接入 EF Core 10、SQLite/PostgreSQL Provider、四张预报存储表和首个迁移；Web 已按配置注册 DbContext；SQLite 迁移及两种 Provider 选择测试通过；未执行真实 PostgreSQL 集成迁移；Web host 进程探针受当前 PowerShell 环境限制未完成 |
+| [x] | `MI-0008` | 2026-07-15 | 建立健康检查、结构化日志和 OpenTelemetry Trace | Web 提供 `/health/live`、`/health/ready` 和数据库有界连接检查；Serilog 输出结构化 JSON 并脱敏 API Key/Token/Authorization/密码/连接字符串/精确位置；接入 W3C Trace、ASP.NET Core/HttpClient/Runtime instrumentation，OTLP 地址可选；设计、部署和 Docker 文档已同步 |
 
 ### 9.2 取消任务
 
@@ -182,6 +184,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-15 | `MI-0008` | 建立 `/health/live`、`/health/ready`、数据库有界连接检查、Serilog JSON 结构化日志、W3C Trace、OTLP 可选导出、UTC 时间字段和敏感信息脱敏，并同步日志/部署文档 | `dotnet build` 0 错误；`dotnet test` 23/23 通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；有 NU1900 审计源和 NU1903 SQLite 漏洞警告；未连接真实 PostgreSQL | 等待用户指定下一项；`MI-0002` 至 `MI-0004`由用户人工处理 |
 | 2026-07-15 | `MI-0007` | 建立 PostgreSQL/SQLite 基础配置、EF Core 持久化映射、四张预报存储表、首个迁移，并接入 Web DI | `dotnet build` 0 错误；`dotnet test` 17/17 通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；有 NU1900、NU1903 警告；未执行真实 PostgreSQL 集成迁移；Web host 进程探针因 PowerShell `Start-Process` 重复 PATH 环境键未完成 | 等待用户指定下一项；`MI-0002` 至 `MI-0004`由用户人工处理 |
 | 2026-07-15 | `MI-0006` | 定义标准 ForecastBatch/ForecastPoint/MetricSource/质量模型、Weather/Marine/Tide 端口和 Provider 错误层 | `dotnet build` 0 错误；`dotnet test` 14/14 通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；有 4 个 NU1900 审计源警告 | 等待用户指定下一项；`MI-0002` 至 `MI-0004`由用户人工处理 |
 | 2026-07-15 | `MI-0005` | 建立 .NET 10 模块化单体工程骨架和 CI | `dotnet restore` 成功但有 8 个 NU1900 审计源警告；`dotnet build`、`dotnet test`（4/4）、`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过；Web 首页 HTTP 200 | 等待用户指定下一项；按 RoadMap 默认选择 `MI-0002` |
