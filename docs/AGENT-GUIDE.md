@@ -127,10 +127,10 @@
 | 当前任务 ID | `MI-0014` |
 | 当前状态 | `DONE` |
 | 当前目标 | 建立只读地点目录查询边界，支持预置地点搜索、附近地点查询，并为 `POST /api/v1/marine-analyses` 接入 `locationId`；`MI-0002`、`MI-0003`、`MI-0004`由用户人工处理并保持 TODO |
-| 最后完成动作 | 完成 `MI-0014`：实现 Location 领域模型、只读 EF 仓储、预置地点迁移、地点搜索/附近 API、分析 `locationId` 解析及地点元数据投影；同步 API、DDD、数据库、异常、测试和 RoadMap 文档 |
+| 最后完成动作 | 完成 `MI-0014`：实现 Location 领域模型、只读 EF 仓储、预置地点迁移、地点搜索/附近 API、分析 `locationId` 解析及地点元数据投影；恢复后已在 Development Web Host 上应用 SQLite 迁移并完成真实 HTTP 验证；同步 API、DDD、数据库、异常、测试和 RoadMap 文档 |
 | 下一步动作 | 等待用户指定下一项；不接管 `MI-0002`、`MI-0003`、`MI-0004` |
 | 涉及文件 | `src/MarineInsight.Domain/Location/`、`src/MarineInsight.Application/Locations/`、`src/MarineInsight.Infrastructure/Persistence/`、`src/MarineInsight.Web/Api/`、相关测试和地点/API/数据库/DDD/测试/RoadMap 文档 |
-| 验证结果 | `dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet test MarineInsight.slnx --no-restore --configuration Release` 75/75 通过；`dotnet format --verify-no-changes`、`git diff --check`、本次 31 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告；真实 PostgreSQL/Redis 未连接 |
+| 验证结果 | `dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet test MarineInsight.slnx --no-restore --configuration Release` 75/75 通过；地点 API 定向测试 3/3 通过；Development Web Host 的 `/health/live`、地点搜索和附近查询真实 HTTP 验证通过；SQLite 已应用两条迁移；`dotnet format --verify-no-changes`、`git diff --check`、本次 31 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告；真实 PostgreSQL/Redis 未连接 |
 | 阻塞/待确认 | 无代码阻塞；地点查询只使用已有 `locations` 表，不接入外部地理编码；本次不处理用户自行人工验证的 `MI-0002`、`MI-0003`、`MI-0004` |
 | 最后更新 | 2026-07-16 |
 
@@ -191,6 +191,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-16 | `MI-0014` | 从中断点恢复并完成地点功能的运行验证；Development Web Host 显式加载 SQLite 配置，应用初始存储和预置地点迁移，确认地点搜索、附近排序和健康端点可通过真实 HTTP 访问；清理探针进程后重新执行测试；不处理 `MI-0002` 至 `MI-0004` | `/health/live` 200；`/api/v1/locations/search?q=东极岛` 200；`/api/v1/locations/nearby?lat=30.194&lon=122.687&radiusKm=500&limit=3` 200；地点定向测试 3/3、全量测试 75/75 通过；`git diff --check` 通过；启动时的无迁移 500 已通过执行 EF 迁移解决；仍有 NU1900、NU1903 警告 | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0014` | 完成地点目录查询任务；新增 Location 领域模型、Application 查询边界、EF 只读仓储、预置数据迁移、地点搜索/附近 API，并让 metrics-only 分析支持 `locationId` 与地点元数据；同步 API/DDD/数据库/异常/测试/RoadMap 文档；不处理 `MI-0002` 至 `MI-0004` | 构建 0 错误；全量测试 75/75 通过；`dotnet format --verify-no-changes`、`git diff --check`、31 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告；未连接真实 PostgreSQL/Redis | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0014` | 启动地点目录查询任务；核对 PRD/SRS、DDD、数据库和 API 契约，确认已有 `locations` 表但没有地点查询端口或 API；范围限定为只读预置/附近查询和分析 `locationId` 输入，不接入外部地理编码或收藏 | 尚未运行本任务验证；基线 MI-0013 为构建 0 错误、63/63 测试通过 | 实现 Location 领域模型、查询端口/仓储、地点 API、`locationId` 分析解析和对应测试；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0013` | 完成 metrics-only 海况分析查询骨架；Weather/Marine 并行回源，串联版本化缓存键、L1 缓存和 ForecastSnapshot，投影指标、质量、来源和缓存状态；补充验证错误、Provider 错误和 Trace-Id；不实现评分、活动、地点名称解析和分析持久化 | `dotnet build` 0 错误；全量 `dotnet test` 63/63 通过；仍有 NU1900、NU1903 警告；真实 PostgreSQL/Redis 未连接 | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
