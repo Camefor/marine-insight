@@ -124,14 +124,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0015` |
+| 当前任务 ID | `MI-0016` |
 | 当前状态 | `DONE` |
-| 当前目标 | 实现阶段 1 基础 Blazor Dashboard 查询闭环：支持地点搜索选择、24/72/168 小时时间范围查询、数据来源状态和关键指标网格展示；不提前实现评分、活动规则、地图选点、收藏或登录 |
-| 最后完成动作 | 完成 `MI-0015`：根路径切换为 Interactive Server Dashboard；新增 scoped `DashboardQuerySession`，支持预置地点搜索、候选选择、24/72/168 小时 metrics-only 查询、请求取消、来源状态、关键指标和逐小时表格投影；同步 UI、Blazor、测试和 RoadMap 文档 |
-| 下一步动作 | 等待用户人工验证 Dashboard 视觉与交互；后续按用户指令进入阶段 2 Safety Gates/评分/活动分析，或继续补地图/收藏等 P1 能力 |
-| 涉及文件 | `src/MarineInsight.Web/Components/`、`src/MarineInsight.Web/Api/`、`tests/MarineInsight.Web.Tests/`、Dashboard/UI/API/测试/RoadMap 文档 |
-| 验证结果 | `dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet test MarineInsight.slnx --no-restore --configuration Release` 78/78 通过；`dotnet format MarineInsight.slnx --verify-no-changes --no-restore` 通过；`git diff --check` 通过；本次 12 个非 JSON/YAML 文本 UTF-8 BOM/CRLF 检查通过；本地 Web Host `/`、`/health/live` 和 `/api/v1/locations/search?q=东极岛` HTTP 200；按用户指令不执行截图验证，由用户自行人工验证；仍有 NU1903 SQLite 漏洞警告 |
-| 阻塞/待确认 | 无代码阻塞；本任务只消费现有地点搜索与 metrics-only 分析 API，不改变 Provider、评分或持久化边界；视觉效果由用户人工验收 |
+| 当前目标 | 建立阶段 2 领域层 Safety Gates 与基础评分骨架：实现等级映射、风险贡献、雷暴/低能见度/大风/大浪/强阵风 Gate、基础惩罚和首批组合风险规则；暂不接入 API、Dashboard、活动 Profile 或推荐时间窗 |
+| 最后完成动作 | 完成 `MI-0016`：新增 Domain `Analysis` 值对象和 `MarineRiskRuleEngine`，可对单小时 `ForecastSnapshotPoint` 输出分数、风险等级、置信度、算法版本和风险贡献；覆盖雷暴、平均风、大浪、强阵风、低能见度 Gate，基础惩罚、风小浪大、阵风异常、短周期浪、长周期涌浪和海况数据不足 Unknown |
+| 下一步动作 | 等待用户指定下一项；建议继续实现海钓/乘船/登岛/露营/摄影 Activity Profile，并将活动分数接入 Application/API/Dashboard |
+| 涉及文件 | `src/MarineInsight.Domain/Analysis/`、`tests/MarineInsight.Domain.Tests/`、分析/评分/DDD/测试/RoadMap 文档和台账 |
+| 验证结果 | `dotnet test tests/MarineInsight.Domain.Tests/MarineInsight.Domain.Tests.csproj --no-restore --configuration Release` 23/23 通过；`dotnet test MarineInsight.slnx --no-restore --configuration Release` 91/91 通过；`dotnet build MarineInsight.slnx --no-restore --configuration Release` 0 错误；`dotnet format MarineInsight.slnx --verify-no-changes --no-restore` 通过；`git diff --check` 通过；本次 13 个非 JSON/YAML 文本 UTF-8 BOM/CRLF 检查通过；并发执行构建/测试时曾因 Release 输出文件锁定出现一次构建失败，单独重跑已通过；仍有 NU1903 SQLite 漏洞警告 |
+| 阻塞/待确认 | 无代码阻塞；本项只建立领域层确定性规则，不改变现有 metrics-only API 和 Dashboard 行为；活动 Profile、时间窗、API/Dashboard 投影留待后续 |
 | 最后更新 | 2026-07-30 |
 
 <!-- agent-state:end -->
@@ -181,6 +181,7 @@
 | [x] | `MI-0013` | 2026-07-16 | 建立 `POST /api/v1/marine-analyses` 指标与质量摘要查询骨架 | Application 并行查询 Weather/Marine 并通过 L1 缓存组装 ForecastSnapshot；Web 返回 metrics-only 标准指标、逐小时质量、指标来源、批次来源和 `hit`/`miss`/`stale`；坐标与 24/72/168 小时校验返回 `VALIDATION_FAILED`，Provider 故障返回 `PROVIDER_UNAVAILABLE` ProblemDetails；补充 4 个 API 集成场景和 DI 注册；评分、活动、地点解析和持久化留待后续；同步 API/异常/测试/RoadMap 文档 |
 | [x] | `MI-0014` | 2026-07-16 | 建立地点目录查询边界和 `locationId` 分析输入 | Domain 增加 Location/LocationType 不变量；Application 增加查询端口和参数校验；Infrastructure 增加 AsNoTracking 搜索、Haversine 附近排序、三条预置地点种子和 migration；Web 提供 `/locations/search`、`/locations/nearby`，分析请求支持地点 ID、时区/名称投影和 `LOCATION_NOT_FOUND`；不接入外部地理编码和收藏 |
 | [x] | `MI-0015` | 2026-07-30 | 实现基础 Blazor Dashboard 查询闭环 | Web 根路径切换为海况 Dashboard；新增 `DashboardQuerySession` 管理地点搜索、候选选择、请求取消和 metrics-only 查询投影；页面展示来源状态、抓取/发布时间、缓存状态、质量、关键指标和逐小时指标表；不实现评分、活动建议、地图、收藏或登录；同步 UI/Blazor/测试/RoadMap 文档 |
+| [x] | `MI-0016` | 2026-07-30 | 建立领域层 Safety Gates 与基础评分骨架 | Domain 新增 `RiskLevel`、`RiskContribution`、`HourlyMarineAssessment` 和 `MarineRiskRuleEngine`；支持单小时综合分、Avoid/Unknown 不变式、算法版本、置信度和风险贡献；覆盖雷暴/大风/大浪/强阵风/低能见度 Gate、基础惩罚、风小浪大、阵风异常、短周期浪、长周期涌浪和海况关键数据缺失；暂不接入 API/Dashboard/Activity Profile |
 
 ### 9.2 取消任务
 
@@ -192,6 +193,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-30 | `MI-0016` | 完成领域层单小时 Safety Gates 与基础评分骨架；新增 `MarineRiskRuleEngine`、等级/严重度/贡献/评估值对象和 13 个 Domain 测试；同步分析引擎、评分算法、DDD、测试和 RoadMap 文档；不改变现有 metrics-only API/Dashboard 行为 | Domain 测试 23/23 通过；全量测试 91/91 通过；构建 0 错误；`dotnet format`、`git diff --check` 和本次 13 个非 JSON/YAML 文本 BOM/CRLF 检查通过；并发构建/测试曾因输出文件锁出现一次构建失败，单独重跑通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续实现 Activity Profile，并把活动分数、风险贡献和算法版本投影到 API/Dashboard |
 | 2026-07-30 | `MI-0015` | 完成基础 Blazor Dashboard 查询闭环；根路径进入 Dashboard，支持地点搜索候选、UTC 起报时间、24/72/168 小时范围、metrics-only 查询提交、来源状态、关键指标和逐小时表格；用户明确接手人工视觉验证，本次不执行截图验证 | 构建 0 错误；全量测试 78/78 通过；`dotnet format`、`git diff --check`、12 个非 JSON/YAML 文本 BOM/CRLF 检查通过；本地 `/`、`/health/live` 和地点搜索 HTTP 200；仍有 NU1903 SQLite 漏洞警告 | 等待用户人工验证 Dashboard；后续按用户指令进入阶段 2 评分/活动分析或继续补 UI/P1 能力 |
 | 2026-07-16 | `MI-0014` | 从中断点恢复并完成地点功能的运行验证；Development Web Host 显式加载 SQLite 配置，应用初始存储和预置地点迁移，确认地点搜索、附近排序和健康端点可通过真实 HTTP 访问；清理探针进程后重新执行测试；不处理 `MI-0002` 至 `MI-0004` | `/health/live` 200；`/api/v1/locations/search?q=东极岛` 200；`/api/v1/locations/nearby?lat=30.194&lon=122.687&radiusKm=500&limit=3` 200；地点定向测试 3/3、全量测试 75/75 通过；`git diff --check` 通过；启动时的无迁移 500 已通过执行 EF 迁移解决；仍有 NU1900、NU1903 警告 | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
 | 2026-07-16 | `MI-0014` | 完成地点目录查询任务；新增 Location 领域模型、Application 查询边界、EF 只读仓储、预置数据迁移、地点搜索/附近 API，并让 metrics-only 分析支持 `locationId` 与地点元数据；同步 API/DDD/数据库/异常/测试/RoadMap 文档；不处理 `MI-0002` 至 `MI-0004` | 构建 0 错误；全量测试 75/75 通过；`dotnet format --verify-no-changes`、`git diff --check`、31 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1900、NU1903 警告；未连接真实 PostgreSQL/Redis | 等待用户指定下一项；不处理 `MI-0002` 至 `MI-0004` |
