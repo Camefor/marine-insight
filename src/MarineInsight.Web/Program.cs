@@ -6,6 +6,7 @@ using MarineInsight.Infrastructure.Persistence;
 using MarineInsight.Infrastructure.Providers.OpenMeteo;
 using MarineInsight.Web.Api;
 using MarineInsight.Web.Components;
+using MarineInsight.Web.Components.Features.Dashboard;
 using MarineInsight.Web.Health;
 using MarineInsight.Web.Observability;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -40,6 +41,7 @@ builder.Services.AddOpenMeteoForecastProviders(builder.Configuration);
 builder.Services.AddSingleton<ForecastSnapshotAssembler>();
 builder.Services.AddScoped<MarineAnalysisQueryService>();
 builder.Services.AddScoped<LocationQueryService>();
+builder.Services.AddScoped<DashboardQuerySession>();
 builder.Services.AddMarineInsightTelemetry(builder.Configuration);
 builder.Services
     .AddHealthChecks()

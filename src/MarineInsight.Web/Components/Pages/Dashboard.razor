@@ -1,0 +1,225 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject DashboardQuerySession Session
+
+<PageTitle>海况 Dashboard</PageTitle>
+
+<main class="dashboard-shell">
+    <section class="dashboard-header" aria-labelledby="dashboard-title">
+        <div>
+            <p class="eyebrow">Marine Insight</p>
+            <h1 id="dashboard-title">海况 Dashboard</h1>
+            <p class="dashboard-subtitle">选择预置地点和时间范围，查看标准化逐小时指标、来源与数据质量。</p>
+        </div>
+        <div class="disclaimer" role="note">
+            结果仅供辅助决策，请以官方预警和现场管理为准。
+        </div>
+    </section>
+
+    <section class="query-band" aria-labelledby="query-title">
+        <h2 id="query-title">查询</h2>
+        <form class="query-form" @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+            <div class="location-controls">
+                <label class="field">
+                    <span>地点搜索</span>
+                    <input type="search"
+                           autocomplete="off"
+                           placeholder="输入海岛或码头名称"
+                           @bind="Session.SearchText" />
+                </label>
+                <button class="secondary-button" type="button" @onclick="SearchLocationsAsync" disabled="@Session.IsSearching">
+                    @(Session.IsSearching ? "搜索中" : "查找地点")
+                </button>
+            </div>
+
+            @if (Session.LocationResults.Count > 0)
+            {
+                <div class="candidate-list" aria-label="地点候选">
+                    @foreach (var location in Session.LocationResults)
+                    {
+                        <button type="button"
+                                class="candidate-button @(Session.SelectedLocation?.Id == location.Id ? "selected" : null)"
+                                title="@($"{location.DisplayName} {location.Latitude:0.###}, {location.Longitude:0.###}")"
+                                @onclick="() => Session.SelectLocation(location.Id)">
+                            <strong>@location.DisplayName</strong>
+                            <span>@location.LocationType · @location.TimeZone · @location.Latitude.ToString("0.###")/@location.Longitude.ToString("0.###")</span>
+                        </button>
+                    }
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Session.SearchError))
+            {
+                <p class="inline-error" role="status">@Session.SearchError</p>
+            }
+
+            <div class="range-controls">
+                <label class="field">
+                    <span>起报时间 UTC</span>
+                    <input type="datetime-local" @bind="Session.ForecastStartUtc" />
+                </label>
+
+                <fieldset class="segmented-group">
+                    <legend>范围</legend>
+                    @foreach (var hours in HourOptions)
+                    {
+                        <button type="button"
+                                class="segment @(Session.Hours == hours ? "active" : null)"
+                                @onclick="() => Session.Hours = hours">
+                            @(hours == 168 ? "7d" : $"{hours}h")
+                        </button>
+                    }
+                </fieldset>
+
+                <button class="primary-button" type="submit" disabled="@(!Session.CanSubmit)">
+                    @(Session.IsLoadingAnalysis ? "查询中" : "查询海况")
+                </button>
+            </div>
+        </form>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Session.AnalysisError))
+    {
+        <section class="status-band error" role="alert">
+            <strong>查询失败</strong>
+            <span>@Session.AnalysisError</span>
+            <button type="button" class="secondary-button" @onclick="SubmitAsync" disabled="@(!Session.CanSubmit)">重试</button>
+        </section>
+    }
+
+    @if (Session.Result is null)
+    {
+        <section class="empty-state">
+            <h2>等待查询</h2>
+            <p>先搜索并选择一个预置地点，再提交 24h、72h 或 7d 查询。当前阶段展示 metrics-only 指标，不展示评分或活动建议。</p>
+        </section>
+    }
+    else
+    {
+        var result = Session.Result;
+        <section class="summary-band" aria-labelledby="summary-title">
+            <div>
+                <h2 id="summary-title">@result.DisplayName</h2>
+                <p>@result.Latitude.ToString("0.###"), @result.Longitude.ToString("0.###") · @(result.TimeZone ?? "UTC")</p>
+            </div>
+            <dl class="summary-grid">
+                <div>
+                    <dt>范围</dt>
+                    <dd>@result.Hours 小时</dd>
+                </div>
+                <div>
+                    <dt>质量</dt>
+                    <dd>@result.QualityStatus / @result.Freshness</dd>
+                </div>
+                <div>
+                    <dt>完整度</dt>
+                    <dd>@result.Completeness.ToString("P0")</dd>
+                </div>
+                <div>
+                    <dt>时间</dt>
+                    <dd>@result.FromUtc.ToString("MM-dd HH:mm") - @result.ToUtc.ToString("MM-dd HH:mm") UTC</dd>
+                </div>
+            </dl>
+        </section>
+
+        @if (result.MissingMetrics.Count > 0 || result.MissingDomains.Count > 0 || result.Flags.Count > 0)
+        {
+            <section class="status-band warning" role="status">
+                <strong>数据状态</strong>
+                <span>缺失指标：@FormatList(result.MissingMetrics)；缺失来源：@FormatList(result.MissingDomains)；标记：@FormatList(result.Flags)</span>
+            </section>
+        }
+
+        <section class="source-section" aria-labelledby="source-title">
+            <h2 id="source-title">数据来源</h2>
+            <div class="source-list">
+                @foreach (var source in result.Sources)
+                {
+                    <article class="source-item">
+                        <div>
+                            <strong>@source.DataDomain</strong>
+                            <span>@source.Provider / @source.Model</span>
+                        </div>
+                        <dl>
+                            <div>
+                                <dt>发布</dt>
+                                <dd>@source.IssuedAtUtc.ToString("MM-dd HH:mm") UTC</dd>
+                            </div>
+                            <div>
+                                <dt>抓取</dt>
+                                <dd>@source.FetchedAtUtc.ToString("MM-dd HH:mm") UTC</dd>
+                            </div>
+                            <div>
+                                <dt>缓存</dt>
+                                <dd>@source.CacheStatus</dd>
+                            </div>
+                            <div>
+                                <dt>质量</dt>
+                                <dd>@source.QualityStatus / @source.Freshness</dd>
+                            </div>
+                        </dl>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section class="metric-section" aria-labelledby="metric-title">
+            <h2 id="metric-title">关键指标</h2>
+            <div class="metric-grid">
+                @foreach (var metric in result.MetricCards)
+                {
+                    <article class="metric-item">
+                        <span class="metric-label">@metric.Label</span>
+                        <strong>@metric.Value <small>@metric.Unit</small></strong>
+                        <span>@metric.Detail</span>
+                        <em>@metric.StatusText</em>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section class="hourly-section" aria-labelledby="hourly-title">
+            <h2 id="hourly-title">逐小时指标</h2>
+            <div class="hourly-table-wrap" tabindex="0">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>UTC 时间</th>
+                            <th>风速 m/s</th>
+                            <th>阵风 m/s</th>
+                            <th>浪高 m</th>
+                            <th>涌浪 m</th>
+                            <th>能见度 km</th>
+                            <th>质量</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in result.HourlyRows)
+                        {
+                            <tr>
+                                <td>@row.ForecastTimeUtc.ToString("MM-dd HH:mm")</td>
+                                <td>@row.WindSpeedMs</td>
+                                <td>@row.WindGustMs</td>
+                                <td>@row.WaveHeightM</td>
+                                <td>@row.SwellHeightM</td>
+                                <td>@row.VisibilityKm</td>
+                                <td>@row.QualityStatus</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+</main>
+
+@code {
+    private static readonly int[] HourOptions = [24, 72, 168];
+
+    private Task SearchLocationsAsync() => Session.SearchLocationsAsync();
+
+    private Task SubmitAsync() => Session.SubmitAnalysisAsync();
+
+    private static string FormatList(IReadOnlyList<string> values) =>
+        values.Count == 0 ? "无" : string.Join("、", values);
+}
