@@ -124,14 +124,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0023` |
+| 当前任务 ID | `MI-0024` |
 | 当前状态 | `DONE` |
-| 当前目标 | 使用经验样本和官方预警口径评审 `marine-score-1.0.0` 初始阈值，记录校准依据，并修正与官方高影响天气边界不一致的安全阈值 |
-| 最后完成动作 | 完成初始阈值校准：阵风 Safety Gate 从 18 m/s 调整为 17.2 m/s，默认参数 Schema 与惩罚分段同步；浪高 2.0 m 和能见度 < 500 m 保留为保守边界；同步 SRS、分析、评分、测试和 RoadMap 文档 |
-| 下一步动作 | 建议进入阶段 3 第一项：Leaflet/OpenStreetMap 全宽选点与地图失败降级；或先处理阶段 3 收藏/历史/用户单位设置 |
-| 涉及文件 | `src/MarineInsight.Domain/Analysis/*`、Domain 测试、SRS、分析引擎、评分算法、测试方案、RoadMap 和台账文档 |
-| 验证结果 | Domain 测试 51/51 通过；Release 构建 0 错误；全量测试 122/122 通过；`dotnet format --verify-no-changes`、`git diff --check` 和 9 个改动文本文件 BOM/CRLF 检查通过；仍有 NU1903 SQLite 漏洞警告 |
-| 阻塞/待确认 | 无；本任务不接入实时官方预警 API、不建立管理员阈值发布 UI，也不校准潮汐/岸线暴露规则 |
+| 当前目标 | 实现阶段 3 Leaflet/OpenStreetMap 地图选点：Dashboard 可通过全宽地图选择坐标并进入同一分析流程，地图加载失败时保留可用坐标输入降级 |
+| 最后完成动作 | 已完成 Dashboard Leaflet/OpenStreetMap 地图选点、坐标输入降级、状态容器坐标提交、Web 自动化测试和相关设计文档同步 |
+| 下一步动作 | 建议继续阶段 3：优先做 ASP.NET Core Identity、收藏地点、查询历史和用户单位设置；或做移动端 360px 导航/可访问性补强 |
+| 涉及文件 | `src/MarineInsight.Web/Components/Pages/Dashboard.razor`、`src/MarineInsight.Web/Components/Features/Dashboard/DashboardQuerySession.cs`、`src/MarineInsight.Web/wwwroot/js/dashboard-map.js`、`tests/MarineInsight.Web.Tests/DashboardQuerySessionTests.cs`、UI/Blazor/测试/RoadMap/台账文档 |
+| 验证结果 | `dotnet build MarineInsight.slnx` 通过；`dotnet build MarineInsight.slnx --no-restore --configuration Release` 通过；`dotnet test MarineInsight.slnx --no-restore --configuration Release` 124/124 通过；`dotnet format MarineInsight.slnx --verify-no-changes --no-restore` 通过；按用户指令未执行截图验证；仍有既有 NU1903 SQLite 警告 |
+| 阻塞/待确认 | 无；本任务不做离线瓦片、瓦片代理、收藏/登录、实时定位或截图验证 |
 | 最后更新 | 2026-07-31 |
 
 <!-- agent-state:end -->
@@ -142,7 +142,6 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-
 用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
 ### 8.2 暂停/阻塞任务恢复详情
@@ -189,6 +188,7 @@
 | [x] | `MI-0021` | 2026-07-31 | 建立算法参数 Schema、版本实体和发布前校验 | Domain 新增 `MarineAlgorithmParameters`、参数 Schema 版本、配置哈希、`AlgorithmParameterValidator`、发布校验结果和 `AlgorithmVersion` 状态机；发布前校验覆盖 Safety Gate、分段惩罚、组合规则、活动 Profile、置信度、推荐窗口和黄金样本门禁；不包含后台 UI、数据库迁移或真实发布接口 |
 | [x] | `MI-0022` | 2026-07-31 | 实现缓存键与算法版本联动 | Application 新增 `MarineAnalysisCacheIdentity`，将来源批次集合哈希、来源选择策略、算法版本和归一化活动集合写入分析语义键和 ETag；查询结果携带缓存身份；API 返回根级 `algorithmVersion`、`cache` 对象、活动级算法版本、`ETag` 响应头并支持 `If-None-Match` 返回 `304`；不包含 Redis L2、分析结果持久化或运行时动态参数切换 |
 | [x] | `MI-0023` | 2026-07-31 | 评审并校准初始阈值 | 对照官方大风、海浪和大雾预警口径评审 `marine-score-1.0.0` 初始阈值；将阵风 Safety Gate 从 18 m/s 校准为 17.2 m/s，并同步默认参数 Schema、惩罚分段和边界测试；浪高 2.0 m、能见度 < 500 m 保持保守边界；不接入实时官方预警 API、潮汐或岸线暴露规则 |
+| [x] | `MI-0024` | 2026-07-31 | 实现 Leaflet/OpenStreetMap 地图选点与失败降级 | Dashboard 增加全宽 Leaflet/OpenStreetMap 地图选点、可见 OSM 署名、瓦片/脚本失败提示和经纬度输入降级；`DashboardQuerySession` 支持预置地点和自定义坐标两类提交目标并复用同一分析流程；不做离线瓦片、瓦片代理、收藏/登录、实时定位或截图验证 |
 
 ### 9.2 取消任务
 
@@ -200,6 +200,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-31 | `MI-0024` | 完成 Leaflet/OpenStreetMap 地图选点与失败降级；Dashboard 可点击地图或输入经纬度选择自定义坐标并进入同一海况分析流程，地图脚本或瓦片失败时保留坐标输入；页面展示 OSM 署名；同步 UI、Blazor、测试方案和 RoadMap 文档 | Web 测试 23/23 通过；默认 Debug 构建 0 错误；Release 构建 0 错误；全量测试 124/124 通过；`dotnet format --verify-no-changes --no-restore` 通过；一次并行运行 Debug 构建和 Release 测试曾因共享 `obj` 目录出现 `ref` 元数据文件竞争，串行重跑通过；仍有 NU1903 SQLite 警告；按用户指令未执行截图验证 | 建议继续阶段 3：ASP.NET Core Identity、收藏地点、查询历史和用户单位设置；或移动端 360px 导航、键盘和基础可访问性 |
 | 2026-07-31 | `MI-0023` | 完成初始阈值官方预警口径评审；阵风 Safety Gate 从 18 m/s 下调到 17.2 m/s，默认参数 Schema 和 `windGustMs` 惩罚分段同步；补充 17.1/17.2 m/s 边界测试；评分算法文档记录大风、海浪和大雾口径依据，SRS/分析/测试/RoadMap 同步 | Domain 测试 51/51 通过；Release 构建 0 错误；全量测试 122/122 通过；`dotnet format --verify-no-changes`、`git diff --check` 和 9 个改动文本文件 BOM/CRLF 检查通过；仍有 NU1903 SQLite 漏洞警告 | 建议进入阶段 3：优先做 Leaflet/OpenStreetMap 全宽选点与地图失败降级；收藏/历史/用户单位设置和 WorldTides 潮汐可作为后续阶段 3 任务 |
 | 2026-07-31 | `MI-0022` | 完成缓存键与算法版本联动；新增分析缓存身份值对象，稳定生成来源批次集合哈希、来源选择策略、算法版本和活动集合语义键/ETag；Application 查询结果携带缓存身份；API 返回根级算法版本、`cache` 对象、活动算法版本和 `ETag`，并支持相同 `If-None-Match` 返回 `304`；同步缓存、API、测试和 RoadMap 文档 | Application 测试 26/26 通过；Web 测试 21/21 通过；Release 构建 0 错误；全量测试 120/120 通过；`dotnet format --verify-no-changes`、`git diff --check` 和 13 个改动文本文件 BOM/CRLF 检查通过；首次并行测试因输出文件锁出现一次构建失败，已改为串行测试通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续阶段 2 最后一项：用经验样本和官方预警案例评审初始阈值；或进入阶段 3 地图/收藏/潮汐等产品完善任务 |
 | 2026-07-31 | `MI-0021` | 完成算法参数 Schema、版本实体和发布前校验；Domain 新增参数集合、Safety Gate/置信度/推荐窗口/组合规则/惩罚分段值对象、配置哈希、校验结果和 `AlgorithmVersion` 状态机；补充默认参数可发布、哈希篡改、缺少黄金样本、非法阈值/区间、活动 Profile 缺失和状态流转测试；同步 DDD、分析、评分、测试和 RoadMap 文档 | Domain 测试 49/49 通过；全量测试 118/118 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续阶段 2 缓存键与算法版本联动；管理员后台、仓储、审计和运行时动态参数切换留待后续任务 |

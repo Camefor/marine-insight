@@ -1,6 +1,8 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @inject DashboardQuerySession Session
+@inject IJSRuntime Js
+@implements IAsyncDisposable
 
 <PageTitle>海况 Dashboard</PageTitle>
 
@@ -30,6 +32,9 @@
                 <button class="secondary-button" type="button" @onclick="SearchLocationsAsync" disabled="@Session.IsSearching">
                     @(Session.IsSearching ? "搜索中" : "查找地点")
                 </button>
+                <button class="secondary-button" type="button" @onclick="ToggleMapPickerAsync">
+                    @(Session.IsMapPickerOpen ? "收起地图" : "地图选点")
+                </button>
             </div>
 
             @if (Session.LocationResults.Count > 0)
@@ -51,6 +56,67 @@
             @if (!string.IsNullOrWhiteSpace(Session.SearchError))
             {
                 <p class="inline-error" role="status">@Session.SearchError</p>
+            }
+
+            @if (Session.IsMapPickerOpen)
+            {
+                <div class="map-picker" aria-labelledby="map-picker-title">
+                    <div class="map-picker-heading">
+                        <div>
+                            <h3 id="map-picker-title">地图选点</h3>
+                            <p>点击地图或输入经纬度，坐标会进入同一海况查询流程。</p>
+                        </div>
+                        <p class="map-attribution">
+                            地图数据 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors
+                        </p>
+                    </div>
+
+                    <div id="dashboard-map-picker"
+                         class="map-canvas"
+                         role="application"
+                         aria-label="OpenStreetMap 地图选点"></div>
+
+                    @if (Session.IsMapUnavailable || !string.IsNullOrWhiteSpace(Session.MapError))
+                    {
+                        <p class="inline-error" role="status">@Session.MapError</p>
+                    }
+
+                    <div class="coordinate-fallback" aria-label="坐标输入降级">
+                        <label class="field">
+                            <span>纬度</span>
+                            <input type="number"
+                                   step="0.000001"
+                                   min="-90"
+                                   max="90"
+                                   @bind="Session.MapLatitude" />
+                        </label>
+                        <label class="field">
+                            <span>经度</span>
+                            <input type="number"
+                                   step="0.000001"
+                                   min="-180"
+                                   max="180"
+                                   @bind="Session.MapLongitude" />
+                        </label>
+                        <button class="secondary-button" type="button" @onclick="UseManualCoordinatesAsync">
+                            使用坐标
+                        </button>
+                        <span class="selected-coordinate">
+                            @if (Session.SelectedMapPoint is not null)
+                            {
+                                @($"当前坐标 {Session.SelectedMapPoint.Latitude:0.######}, {Session.SelectedMapPoint.Longitude:0.######}")
+                            }
+                            else if (Session.SelectedLocation is not null)
+                            {
+                                @($"当前地点 {Session.SelectedLocation.DisplayName} · {Session.SelectedLocation.Latitude:0.###}, {Session.SelectedLocation.Longitude:0.###}")
+                            }
+                            else
+                            {
+                                @("尚未选择坐标")
+                            }
+                        </span>
+                    </div>
+                </div>
             }
 
             <div class="range-controls">
@@ -91,7 +157,7 @@
     {
         <section class="empty-state">
             <h2>等待查询</h2>
-            <p>先搜索并选择一个预置地点，再提交 24h、72h 或 7d 查询。</p>
+            <p>先搜索并选择一个预置地点，或通过地图/坐标选择位置，再提交 24h、72h 或 7d 查询。</p>
         </section>
     }
     else
@@ -429,10 +495,136 @@
 
 @code {
     private static readonly int[] HourOptions = [24, 72, 168];
+    private IJSObjectReference? _mapModule;
+    private DotNetObjectReference<Dashboard>? _mapCallback;
+    private bool _mapInitialized;
+    private bool _mapInitializationAttempted;
 
     private Task SearchLocationsAsync() => Session.SearchLocationsAsync();
 
     private Task SubmitAsync() => Session.SubmitAnalysisAsync();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if ((firstRender || Session.IsMapPickerOpen) && Session.IsMapPickerOpen)
+        {
+            await EnsureMapAsync();
+        }
+    }
+
+    private async Task ToggleMapPickerAsync()
+    {
+        Session.ToggleMapPicker();
+        if (!Session.IsMapPickerOpen)
+        {
+            await DisposeMapAsync();
+        }
+    }
+
+    private async Task UseManualCoordinatesAsync()
+    {
+        if (Session.UseManualCoordinates())
+        {
+            await UpdateMapSelectionAsync();
+        }
+    }
+
+    private async Task EnsureMapAsync()
+    {
+        if (_mapInitialized || _mapInitializationAttempted)
+        {
+            return;
+        }
+
+        _mapInitializationAttempted = true;
+        try
+        {
+            _mapModule ??= await Js.InvokeAsync<IJSObjectReference>("import", "./js/dashboard-map.js");
+            _mapCallback ??= DotNetObjectReference.Create(this);
+            _mapInitialized = await _mapModule.InvokeAsync<bool>(
+                "init",
+                "dashboard-map-picker",
+                _mapCallback,
+                new
+                {
+                    latitude = Session.MapLatitude,
+                    longitude = Session.MapLongitude,
+                    zoom = 9
+                });
+
+            if (!_mapInitialized)
+            {
+                Session.MarkMapUnavailable();
+            }
+        }
+        catch (JSException)
+        {
+            Session.MarkMapUnavailable("地图脚本加载失败，请直接输入经纬度继续查询。");
+        }
+        catch (InvalidOperationException)
+        {
+            Session.MarkMapUnavailable("地图交互暂时不可用，请直接输入经纬度继续查询。");
+        }
+    }
+
+    private async Task UpdateMapSelectionAsync()
+    {
+        if (_mapModule is null || !_mapInitialized)
+        {
+            return;
+        }
+
+        await _mapModule.InvokeVoidAsync(
+            "updateSelection",
+            "dashboard-map-picker",
+            Session.MapLatitude,
+            Session.MapLongitude,
+            10);
+    }
+
+    [JSInvokable]
+    public Task SelectMapPointFromJs(double latitude, double longitude)
+    {
+        Session.SelectMapPoint(latitude, longitude);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task HandleMapUnavailableFromJs(string? message)
+    {
+        Session.MarkMapUnavailable(message);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async ValueTask DisposeMapAsync()
+    {
+        if (_mapModule is not null)
+        {
+            try
+            {
+                await _mapModule.InvokeVoidAsync("dispose", "dashboard-map-picker");
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+
+        _mapInitialized = false;
+        _mapInitializationAttempted = false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeMapAsync();
+        if (_mapModule is not null)
+        {
+            await _mapModule.DisposeAsync();
+        }
+
+        _mapCallback?.Dispose();
+    }
 
     private static string FormatList(IReadOnlyList<string> values) =>
         values.Count == 0 ? "无" : string.Join("、", values);

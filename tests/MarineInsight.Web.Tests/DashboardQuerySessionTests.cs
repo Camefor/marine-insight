@@ -18,6 +18,10 @@ public sealed class DashboardQuerySessionTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("海况 Dashboard", html, StringComparison.Ordinal);
         Assert.Contains("地点搜索", html, StringComparison.Ordinal);
+        Assert.Contains("地图选点", html, StringComparison.Ordinal);
+        Assert.Contains("OpenStreetMap", html, StringComparison.Ordinal);
+        Assert.Contains("纬度", html, StringComparison.Ordinal);
+        Assert.Contains("经度", html, StringComparison.Ordinal);
         Assert.Contains("等待查询", html, StringComparison.Ordinal);
     }
 
@@ -85,5 +89,46 @@ public sealed class DashboardQuerySessionTests
 
         Assert.Null(session.Result);
         Assert.Contains("天气数据源暂时不可用", session.AnalysisError, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task MapPointSelectionSubmitsCoordinateAnalysisWithoutCatalogLocation()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        session.ForecastStartUtc = new DateTime(2026, 7, 16, 0, 0, 0);
+        session.Hours = 24;
+
+        Assert.True(session.SelectMapPoint(30.194, 122.687));
+        await session.SubmitAnalysisAsync();
+
+        Assert.Null(session.AnalysisError);
+        Assert.NotNull(session.Result);
+        Assert.Equal("自定义坐标", session.Result.DisplayName);
+        Assert.Null(session.Result.TimeZone);
+        Assert.Equal(30.194, session.Result.Latitude, 3);
+        Assert.Equal(122.687, session.Result.Longitude, 3);
+        Assert.Equal(2, session.Result.Sources.Count);
+        Assert.Equal(25, session.Result.HourlyRows.Count);
+    }
+
+    [Fact]
+    public async Task InvalidMapPointLeavesCoordinateFallbackErrorAndBlocksSubmit()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+
+        Assert.False(session.SelectMapPoint(91, 122.687));
+        Assert.False(session.CanSubmit);
+        Assert.Contains("纬度", session.MapError, StringComparison.Ordinal);
+
+        await session.SubmitAnalysisAsync();
+
+        Assert.Null(session.Result);
+        Assert.Contains("地图/坐标", session.AnalysisError, StringComparison.Ordinal);
     }
 }

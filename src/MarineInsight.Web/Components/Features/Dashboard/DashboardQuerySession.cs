@@ -34,6 +34,16 @@ public sealed class DashboardQuerySession : IDisposable
 
     public DateTime ForecastStartUtc { get; set; }
 
+    public bool IsMapPickerOpen { get; private set; } = true;
+
+    public bool IsMapUnavailable { get; private set; }
+
+    public string? MapError { get; private set; }
+
+    public double MapLatitude { get; set; } = 30.194;
+
+    public double MapLongitude { get; set; } = 122.687;
+
     public bool IsSearching { get; private set; }
 
     public bool IsLoadingAnalysis { get; private set; }
@@ -46,6 +56,8 @@ public sealed class DashboardQuerySession : IDisposable
         Array.Empty<DashboardLocationOption>();
 
     public DashboardLocationOption? SelectedLocation { get; private set; }
+
+    public DashboardMapPoint? SelectedMapPoint { get; private set; }
 
     public DashboardAnalysisResult? Result { get; private set; }
 
@@ -67,7 +79,48 @@ public sealed class DashboardQuerySession : IDisposable
         }
     }
 
-    public bool CanSubmit => SelectedLocation is not null && !IsLoadingAnalysis;
+    public bool CanSubmit => (SelectedLocation is not null || SelectedMapPoint is not null) && !IsLoadingAnalysis;
+
+    public void ToggleMapPicker()
+    {
+        IsMapPickerOpen = !IsMapPickerOpen;
+        if (IsMapPickerOpen)
+        {
+            MapError = null;
+        }
+    }
+
+    public void MarkMapUnavailable(string? message = null)
+    {
+        IsMapUnavailable = true;
+        MapError = string.IsNullOrWhiteSpace(message)
+            ? "地图暂时不可用，请直接输入经纬度继续查询。"
+            : message;
+    }
+
+    public bool UseManualCoordinates() => SelectMapPoint(MapLatitude, MapLongitude);
+
+    public bool SelectMapPoint(double latitude, double longitude)
+    {
+        try
+        {
+            var point = new GeoPoint(latitude, longitude);
+            MapLatitude = point.Latitude;
+            MapLongitude = point.Longitude;
+            SelectedMapPoint = new DashboardMapPoint(point.Latitude, point.Longitude);
+            SelectedLocation = null;
+            MapError = null;
+            SearchError = null;
+            AnalysisError = null;
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            SelectedMapPoint = null;
+            MapError = "经纬度不在有效范围内：纬度必须在 -90 到 90，经度必须在 -180 到 180。";
+            return false;
+        }
+    }
 
     public void SelectTrend(string trendKey)
     {
@@ -92,6 +145,14 @@ public sealed class DashboardQuerySession : IDisposable
     public void SelectLocation(Guid locationId)
     {
         SelectedLocation = LocationResults.FirstOrDefault(location => location.Id == locationId);
+        if (SelectedLocation is not null)
+        {
+            SelectedMapPoint = null;
+            MapLatitude = SelectedLocation.Latitude;
+            MapLongitude = SelectedLocation.Longitude;
+            MapError = null;
+        }
+
         AnalysisError = null;
     }
 
@@ -131,9 +192,9 @@ public sealed class DashboardQuerySession : IDisposable
 
     public async Task SubmitAnalysisAsync(CancellationToken cancellationToken = default)
     {
-        if (SelectedLocation is null)
+        if (SelectedLocation is null && SelectedMapPoint is null)
         {
-            AnalysisError = "请先从候选列表中选择一个地点。";
+            AnalysisError = "请先从候选列表中选择地点，或通过地图/坐标选择一个位置。";
             return;
         }
 
@@ -145,20 +206,13 @@ public sealed class DashboardQuerySession : IDisposable
 
         try
         {
-            var location = await _locationQueryService.GetByIdAsync(
-                SelectedLocation.Id,
-                _activeRequest.Token);
-            if (location is null)
+            var query = await CreateAnalysisQueryAsync(_activeRequest.Token);
+            if (query is null)
             {
-                AnalysisError = "所选地点已不存在，请重新搜索。";
                 Result = null;
                 return;
             }
 
-            var query = new MarineAnalysisQuery(
-                location.Coordinates,
-                new ForecastRange(GetForecastStartOffset(), Hours),
-                location);
             var result = await _analysisQueryService.ExecuteAsync(query, _activeRequest.Token);
 
             if (requestVersion == _requestVersion)
@@ -214,6 +268,35 @@ public sealed class DashboardQuerySession : IDisposable
     {
         var startUtc = DateTime.SpecifyKind(ForecastStartUtc, DateTimeKind.Utc);
         return new DateTimeOffset(startUtc, TimeSpan.Zero);
+    }
+
+    private async Task<MarineAnalysisQuery?> CreateAnalysisQueryAsync(CancellationToken cancellationToken)
+    {
+        var range = new ForecastRange(GetForecastStartOffset(), Hours);
+        if (SelectedLocation is not null)
+        {
+            var location = await _locationQueryService.GetByIdAsync(
+                SelectedLocation.Id,
+                cancellationToken);
+            if (location is null)
+            {
+                AnalysisError = "所选地点已不存在，请重新搜索。";
+                return null;
+            }
+
+            return new MarineAnalysisQuery(location.Coordinates, range, location);
+        }
+
+        if (SelectedMapPoint is null)
+        {
+            AnalysisError = "请先从候选列表中选择地点，或通过地图/坐标选择一个位置。";
+            return null;
+        }
+
+        // 地图选点没有地点目录元数据，保留纯坐标查询，结果中按自定义坐标展示。
+        return new MarineAnalysisQuery(
+            new GeoPoint(SelectedMapPoint.Latitude, SelectedMapPoint.Longitude),
+            range);
     }
 
     private static DashboardLocationOption ToLocationOption(Location location) => new(
@@ -647,6 +730,10 @@ public sealed record DashboardLocationOption(
     double Longitude,
     string TimeZone,
     string Source);
+
+public sealed record DashboardMapPoint(
+    double Latitude,
+    double Longitude);
 
 public sealed record DashboardAnalysisResult(
     Guid SnapshotId,

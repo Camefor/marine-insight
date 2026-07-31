@@ -115,7 +115,7 @@
     align-items: end;
     display: grid;
     gap: 12px;
-    grid-template-columns: minmax(220px, 1fr) auto;
+    grid-template-columns: minmax(220px, 1fr) auto auto;
 }
 
 .range-controls {
@@ -231,6 +231,66 @@
 .inline-error {
     color: var(--error);
     margin: 0;
+}
+
+.map-picker {
+    border-top: 1px solid var(--border);
+    display: grid;
+    gap: 12px;
+    padding-top: 14px;
+}
+
+.map-picker-heading {
+    align-items: end;
+    display: flex;
+    gap: 14px;
+    justify-content: space-between;
+}
+
+.map-picker-heading h3 {
+    letter-spacing: 0;
+    margin: 0;
+}
+
+.map-picker-heading p,
+.map-attribution {
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 4px 0 0;
+}
+
+.map-attribution {
+    font-size: 0.82rem;
+    text-align: right;
+}
+
+.map-attribution a {
+    color: var(--accent-strong);
+    font-weight: 700;
+}
+
+.map-canvas {
+    background: #dfe7e6;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 340px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.coordinate-fallback {
+    align-items: end;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(120px, 0.22fr) minmax(120px, 0.22fr) auto minmax(180px, 1fr);
+}
+
+.selected-coordinate {
+    color: var(--muted);
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    padding-bottom: 10px;
 }
 
 .status-band {
@@ -743,8 +803,14 @@ th {
     .source-item dl,
     .activity-list,
     .recommendation-list,
-    .metric-grid {
+    .metric-grid,
+    .coordinate-fallback {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .coordinate-fallback .secondary-button,
+    .selected-coordinate {
+        grid-column: 1 / -1;
     }
 }
 
@@ -756,6 +822,19 @@ th {
     .location-controls,
     .range-controls {
         grid-template-columns: 1fr;
+    }
+
+    .map-picker-heading {
+        align-items: stretch;
+        display: grid;
+    }
+
+    .map-attribution {
+        text-align: left;
+    }
+
+    .map-canvas {
+        min-height: 280px;
     }
 
     .section-heading {
@@ -784,7 +863,8 @@ th {
     .summary-grid,
     .activity-list,
     .recommendation-list,
-    .metric-grid {
+    .metric-grid,
+    .coordinate-fallback {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
