@@ -50,6 +50,18 @@ public sealed class DashboardQuerySessionTests
         Assert.Contains(session.Result.ActivityScores, activity => activity.Type == "boat" && activity.RiskLevelText == "适宜");
         Assert.NotEmpty(session.Result.RecommendationWindows);
         Assert.Contains(session.Result.RecommendationWindows, window => window.Activity == "boat");
+        Assert.Equal(3, session.Result.TrendTabs.Count);
+        Assert.Contains(session.Result.TrendTabs, tab => tab.Key == DashboardTrendKeys.Score && tab.Points.Count == 25);
+        Assert.Contains(session.Result.TrendTabs, tab => tab.Key == DashboardTrendKeys.Wind && tab.Points.Count == 25);
+        Assert.Contains(session.Result.TrendTabs, tab => tab.Key == DashboardTrendKeys.Wave && tab.Points.Count == 25);
+        Assert.NotEmpty(session.Result.TimelineWindows);
+        Assert.Equal(session.Result.HourlyDetails[0].ForecastTimeUtc, session.SelectedHourlyDetail?.ForecastTimeUtc);
+
+        session.SelectTrend(DashboardTrendKeys.Wave);
+        session.SelectHour(session.Result.HourlyDetails[1].ForecastTimeUtc);
+
+        Assert.Equal(DashboardTrendKeys.Wave, session.SelectedTrendKey);
+        Assert.Equal(session.Result.HourlyDetails[1].ForecastTimeUtc, session.SelectedHourlyDetail?.ForecastTimeUtc);
         Assert.NotEmpty(session.Result.TopRisks);
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "风速" && metric.Value == "4.0");
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "有效波高" && metric.Value == "0.8");

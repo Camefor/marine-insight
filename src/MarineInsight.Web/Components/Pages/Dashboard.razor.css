@@ -29,6 +29,7 @@
 .activity-section,
 .recommendation-section,
 .risk-section,
+.trend-section,
 .metric-section,
 .hourly-section,
 .empty-state,
@@ -50,6 +51,7 @@
 .activity-section h2,
 .recommendation-section h2,
 .risk-section h2,
+.trend-section h2,
 .metric-section h2,
 .hourly-section h2,
 .empty-state h2,
@@ -93,6 +95,7 @@
 .activity-section,
 .recommendation-section,
 .risk-section,
+.trend-section,
 .metric-section,
 .hourly-section {
     background: var(--surface-muted);
@@ -300,6 +303,13 @@ dd {
     margin-top: 12px;
 }
 
+.section-heading {
+    align-items: center;
+    display: flex;
+    gap: 14px;
+    justify-content: space-between;
+}
+
 .activity-list,
 .recommendation-list,
 .risk-list {
@@ -400,6 +410,222 @@ dd {
     overflow-wrap: anywhere;
 }
 
+.trend-tabs {
+    display: grid;
+    gap: 6px;
+    grid-auto-flow: column;
+}
+
+.trend-tab {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    font-weight: 700;
+    min-height: 36px;
+    padding: 0 13px;
+}
+
+.trend-tab.active {
+    background: #d7f0ec;
+    border-color: var(--ok);
+    color: var(--ok);
+}
+
+.trend-layout {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+    margin-top: 12px;
+}
+
+.trend-panel,
+.hour-detail-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.trend-panel {
+    min-width: 0;
+    padding: 14px;
+}
+
+.trend-scale {
+    color: var(--muted);
+    display: flex;
+    font-size: 0.82rem;
+    font-weight: 700;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.trend-points {
+    display: grid;
+    gap: 8px;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(86px, 1fr);
+    min-height: 176px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+}
+
+.trend-point {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    cursor: pointer;
+    display: grid;
+    gap: 7px;
+    grid-template-rows: auto 76px auto auto;
+    min-height: 160px;
+    min-width: 86px;
+    padding: 9px;
+    text-align: left;
+}
+
+.trend-point.selected {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 2px rgba(11, 114, 133, 0.18);
+}
+
+.trend-point.recommended {
+    background: #f2fbf8;
+}
+
+.trend-time,
+.trend-values em {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-style: normal;
+}
+
+.trend-bars {
+    align-items: end;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    gap: 5px;
+    grid-template-columns: 1fr 1fr;
+    min-height: 76px;
+}
+
+.trend-bar {
+    border-radius: 4px 4px 0 0;
+    display: block;
+    min-height: 4px;
+}
+
+.trend-bar.primary {
+    background: var(--accent);
+    height: var(--primary);
+}
+
+.trend-bar.secondary {
+    background: #637a83;
+    height: var(--secondary);
+}
+
+.trend-values {
+    display: grid;
+    gap: 2px;
+}
+
+.trend-marker {
+    background: var(--danger-bg);
+    border-radius: 999px;
+    color: var(--error);
+    font-size: 0.72rem;
+    font-weight: 700;
+    justify-self: start;
+    padding: 2px 7px;
+}
+
+.trend-marker.return {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+.timeline-band {
+    background: #e6ecef;
+    border-radius: 999px;
+    height: 32px;
+    margin-top: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.timeline-window {
+    align-items: center;
+    background: #b9e5d7;
+    border-left: 2px solid var(--ok);
+    color: #173d2a;
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 700;
+    height: 100%;
+    justify-content: center;
+    min-width: 28px;
+    overflow: hidden;
+    padding: 0 5px;
+    position: absolute;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hour-detail-panel {
+    align-self: start;
+    display: grid;
+    gap: 12px;
+    max-height: 560px;
+    overflow: auto;
+    padding: 14px;
+}
+
+.hour-detail-header h3 {
+    letter-spacing: 0;
+    margin: 0;
+}
+
+.hour-detail-header p {
+    color: var(--muted);
+    margin: 5px 0 0;
+}
+
+.detail-metric-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+}
+
+.detail-metric-grid div {
+    background: var(--surface-muted);
+    border-radius: 6px;
+    min-height: 64px;
+    padding: 8px;
+}
+
+.detail-metric-grid dd span {
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+
+.detail-block {
+    border-top: 1px solid var(--border);
+    display: grid;
+    gap: 7px;
+    padding-top: 10px;
+}
+
+.detail-block p {
+    color: var(--muted);
+    line-height: 1.45;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
 .source-item {
     display: grid;
     gap: 14px;
@@ -486,6 +712,21 @@ th {
     top: 0;
 }
 
+.selected-row td {
+    background: #edf8f5;
+}
+
+.hour-link {
+    background: transparent;
+    border: 0;
+    color: var(--accent-strong);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 0;
+    text-align: left;
+}
+
 @media (max-width: 959px) {
     .dashboard-shell {
         padding: 18px;
@@ -493,7 +734,8 @@ th {
 
     .dashboard-header,
     .summary-band,
-    .source-item {
+    .source-item,
+    .trend-layout {
         grid-template-columns: 1fr;
     }
 
@@ -514,6 +756,20 @@ th {
     .location-controls,
     .range-controls {
         grid-template-columns: 1fr;
+    }
+
+    .section-heading {
+        align-items: stretch;
+        display: grid;
+    }
+
+    .trend-tabs {
+        grid-auto-flow: column;
+        justify-content: stretch;
+    }
+
+    .trend-tab {
+        width: 100%;
     }
 
     .segmented-group {

@@ -168,6 +168,126 @@
             </section>
         }
 
+        @if (result.TrendTabs.Count > 0)
+        {
+            var selectedTrend = result.TrendTabs.FirstOrDefault(tab => tab.Key == Session.SelectedTrendKey) ?? result.TrendTabs[0];
+            var selectedDetail = Session.SelectedHourlyDetail;
+
+            <section class="trend-section" aria-labelledby="trend-title">
+                <div class="section-heading">
+                    <h2 id="trend-title">逐小时趋势</h2>
+                    <div class="trend-tabs" role="tablist" aria-label="趋势视图">
+                        @foreach (var tab in result.TrendTabs)
+                        {
+                            <button type="button"
+                                    role="tab"
+                                    aria-selected="@(selectedTrend.Key == tab.Key)"
+                                    class="trend-tab @(selectedTrend.Key == tab.Key ? "active" : null)"
+                                    @onclick="() => Session.SelectTrend(tab.Key)">
+                                @tab.Label
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="trend-layout">
+                    <div class="trend-panel">
+                        <div class="trend-scale" aria-hidden="true">
+                            <span>@selectedTrend.PrimaryLabel</span>
+                            <span>@selectedTrend.SecondaryLabel</span>
+                        </div>
+                        <div class="trend-points" role="list" aria-label="@($"{selectedTrend.Label}趋势")">
+                            @foreach (var point in selectedTrend.Points)
+                            {
+                                <button type="button"
+                                        role="listitem"
+                                        class="trend-point risk-@point.RiskLevel @(Session.SelectedHourlyDetail?.ForecastTimeUtc == point.ForecastTimeUtc ? "selected" : null) @(point.IsRecommended ? "recommended" : null)"
+                                        style="@($"--primary:{point.PrimaryPercent}%;--secondary:{point.SecondaryPercent}%;")"
+                                        title="@($"{point.TimeLabel} {selectedTrend.PrimaryLabel} {point.PrimaryValue} {selectedTrend.SecondaryLabel} {point.SecondaryValue}")"
+                                        @onclick="() => Session.SelectHour(point.ForecastTimeUtc)">
+                                    <span class="trend-time">@point.ForecastTimeUtc.ToString("HH:mm")</span>
+                                    <span class="trend-bars" aria-hidden="true">
+                                        <span class="trend-bar primary"></span>
+                                        <span class="trend-bar secondary"></span>
+                                    </span>
+                                    <span class="trend-values">
+                                        <strong>@point.PrimaryValue</strong>
+                                        <em>@point.SecondaryValue</em>
+                                    </span>
+                                    @if (point.IsRiskRise)
+                                    {
+                                        <span class="trend-marker">风险</span>
+                                    }
+                                    else if (point.IsReturnBefore)
+                                    {
+                                        <span class="trend-marker return">返航</span>
+                                    }
+                                </button>
+                            }
+                        </div>
+
+                        @if (result.TimelineWindows.Count > 0)
+                        {
+                            <div class="timeline-band" aria-label="推荐窗口时间带">
+                                @foreach (var window in result.TimelineWindows)
+                                {
+                                    <span class="timeline-window"
+                                          style="@($"left:{window.StartPercent}%;width:{window.WidthPercent}%;")"
+                                          title="@($"{window.Label} {window.StartUtc:MM-dd HH:mm} - {window.EndUtc:MM-dd HH:mm} UTC")">
+                                        @window.Label
+                                    </span>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    @if (selectedDetail is not null)
+                    {
+                        <aside class="hour-detail-panel" aria-labelledby="hour-detail-title">
+                            <div class="hour-detail-header">
+                                <div>
+                                    <h3 id="hour-detail-title">@selectedDetail.ForecastTimeUtc.ToString("MM-dd HH:mm") UTC</h3>
+                                    <p>@selectedDetail.Score · @selectedDetail.RiskLevelText · @selectedDetail.QualityStatus / @selectedDetail.Freshness</p>
+                                </div>
+                            </div>
+
+                            <dl class="detail-metric-grid">
+                                @foreach (var metric in selectedDetail.Metrics)
+                                {
+                                    <div>
+                                        <dt>@metric.Label</dt>
+                                        <dd>@metric.Value <span>@metric.Unit</span></dd>
+                                    </div>
+                                }
+                            </dl>
+
+                            @if (selectedDetail.Risks.Count > 0)
+                            {
+                                <div class="detail-block">
+                                    <strong>风险贡献</strong>
+                                    @foreach (var risk in selectedDetail.Risks)
+                                    {
+                                        <p>@risk.Code：@risk.Message</p>
+                                    }
+                                </div>
+                            }
+
+                            @if (selectedDetail.Sources.Count > 0)
+                            {
+                                <div class="detail-block">
+                                    <strong>指标来源</strong>
+                                    @foreach (var source in selectedDetail.Sources.Take(6))
+                                    {
+                                        <p>@source.Metric：@source.Provider / @source.Model · @source.QualityStatus</p>
+                                    }
+                                </div>
+                            }
+                        </aside>
+                    }
+                </div>
+            </section>
+        }
+
         @if (result.RecommendationWindows.Count > 0)
         {
             <section class="recommendation-section" aria-labelledby="recommendation-title">
@@ -284,8 +404,12 @@
                     <tbody>
                         @foreach (var row in result.HourlyRows)
                         {
-                            <tr>
-                                <td>@row.ForecastTimeUtc.ToString("MM-dd HH:mm")</td>
+                            <tr class="@(Session.SelectedHourlyDetail?.ForecastTimeUtc == row.ForecastTimeUtc ? "selected-row" : null)">
+                                <td>
+                                    <button type="button" class="hour-link" @onclick="() => Session.SelectHour(row.ForecastTimeUtc)">
+                                        @row.ForecastTimeUtc.ToString("MM-dd HH:mm")
+                                    </button>
+                                </td>
                                 <td>@row.WindSpeedMs</td>
                                 <td>@row.WindGustMs</td>
                                 <td>@row.WaveHeightM</td>
