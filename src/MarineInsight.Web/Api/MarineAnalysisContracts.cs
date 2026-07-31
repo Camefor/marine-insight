@@ -34,6 +34,8 @@ public sealed record MarineAnalysisUnitsInput
 public sealed record MarineAnalysisResponse(
     string AnalysisStatus,
     Guid AnalysisId,
+    string AlgorithmVersion,
+    MarineAnalysisCacheResponse Cache,
     MarineAnalysisLocationResponse Location,
     MarineAnalysisRangeResponse Range,
     IReadOnlyList<MarineAnalysisSourceResponse> Sources,
@@ -45,6 +47,14 @@ public sealed record MarineAnalysisResponse(
     IReadOnlyList<MarineAnalysisHourlyResponse> Hourly,
     string Disclaimer,
     string TraceId);
+
+public sealed record MarineAnalysisCacheResponse(
+    string Key,
+    string ETag,
+    string SourceBatchSetHash,
+    string SourceSelectionPolicy,
+    string AlgorithmVersion,
+    IReadOnlyList<string> Activities);
 
 public sealed record MarineAnalysisLocationResponse(
     double Latitude,
@@ -87,7 +97,8 @@ public sealed record MarineAnalysisActivityResponse(
     string Type,
     double? Score,
     string RiskLevel,
-    double Confidence);
+    double Confidence,
+    string AlgorithmVersion);
 
 public sealed record MarineAnalysisRecommendedWindowResponse(
     string Activity,

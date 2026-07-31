@@ -124,14 +124,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0021` |
+| 当前任务 ID | `MI-0022` |
 | 当前状态 | `DONE` |
-| 当前目标 | 建立阶段 2 算法参数 Schema、算法版本实体和发布前校验：支持 Draft/Validated/Published/Retired 状态、不允许发布后原地修改，并校验阈值、惩罚、活动乘数、置信度、推荐窗口和配置哈希 |
-| 最后完成动作 | 已新增算法参数 Schema、配置哈希、发布前校验器和 `AlgorithmVersion` 状态机；补充 Domain 测试并同步 DDD、分析、评分、测试、RoadMap 和台账文档 |
-| 下一步动作 | 建议继续阶段 2 缓存键与算法版本联动，或进入阶段 3 前做用户人工视觉/可访问性验收；管理员后台、仓储、审计和运行时动态参数切换仍待后续任务 |
-| 涉及文件 | `src/MarineInsight.Domain/Analysis/AlgorithmVersion.cs`、`src/MarineInsight.Domain/Analysis/MarineAlgorithmParameters.cs`、`src/MarineInsight.Domain/Analysis/AlgorithmParameterValidator.cs`、其他参数值对象、`tests/MarineInsight.Domain.Tests/AlgorithmVersionTests.cs`、相关设计/测试/RoadMap/台账文档 |
-| 验证结果 | Domain 测试 49/49 通过；全量测试 118/118 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；仍有既有 `NU1903 SQLitePCLRaw.lib.e_sqlite3` 漏洞警告 |
-| 阻塞/待确认 | 无；本任务不包含后台 UI、数据库迁移或真实发布接口 |
+| 当前目标 | 实现阶段 2 缓存键与算法版本联动：为分析结果生成包含来源批次集合、来源选择策略、算法版本和活动集合的稳定缓存身份/ETag，并确保查询/API 投影显式携带算法版本 |
+| 最后完成动作 | 完成 `MarineAnalysisCacheIdentity`、查询结果缓存身份、API 根级算法版本/缓存对象、`ETag` 响应头和 `If-None-Match` 条件请求；同步缓存、API、测试和 RoadMap 文档 |
+| 下一步动作 | 建议继续阶段 2 最后一项：用经验样本和官方预警案例评审初始阈值；或进入阶段 3 地图/收藏/潮汐等产品完善任务 |
+| 涉及文件 | `src/MarineInsight.Application/Analysis/MarineAnalysisCacheIdentity.cs`、`MarineAnalysisQueryResult.cs`、`MarineAnalysisQueryService.cs`、`src/MarineInsight.Web/Api/MarineAnalysisContracts.cs`、`MarineAnalysisEndpointExtensions.cs`、相关测试和文档 |
+| 验证结果 | Application 定向测试 26/26 通过；Web 定向测试 21/21 通过；Release 构建 0 错误；全量测试 120/120 通过；`dotnet format --verify-no-changes`、`git diff --check` 和 13 个改动文本文件 BOM/CRLF 检查通过；仍有 NU1903 SQLite 漏洞警告 |
+| 阻塞/待确认 | 无；本任务不包含 Redis L2、分析报告持久化或运行时动态参数切换 |
 | 最后更新 | 2026-07-31 |
 
 <!-- agent-state:end -->
@@ -142,8 +142,6 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-
-当前没有待办任务。
 
 用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
@@ -189,6 +187,7 @@
 | [x] | `MI-0019` | 2026-07-31 | 实现 Dashboard 趋势 Tabs、推荐窗口时间带和小时详情面板 | Web 状态容器新增趋势点、时间带、小时详情和选中小时；Dashboard 支持分数/风/浪趋势切换、推荐窗口横向时间带、点击小时查看完整指标/风险/来源摘要；不引入第三方 JS 图表、地图、AI、潮汐或收藏 |
 | [x] | `MI-0020` | 2026-07-31 | 建立 GS-001 至 GS-010 海况黄金样本回归测试 | Domain 新增黄金样本测试，覆盖平静海况、风小浪大、阵风突增、短周期颠簸、长周期岸边风险、雷暴、CAPE、低能见度、关键海况缺失和 17:00 后风险上升窗口；同步评分算法、测试方案和 RoadMap 文档 |
 | [x] | `MI-0021` | 2026-07-31 | 建立算法参数 Schema、版本实体和发布前校验 | Domain 新增 `MarineAlgorithmParameters`、参数 Schema 版本、配置哈希、`AlgorithmParameterValidator`、发布校验结果和 `AlgorithmVersion` 状态机；发布前校验覆盖 Safety Gate、分段惩罚、组合规则、活动 Profile、置信度、推荐窗口和黄金样本门禁；不包含后台 UI、数据库迁移或真实发布接口 |
+| [x] | `MI-0022` | 2026-07-31 | 实现缓存键与算法版本联动 | Application 新增 `MarineAnalysisCacheIdentity`，将来源批次集合哈希、来源选择策略、算法版本和归一化活动集合写入分析语义键和 ETag；查询结果携带缓存身份；API 返回根级 `algorithmVersion`、`cache` 对象、活动级算法版本、`ETag` 响应头并支持 `If-None-Match` 返回 `304`；不包含 Redis L2、分析结果持久化或运行时动态参数切换 |
 
 ### 9.2 取消任务
 
@@ -200,6 +199,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-31 | `MI-0022` | 完成缓存键与算法版本联动；新增分析缓存身份值对象，稳定生成来源批次集合哈希、来源选择策略、算法版本和活动集合语义键/ETag；Application 查询结果携带缓存身份；API 返回根级算法版本、`cache` 对象、活动算法版本和 `ETag`，并支持相同 `If-None-Match` 返回 `304`；同步缓存、API、测试和 RoadMap 文档 | Application 测试 26/26 通过；Web 测试 21/21 通过；Release 构建 0 错误；全量测试 120/120 通过；`dotnet format --verify-no-changes`、`git diff --check` 和 13 个改动文本文件 BOM/CRLF 检查通过；首次并行测试因输出文件锁出现一次构建失败，已改为串行测试通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续阶段 2 最后一项：用经验样本和官方预警案例评审初始阈值；或进入阶段 3 地图/收藏/潮汐等产品完善任务 |
 | 2026-07-31 | `MI-0021` | 完成算法参数 Schema、版本实体和发布前校验；Domain 新增参数集合、Safety Gate/置信度/推荐窗口/组合规则/惩罚分段值对象、配置哈希、校验结果和 `AlgorithmVersion` 状态机；补充默认参数可发布、哈希篡改、缺少黄金样本、非法阈值/区间、活动 Profile 缺失和状态流转测试；同步 DDD、分析、评分、测试和 RoadMap 文档 | Domain 测试 49/49 通过；全量测试 118/118 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续阶段 2 缓存键与算法版本联动；管理员后台、仓储、审计和运行时动态参数切换留待后续任务 |
 | 2026-07-31 | `MI-0020` | 完成 `GS-001` 至 `GS-010` 海况黄金样本回归测试；新增 `MarineGoldenSampleTests`，用真实领域规则引擎、活动评分服务和推荐窗口规划器回放黄金样本，锁定规则代码、Safety Gate、活动分差异、Unknown 和返航缓冲；同步评分算法、测试方案和 RoadMap 文档 | Domain 测试 39/39 通过；全量测试 108/108 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore`、`git diff --check` 和 5 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续阶段 2 算法参数 Schema/版本实体与发布前校验，或进入阶段 3 前做用户人工视觉/可访问性验收；不提前进入地图、AI、潮汐或收藏 |
 | 2026-07-31 | `MI-0019` | 完成 Dashboard 趋势 Tabs、推荐窗口时间带和小时详情面板；`DashboardQuerySession` 投影分数/风/浪三组趋势、推荐窗口时间带、默认选中小时和完整小时详情；页面支持趋势切换与逐小时行选择；同步 UI、Blazor、测试和 RoadMap 文档 | Web 测试 21/21 通过；全量测试 98/98 通过；构建 0 错误；仍有 NU1903 SQLite 漏洞警告；按用户指令未执行截图验证 | 建议继续阶段 2 黄金样本集、算法参数 Schema/版本实体，或先做用户人工视觉/可访问性验收；不提前进入地图、AI、潮汐或收藏 |

@@ -31,10 +31,21 @@ public sealed class MarineAnalysisApiTests
 
         Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
         Assert.False(string.IsNullOrWhiteSpace(firstResponse.Headers.GetValues("Trace-Id").Single()));
+        var etag = firstResponse.Headers.GetValues("ETag").Single();
+        Assert.StartsWith("\"", etag, StringComparison.Ordinal);
         Assert.Equal("analyzed", firstDocument.RootElement.GetProperty("analysisStatus").GetString());
+        Assert.Equal("marine-score-1.0.0", firstDocument.RootElement.GetProperty("algorithmVersion").GetString());
+        Assert.Equal(etag, firstDocument.RootElement.GetProperty("cache").GetProperty("eTag").GetString());
+        Assert.Contains(
+            ":marine-score-1.0.0:",
+            firstDocument.RootElement.GetProperty("cache").GetProperty("key").GetString(),
+            StringComparison.Ordinal);
         Assert.Equal("good", firstDocument.RootElement.GetProperty("overall").GetProperty("riskLevel").GetString());
         Assert.Equal(1, firstDocument.RootElement.GetProperty("activities").GetArrayLength());
         Assert.Equal("boat", firstDocument.RootElement.GetProperty("activities")[0].GetProperty("type").GetString());
+        Assert.Equal(
+            "marine-score-1.0.0",
+            firstDocument.RootElement.GetProperty("activities")[0].GetProperty("algorithmVersion").GetString());
         Assert.True(firstDocument.RootElement.GetProperty("recommendedWindows").GetArrayLength() > 0);
         Assert.Equal(
             "boat",
@@ -71,6 +82,16 @@ public sealed class MarineAnalysisApiTests
         Assert.All(
             secondDocument.RootElement.GetProperty("sources").EnumerateArray(),
             source => Assert.Equal("hit", source.GetProperty("cacheStatus").GetString()));
+
+        using var conditionalRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/marine-analyses")
+        {
+            Content = JsonContent.Create(request)
+        };
+        conditionalRequest.Headers.TryAddWithoutValidation("If-None-Match", etag);
+        using var conditionalResponse = await client.SendAsync(conditionalRequest);
+
+        Assert.Equal(HttpStatusCode.NotModified, conditionalResponse.StatusCode);
+        Assert.Equal(etag, conditionalResponse.Headers.GetValues("ETag").Single());
         Assert.Equal(1, factory.Weather.CallCount);
         Assert.Equal(1, factory.Marine.CallCount);
     }

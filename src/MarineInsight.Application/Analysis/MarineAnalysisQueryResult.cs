@@ -14,6 +14,7 @@ public sealed class MarineAnalysisQueryResult
         ForecastSnapshot snapshot,
         IEnumerable<HourlyMarineAssessment> hourlyAssessments,
         IEnumerable<RecommendationWindow> recommendedWindows,
+        MarineAnalysisCacheIdentity cacheIdentity,
         ForecastCacheResult weather,
         ForecastCacheResult marine)
     {
@@ -21,6 +22,7 @@ public sealed class MarineAnalysisQueryResult
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(hourlyAssessments);
         ArgumentNullException.ThrowIfNull(recommendedWindows);
+        ArgumentNullException.ThrowIfNull(cacheIdentity);
         ArgumentNullException.ThrowIfNull(weather);
         ArgumentNullException.ThrowIfNull(marine);
 
@@ -28,6 +30,7 @@ public sealed class MarineAnalysisQueryResult
         Snapshot = snapshot;
         HourlyAssessments = Array.AsReadOnly(hourlyAssessments.ToArray());
         RecommendedWindows = Array.AsReadOnly(recommendedWindows.ToArray());
+        CacheIdentity = cacheIdentity;
         Weather = weather;
         Marine = marine;
     }
@@ -39,6 +42,8 @@ public sealed class MarineAnalysisQueryResult
     public IReadOnlyList<HourlyMarineAssessment> HourlyAssessments { get; }
 
     public IReadOnlyList<RecommendationWindow> RecommendedWindows { get; }
+
+    public MarineAnalysisCacheIdentity CacheIdentity { get; }
 
     public ForecastCacheResult Weather { get; }
 

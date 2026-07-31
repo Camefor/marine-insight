@@ -75,8 +75,16 @@ public sealed class MarineAnalysisQueryService
             })
             .ToArray();
         var recommendedWindows = MarineRecommendationWindowPlanner.Plan(assessments, activityProfiles);
+        var algorithmVersion = assessments
+            .Select(assessment => assessment.AlgorithmVersion)
+            .Distinct(StringComparer.Ordinal)
+            .Single();
+        var cacheIdentity = MarineAnalysisCacheIdentity.Create(
+            snapshot.SourceBatches,
+            query.Activities,
+            algorithmVersion);
 
-        return new MarineAnalysisQueryResult(query, snapshot, assessments, recommendedWindows, weather, marine);
+        return new MarineAnalysisQueryResult(query, snapshot, assessments, recommendedWindows, cacheIdentity, weather, marine);
     }
 
     private Task<ForecastCacheResult> LoadWeatherAsync(

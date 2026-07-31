@@ -23,6 +23,7 @@ public static class MarineAnalysisEndpointExtensions
             .AllowAnonymous()
             .WithName("CreateMarineAnalysis")
             .Produces<MarineAnalysisResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status304NotModified)
             .ProducesValidationProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status429TooManyRequests)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
@@ -66,6 +67,12 @@ public static class MarineAnalysisEndpointExtensions
         try
         {
             var result = await queryService.ExecuteAsync(queryCreation.Query, cancellationToken);
+            httpContext.Response.Headers.ETag = result.CacheIdentity.ETag;
+            if (IsNotModified(httpContext, result.CacheIdentity.ETag))
+            {
+                return Results.StatusCode(StatusCodes.Status304NotModified);
+            }
+
             return Results.Ok(Project(result, traceId));
         }
         catch (ProviderException exception)
@@ -313,6 +320,14 @@ public static class MarineAnalysisEndpointExtensions
         return new MarineAnalysisResponse(
             "analyzed",
             result.Snapshot.SnapshotId,
+            result.CacheIdentity.AlgorithmVersion,
+            new MarineAnalysisCacheResponse(
+                result.CacheIdentity.Value,
+                result.CacheIdentity.ETag,
+                result.CacheIdentity.SourceBatchSetHash,
+                result.CacheIdentity.SourceSelectionPolicy,
+                result.CacheIdentity.AlgorithmVersion,
+                result.CacheIdentity.Activities.Select(ToApiName).ToArray()),
             new MarineAnalysisLocationResponse(
                 result.Snapshot.RequestedLocation.Latitude,
                 result.Snapshot.RequestedLocation.Longitude,
@@ -348,7 +363,8 @@ public static class MarineAnalysisEndpointExtensions
                 ToApiName(activity.ActivityType),
                 activity.Score,
                 ToApiName(activity.RiskLevel),
-                activity.Confidence))
+                activity.Confidence,
+                activity.AlgorithmVersion))
             .ToArray();
 
     private static MarineAnalysisRecommendedWindowResponse[] ProjectRecommendedWindows(
@@ -453,6 +469,18 @@ public static class MarineAnalysisEndpointExtensions
 
     private static string GetTraceId(HttpContext httpContext) =>
         Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
+    private static bool IsNotModified(HttpContext httpContext, string etag)
+    {
+        if (!httpContext.Request.Headers.TryGetValue("If-None-Match", out var candidates))
+        {
+            return false;
+        }
+
+        return candidates
+            .SelectMany(value => value?.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [])
+            .Any(candidate => string.Equals(candidate, etag, StringComparison.Ordinal) || candidate == "*");
+    }
 
     private static IResult CreateLocationNotFoundProblem(
         Guid locationId,

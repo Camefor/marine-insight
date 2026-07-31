@@ -46,6 +46,10 @@ public sealed class MarineAnalysisQueryServiceTests
         Assert.NotEmpty(first.RecommendedWindows);
         Assert.Contains(first.RecommendedWindows, window => window.ActivityType == Domain.Analysis.ActivityType.Boat);
         Assert.Equal("marine-score-1.0.0", first.HourlyAssessments[0].AlgorithmVersion);
+        Assert.Equal("marine-score-1.0.0", first.CacheIdentity.AlgorithmVersion);
+        Assert.Contains(":marine-score-1.0.0:", first.CacheIdentity.Value, StringComparison.Ordinal);
+        Assert.StartsWith("\"", first.CacheIdentity.ETag, StringComparison.Ordinal);
+        Assert.Equal(first.CacheIdentity.Value, second.CacheIdentity.Value);
     }
 
     private sealed class FakeCacheKeyFactory : IForecastCacheKeyFactory

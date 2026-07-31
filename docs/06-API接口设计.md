@@ -164,6 +164,15 @@
 {
   "analysisStatus": "analyzed",
   "analysisId": "82f9ff76-bb11-4456-93e5-78d669e609ea",
+  "algorithmVersion": "marine-score-1.0.0",
+  "cache": {
+    "key": "mi:analysis:v1:forecast-snapshot-assembler.v1:8f4...:marine-score-1.0.0:boat",
+    "eTag": "\"4f2d8f53e5d64d0e8ad07f179067a4a5\"",
+    "sourceBatchSetHash": "8f4...",
+    "sourceSelectionPolicy": "forecast-snapshot-assembler.v1",
+    "algorithmVersion": "marine-score-1.0.0",
+    "activities": ["boat"]
+  },
   "location": { "latitude": 30.194, "longitude": 122.687 },
   "range": {
     "from": "2026-07-15T00:00:00Z",
@@ -197,7 +206,7 @@
     "algorithmVersion": "marine-score-1.0.0"
   },
   "activities": [
-    { "type": "boat", "score": 81, "riskLevel": "good", "confidence": 1 }
+    { "type": "boat", "score": 81, "riskLevel": "good", "confidence": 1, "algorithmVersion": "marine-score-1.0.0" }
   ],
   "recommendedWindows": [
     {
@@ -241,7 +250,7 @@
 }
 ```
 
-`sources[].cacheStatus` 为 `hit`、`miss` 或 `stale`；当 Provider 在 Stale 窗口内失败时，响应保留旧批次并通过 `quality.freshness` 与质量 flags 表达降级。`activities` 为空或缺省时服务端默认返回五类活动分；传入未知活动返回 `400 VALIDATION_FAILED`。
+`MI-0022` 后，响应头返回与 `cache.eTag` 一致的 `ETag`；客户端带相同 `If-None-Match` 时返回 `304 Not Modified`，不重复传输响应体。`cache.key` 和 `cache.eTag` 均由来源批次集合、来源选择策略、算法版本和归一化活动集合决定。`sources[].cacheStatus` 为 `hit`、`miss` 或 `stale`；当 Provider 在 Stale 窗口内失败时，响应保留旧批次并通过 `quality.freshness` 与质量 flags 表达降级。`activities` 为空或缺省时服务端默认返回五类活动分；传入未知活动返回 `400 VALIDATION_FAILED`。
 
 ## 6. 地点目录查询
 
@@ -294,7 +303,7 @@
 ## 9. 缓存与条件请求
 
 - 地点搜索可缓存 24 小时；预报按 Provider 更新节奏缓存 10-30 分钟。
-- 分析响应的 ETag 由来源批次集合哈希、来源选择策略、算法版本、活动和单位偏好组成。
+- 分析响应的 ETag 由来源批次集合哈希、来源选择策略、算法版本和归一化活动集合组成；单位偏好仅影响展示换算，不进入领域分析缓存键。
 - 客户端可发送 `If-None-Match`；服务端返回 `304` 时不重复传输结果。
 - 任何缓存响应都必须保留原数据 `fetchedAt`，不能将命中时间伪装为数据时间。
 
@@ -325,3 +334,4 @@
 | 1.2 | 2026-07-16 | 增加 `POST /api/v1/marine-analyses` metrics-only 查询骨架、质量/来源/缓存投影和坐标校验契约 |
 | 1.3 | 2026-07-30 | 增加 `MI-0017` 分析响应 `overall`、`activities`、`risks`、逐小时评估投影和活动参数校验 |
 | 1.4 | 2026-07-31 | 增加 `MI-0018` 分析响应 `recommendedWindows`、风险上升点和返航截止投影 |
+| 1.5 | 2026-07-31 | 增加 `MI-0022` 根级 `algorithmVersion`、`cache` 对象、`ETag` 响应头和 `If-None-Match` 条件请求 |
