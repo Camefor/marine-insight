@@ -71,7 +71,7 @@ public sealed record MarineAlgorithmParameters
         CurrentSchemaVersion,
         new SafetyGateThresholds(
             WindSpeedMs: 13,
-            WindGustMs: 18,
+            WindGustMs: 17.2,
             WaveHeightM: 2.0,
             VisibilityM: 500),
         CreateDefaultPenaltyBands(),
@@ -119,7 +119,7 @@ public sealed record MarineAlgorithmParameters
         new("windGustMs", null, 6, 0),
         new("windGustMs", 6, 9, 5),
         new("windGustMs", 9, 12, 12),
-        new("windGustMs", 12, 18, 25),
+        new("windGustMs", 12, 17.2, 25),
         new("waveHeightM", null, 0.3, 0),
         new("waveHeightM", 0.3, 0.5, 3),
         new("waveHeightM", 0.5, 1.0, 12),

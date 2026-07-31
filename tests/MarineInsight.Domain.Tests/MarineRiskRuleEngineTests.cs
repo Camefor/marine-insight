@@ -58,6 +58,25 @@ public sealed class MarineRiskRuleEngineTests
     }
 
     [Theory]
+    [InlineData(17.1, false)]
+    [InlineData(17.2, true)]
+    public void EvaluateWindGustGateUsesOfficialGaleBoundary(
+        double windGustMs,
+        bool shouldTriggerGate)
+    {
+        var assessment = Evaluate(ForecastMetricSet.Create(
+            windSpeedMs: 6,
+            windGustMs: windGustMs,
+            waveHeightM: 0.6,
+            thunderstorm: false));
+
+        // 17.2 m/s is the lower bound of Beaufort force 8 gale in domestic meteorological usage.
+        Assert.Equal(
+            shouldTriggerGate,
+            assessment.Contributions.Any(contribution => contribution.Code == "WIND_GUST_GATE"));
+    }
+
+    [Theory]
     [InlineData(1.99, false)]
     [InlineData(2.0, true)]
     public void EvaluateWaveHeightGateUsesConfiguredBoundary(

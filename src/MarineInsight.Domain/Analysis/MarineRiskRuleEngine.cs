@@ -7,7 +7,7 @@ public sealed class MarineRiskRuleEngine
     public const string DefaultAlgorithmVersion = "marine-score-1.0.0";
 
     private const double WindGateMs = 13;
-    private const double GustGateMs = 18;
+    private const double GustGateMs = 17.2;
     private const double WaveGateM = 2.0;
     private const double VisibilityGateM = 500;
     private readonly string _defaultAlgorithmVersion;
