@@ -124,14 +124,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0019` |
+| 当前任务 ID | `MI-0021` |
 | 当前状态 | `DONE` |
-| 当前目标 | 实现阶段 2 Dashboard 趋势 Tabs、推荐窗口时间带和小时详情面板闭环：基于现有逐小时分析结果生成风/浪/分数趋势 ViewModel，支持切换视图和选择小时查看完整指标、风险贡献与来源；暂不引入地图、AI、潮汐、收藏、算法参数后台或第三方 JS 图表库 |
-| 最后完成动作 | 已完成 `DashboardQuerySession` 趋势 Tabs、推荐时间带、选中小时和小时详情 ViewModel；页面新增趋势区、时间带、小时详情面板和逐小时行选择；已补充 Web 状态容器断言并同步 UI、Blazor、测试和 RoadMap 文档 |
-| 下一步动作 | 建议继续阶段 2 黄金样本集、算法参数 Schema/版本实体，或进入阶段 3 前先补截图/可访问性人工验收；仍不提前实现地图、AI、潮汐或收藏 |
-| 涉及文件 | `src/MarineInsight.Web/Components/Features/Dashboard/DashboardQuerySession.cs`、`src/MarineInsight.Web/Components/Pages/Dashboard.razor`、`src/MarineInsight.Web/Components/Pages/Dashboard.razor.css`、`tests/MarineInsight.Web.Tests/DashboardQuerySessionTests.cs`、相关 UI/Blazor/测试/RoadMap 文档 |
-| 验证结果 | Web 测试 21/21 通过；全量测试 98/98 通过；构建 0 错误；仍有既有 `NU1903 SQLitePCLRaw.lib.e_sqlite3` 漏洞警告；按用户指令未执行截图验证 |
-| 阻塞/待确认 | 无；按用户既定指令不执行截图验证，由用户自行人工验证 Dashboard 视觉 |
+| 当前目标 | 建立阶段 2 算法参数 Schema、算法版本实体和发布前校验：支持 Draft/Validated/Published/Retired 状态、不允许发布后原地修改，并校验阈值、惩罚、活动乘数、置信度、推荐窗口和配置哈希 |
+| 最后完成动作 | 已新增算法参数 Schema、配置哈希、发布前校验器和 `AlgorithmVersion` 状态机；补充 Domain 测试并同步 DDD、分析、评分、测试、RoadMap 和台账文档 |
+| 下一步动作 | 建议继续阶段 2 缓存键与算法版本联动，或进入阶段 3 前做用户人工视觉/可访问性验收；管理员后台、仓储、审计和运行时动态参数切换仍待后续任务 |
+| 涉及文件 | `src/MarineInsight.Domain/Analysis/AlgorithmVersion.cs`、`src/MarineInsight.Domain/Analysis/MarineAlgorithmParameters.cs`、`src/MarineInsight.Domain/Analysis/AlgorithmParameterValidator.cs`、其他参数值对象、`tests/MarineInsight.Domain.Tests/AlgorithmVersionTests.cs`、相关设计/测试/RoadMap/台账文档 |
+| 验证结果 | Domain 测试 49/49 通过；全量测试 118/118 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；仍有既有 `NU1903 SQLitePCLRaw.lib.e_sqlite3` 漏洞警告 |
+| 阻塞/待确认 | 无；本任务不包含后台 UI、数据库迁移或真实发布接口 |
 | 最后更新 | 2026-07-31 |
 
 <!-- agent-state:end -->
@@ -143,7 +143,9 @@
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
 
-当前没有待办任务；用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
+当前没有待办任务。
+
+用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
 ### 8.2 暂停/阻塞任务恢复详情
 
@@ -185,6 +187,8 @@
 | [x] | `MI-0017` | 2026-07-30 | 实现 Activity Profile 与逐小时活动评分 API/Dashboard 闭环 | Domain 新增 `ActivityType`、`ActivityProfile`、`ActivityMarineAssessment` 和活动评分服务；Application 生成逐小时综合/活动评估；API 返回 analyzed、overall、activities、risks 和 hourly assessment 投影并校验未知活动；Dashboard 展示综合结论、活动评分、主要风险和逐小时评分表；不实现推荐时间窗、返航截止、趋势 Tabs、小时详情或截图验证 |
 | [x] | `MI-0018` | 2026-07-31 | 实现推荐时间窗、风险快速上升和返航截止闭环 | Domain 新增 `RecommendationWindow` 和 `MarineRecommendationWindowPlanner`；Application 查询结果携带推荐窗口；API 返回 `recommendedWindows`；Dashboard 展示推荐窗口、风险上升提示和保守返航截止；不实现趋势图 JS、小时详情、地图、AI、潮汐或参数后台 |
 | [x] | `MI-0019` | 2026-07-31 | 实现 Dashboard 趋势 Tabs、推荐窗口时间带和小时详情面板 | Web 状态容器新增趋势点、时间带、小时详情和选中小时；Dashboard 支持分数/风/浪趋势切换、推荐窗口横向时间带、点击小时查看完整指标/风险/来源摘要；不引入第三方 JS 图表、地图、AI、潮汐或收藏 |
+| [x] | `MI-0020` | 2026-07-31 | 建立 GS-001 至 GS-010 海况黄金样本回归测试 | Domain 新增黄金样本测试，覆盖平静海况、风小浪大、阵风突增、短周期颠簸、长周期岸边风险、雷暴、CAPE、低能见度、关键海况缺失和 17:00 后风险上升窗口；同步评分算法、测试方案和 RoadMap 文档 |
+| [x] | `MI-0021` | 2026-07-31 | 建立算法参数 Schema、版本实体和发布前校验 | Domain 新增 `MarineAlgorithmParameters`、参数 Schema 版本、配置哈希、`AlgorithmParameterValidator`、发布校验结果和 `AlgorithmVersion` 状态机；发布前校验覆盖 Safety Gate、分段惩罚、组合规则、活动 Profile、置信度、推荐窗口和黄金样本门禁；不包含后台 UI、数据库迁移或真实发布接口 |
 
 ### 9.2 取消任务
 
@@ -196,6 +200,8 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-31 | `MI-0021` | 完成算法参数 Schema、版本实体和发布前校验；Domain 新增参数集合、Safety Gate/置信度/推荐窗口/组合规则/惩罚分段值对象、配置哈希、校验结果和 `AlgorithmVersion` 状态机；补充默认参数可发布、哈希篡改、缺少黄金样本、非法阈值/区间、活动 Profile 缺失和状态流转测试；同步 DDD、分析、评分、测试和 RoadMap 文档 | Domain 测试 49/49 通过；全量测试 118/118 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续阶段 2 缓存键与算法版本联动；管理员后台、仓储、审计和运行时动态参数切换留待后续任务 |
+| 2026-07-31 | `MI-0020` | 完成 `GS-001` 至 `GS-010` 海况黄金样本回归测试；新增 `MarineGoldenSampleTests`，用真实领域规则引擎、活动评分服务和推荐窗口规划器回放黄金样本，锁定规则代码、Safety Gate、活动分差异、Unknown 和返航缓冲；同步评分算法、测试方案和 RoadMap 文档 | Domain 测试 39/39 通过；全量测试 108/108 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore`、`git diff --check` 和 5 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续阶段 2 算法参数 Schema/版本实体与发布前校验，或进入阶段 3 前做用户人工视觉/可访问性验收；不提前进入地图、AI、潮汐或收藏 |
 | 2026-07-31 | `MI-0019` | 完成 Dashboard 趋势 Tabs、推荐窗口时间带和小时详情面板；`DashboardQuerySession` 投影分数/风/浪三组趋势、推荐窗口时间带、默认选中小时和完整小时详情；页面支持趋势切换与逐小时行选择；同步 UI、Blazor、测试和 RoadMap 文档 | Web 测试 21/21 通过；全量测试 98/98 通过；构建 0 错误；仍有 NU1903 SQLite 漏洞警告；按用户指令未执行截图验证 | 建议继续阶段 2 黄金样本集、算法参数 Schema/版本实体，或先做用户人工视觉/可访问性验收；不提前进入地图、AI、潮汐或收藏 |
 | 2026-07-31 | `MI-0018` | 完成推荐时间窗、风险快速上升和保守返航截止闭环；新增领域窗口值对象与规划服务，按活动最低分、置信度、Safety Gate 和连续小时生成窗口；Application/API/Dashboard 已投影 `recommendedWindows`、返航截止、风险上升点和风险原因；同步分析、评分、DDD、API、UI、Blazor、测试和 RoadMap 文档 | Domain 测试 29/29 通过；全量测试 98/98 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；仍有 NU1903 SQLite 漏洞警告；按用户指令未执行截图验证 | 建议继续阶段 2 趋势 Tabs、图表时间带、小时详情抽屉或黄金样本集；不提前进入阶段 3 |
 | 2026-07-30 | `MI-0017` | 完成 Activity Profile 与逐小时活动评分 API/Dashboard 闭环；新增五类活动默认乘数、活动评分值对象和服务；Application 查询结果携带逐小时评估；API 响应升级为 `analyzed` 并返回综合分、活动分和风险贡献；Dashboard 展示综合结论、活动评分、主要风险和逐小时评分表；同步分析、评分、DDD、API、UI、Blazor、测试和 RoadMap 文档 | Domain 测试 25/25 通过；全量测试 94/94 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；本次 28 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1903 SQLite 漏洞警告；按用户指令未执行截图验证 | 建议继续阶段 2 推荐时间窗、风险快速上升识别、返航截止、趋势 Tabs 和小时详情；不提前进入阶段 3 |

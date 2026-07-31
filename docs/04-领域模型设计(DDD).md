@@ -88,6 +88,7 @@ flowchart LR
 - 聚合根：`AlgorithmVersion`。
 - 状态：`Draft -> Validated -> Published -> Retired`。
 - 不变式：已发布版本不可原地修改；同时只能有一个默认发布版本；发布和回滚必须审计。
+- 当前 `MI-0021` 已在 Domain 落地 `AlgorithmVersion`、`MarineAlgorithmParameters`、参数 Schema 版本、配置哈希和发布前校验结果；校验覆盖 Safety Gate、分段惩罚、组合规则、活动 Profile、置信度、推荐窗口和 `GS-001` 至 `GS-010` 黄金样本回放门禁。仓储、管理员发布 API、默认版本唯一约束和审计持久化仍待后续任务。
 
 ## 5. 值对象
 
@@ -166,3 +167,4 @@ flowchart LR
 | 1.4 | 2026-07-30 | 增加 `MI-0016` 单小时海况风险评估值对象和领域规则引擎实现边界 |
 | 1.5 | 2026-07-30 | 增加 `MI-0017` 活动 Profile、活动评分值对象和 API/Dashboard 查询投影边界 |
 | 1.6 | 2026-07-31 | 增加 `MI-0018` 推荐窗口值对象、窗口规划服务和返航截止边界 |
+| 1.7 | 2026-07-31 | 增加 `MI-0021` 算法参数 Schema、版本实体状态机和发布前校验边界 |
