@@ -43,6 +43,8 @@ public sealed class MarineAnalysisQueryServiceTests
         Assert.Equal(ForecastQualityStatus.Valid, first.Snapshot.Quality.Status);
         Assert.Equal(25, first.HourlyAssessments.Count);
         Assert.Equal(5, first.HourlyAssessments[0].ActivityAssessments.Count);
+        Assert.NotEmpty(first.RecommendedWindows);
+        Assert.Contains(first.RecommendedWindows, window => window.ActivityType == Domain.Analysis.ActivityType.Boat);
         Assert.Equal("marine-score-1.0.0", first.HourlyAssessments[0].AlgorithmVersion);
     }
 

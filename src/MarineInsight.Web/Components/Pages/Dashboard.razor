@@ -168,6 +168,46 @@
             </section>
         }
 
+        @if (result.RecommendationWindows.Count > 0)
+        {
+            <section class="recommendation-section" aria-labelledby="recommendation-title">
+                <h2 id="recommendation-title">推荐时间窗</h2>
+                <div class="recommendation-list">
+                    @foreach (var window in result.RecommendationWindows)
+                    {
+                        <article class="recommendation-item">
+                            <div>
+                                <span>@window.Label</span>
+                                <strong>@window.StartUtc.ToString("MM-dd HH:mm") - @window.EndUtc.ToString("HH:mm") UTC</strong>
+                            </div>
+                            <dl>
+                                <div>
+                                    <dt>时长</dt>
+                                    <dd>@window.DurationHours h</dd>
+                                </div>
+                                <div>
+                                    <dt>最佳分</dt>
+                                    <dd>@window.BestScore</dd>
+                                </div>
+                                <div>
+                                    <dt>门槛</dt>
+                                    <dd>@window.MinimumScore</dd>
+                                </div>
+                                <div>
+                                    <dt>返航</dt>
+                                    <dd>@(window.ReturnBeforeUtc?.ToString("MM-dd HH:mm") ?? "暂无")</dd>
+                                </div>
+                            </dl>
+                            @if (window.RiskRisesAtUtc is not null)
+                            {
+                                <p>风险约 @window.RiskRisesAtUtc.Value.ToString("MM-dd HH:mm") UTC 上升：@(window.RiskReason ?? "需要提前结束活动。")</p>
+                            }
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+
         @if (result.MissingMetrics.Count > 0 || result.MissingDomains.Count > 0 || result.Flags.Count > 0)
         {
             <section class="status-band warning" role="status">

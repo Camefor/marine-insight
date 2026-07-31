@@ -40,6 +40,7 @@ public sealed record MarineAnalysisResponse(
     MarineAnalysisQualityResponse Quality,
     MarineAnalysisOverallResponse? Overall,
     IReadOnlyList<MarineAnalysisActivityResponse> Activities,
+    IReadOnlyList<MarineAnalysisRecommendedWindowResponse> RecommendedWindows,
     IReadOnlyList<MarineAnalysisRiskResponse> Risks,
     IReadOnlyList<MarineAnalysisHourlyResponse> Hourly,
     string Disclaimer,
@@ -87,6 +88,17 @@ public sealed record MarineAnalysisActivityResponse(
     double? Score,
     string RiskLevel,
     double Confidence);
+
+public sealed record MarineAnalysisRecommendedWindowResponse(
+    string Activity,
+    DateTimeOffset Start,
+    DateTimeOffset End,
+    DateTimeOffset? ReturnBefore,
+    DateTimeOffset? RiskRisesAt,
+    string? RiskReason,
+    double BestScore,
+    double MinimumScore,
+    int DurationHours);
 
 public sealed record MarineAnalysisRiskResponse(
     string Code,

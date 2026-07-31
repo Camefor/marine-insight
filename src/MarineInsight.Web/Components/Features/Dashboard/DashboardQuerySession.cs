@@ -252,6 +252,7 @@ public sealed class DashboardQuerySession : IDisposable
             result.Snapshot.Quality.MissingDomains.Select(ToApiName).ToArray(),
             selectedAssessment is null ? null : ToDashboardOverall(selectedAssessment),
             selectedAssessment is null ? [] : ToActivityScores(selectedAssessment),
+            ToRecommendationWindows(result),
             selectedAssessment is null ? [] : ToRiskSummaries(selectedAssessment),
             sources,
             metricCards,
@@ -313,6 +314,22 @@ public sealed class DashboardQuerySession : IDisposable
                 FormatScore(activity.Score),
                 ToApiName(activity.RiskLevel),
                 ToRiskLevelText(activity.RiskLevel)))
+            .ToArray();
+
+    private static DashboardRecommendationWindow[] ToRecommendationWindows(
+        MarineAnalysisQueryResult result) =>
+        result.RecommendedWindows
+            .Select(window => new DashboardRecommendationWindow(
+                ToActivityLabel(window.ActivityType),
+                ToApiName(window.ActivityType),
+                window.StartUtc,
+                window.EndUtc,
+                FormatScore(window.BestScore),
+                FormatScore(window.MinimumScore),
+                window.DurationHours,
+                window.ReturnBeforeUtc,
+                window.RiskRisesAtUtc,
+                window.RiskReason))
             .ToArray();
 
     private static DashboardRiskSummary[] ToRiskSummaries(
@@ -429,6 +446,7 @@ public sealed record DashboardAnalysisResult(
     IReadOnlyList<string> MissingDomains,
     DashboardOverallAssessment? Overall,
     IReadOnlyList<DashboardActivityScore> ActivityScores,
+    IReadOnlyList<DashboardRecommendationWindow> RecommendationWindows,
     IReadOnlyList<DashboardRiskSummary> TopRisks,
     IReadOnlyList<DashboardSourceStatus> Sources,
     IReadOnlyList<DashboardMetricCard> MetricCards,
@@ -466,6 +484,18 @@ public sealed record DashboardActivityScore(
     string Score,
     string RiskLevel,
     string RiskLevelText);
+
+public sealed record DashboardRecommendationWindow(
+    string Label,
+    string Activity,
+    DateTimeOffset StartUtc,
+    DateTimeOffset EndUtc,
+    string BestScore,
+    string MinimumScore,
+    int DurationHours,
+    DateTimeOffset? ReturnBeforeUtc,
+    DateTimeOffset? RiskRisesAtUtc,
+    string? RiskReason);
 
 public sealed record DashboardRiskSummary(
     string Code,

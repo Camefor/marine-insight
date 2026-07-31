@@ -74,8 +74,9 @@ public sealed class MarineAnalysisQueryService
                     activityAssessments);
             })
             .ToArray();
+        var recommendedWindows = MarineRecommendationWindowPlanner.Plan(assessments, activityProfiles);
 
-        return new MarineAnalysisQueryResult(query, snapshot, assessments, weather, marine);
+        return new MarineAnalysisQueryResult(query, snapshot, assessments, recommendedWindows, weather, marine);
     }
 
     private Task<ForecastCacheResult> LoadWeatherAsync(

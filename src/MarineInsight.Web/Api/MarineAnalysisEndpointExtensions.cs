@@ -327,6 +327,7 @@ public static class MarineAnalysisEndpointExtensions
             ToQuality(result.Snapshot.Quality),
             rootAssessment is null ? null : ProjectOverall(rootAssessment),
             rootAssessment is null ? [] : ProjectActivities(rootAssessment),
+            ProjectRecommendedWindows(result),
             rootRisks,
             hourly,
             "结果仅供辅助决策，请以官方预警和现场管理为准。",
@@ -348,6 +349,21 @@ public static class MarineAnalysisEndpointExtensions
                 activity.Score,
                 ToApiName(activity.RiskLevel),
                 activity.Confidence))
+            .ToArray();
+
+    private static MarineAnalysisRecommendedWindowResponse[] ProjectRecommendedWindows(
+        MarineAnalysisQueryResult result) =>
+        result.RecommendedWindows
+            .Select(window => new MarineAnalysisRecommendedWindowResponse(
+                ToApiName(window.ActivityType),
+                window.StartUtc,
+                window.EndUtc,
+                window.ReturnBeforeUtc,
+                window.RiskRisesAtUtc,
+                window.RiskReason,
+                window.BestScore,
+                window.MinimumScore,
+                window.DurationHours))
             .ToArray();
 
     private static MarineAnalysisRiskResponse[] ProjectRisks(

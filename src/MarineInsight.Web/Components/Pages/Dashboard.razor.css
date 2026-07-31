@@ -27,6 +27,7 @@
 .summary-band,
 .source-section,
 .activity-section,
+.recommendation-section,
 .risk-section,
 .metric-section,
 .hourly-section,
@@ -47,6 +48,7 @@
 .query-band h2,
 .source-section h2,
 .activity-section h2,
+.recommendation-section h2,
 .risk-section h2,
 .metric-section h2,
 .hourly-section h2,
@@ -89,6 +91,7 @@
 .query-band,
 .source-section,
 .activity-section,
+.recommendation-section,
 .risk-section,
 .metric-section,
 .hourly-section {
@@ -298,6 +301,7 @@ dd {
 }
 
 .activity-list,
+.recommendation-list,
 .risk-list {
     display: grid;
     gap: 12px;
@@ -309,6 +313,7 @@ dd {
 }
 
 .activity-item,
+.recommendation-item,
 .risk-item {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -320,6 +325,7 @@ dd {
 }
 
 .activity-item span,
+.recommendation-item span,
 .risk-item span {
     color: var(--muted);
     overflow-wrap: anywhere;
@@ -361,6 +367,36 @@ dd {
 }
 
 .risk-item strong {
+    overflow-wrap: anywhere;
+}
+
+.recommendation-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.recommendation-item {
+    gap: 12px;
+    min-height: 156px;
+}
+
+.recommendation-item strong {
+    display: block;
+    font-size: 1.05rem;
+    letter-spacing: 0;
+    margin-top: 4px;
+}
+
+.recommendation-item dl {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+}
+
+.recommendation-item p {
+    color: var(--warning);
+    line-height: 1.5;
+    margin: 0;
     overflow-wrap: anywhere;
 }
 
@@ -464,6 +500,7 @@ th {
     .summary-grid,
     .source-item dl,
     .activity-list,
+    .recommendation-list,
     .metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -490,11 +527,13 @@ th {
 
     .summary-grid,
     .activity-list,
+    .recommendation-list,
     .metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .source-item dl {
+    .source-item dl,
+    .recommendation-item dl {
         grid-template-columns: 1fr;
     }
 

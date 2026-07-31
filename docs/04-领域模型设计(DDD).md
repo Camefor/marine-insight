@@ -75,7 +75,7 @@ flowchart LR
 - 实体：`HourlyAssessment`、`RiskFactor`、`ActivityAssessment`、`RecommendationWindow`。
 - 值对象：`Score`、`RiskLevel`、`Confidence`、`AlgorithmVersion`。
 - 不变式：分数范围为 0-100；硬性风险触发时等级必须为 `Avoid`；数据不足时允许 `Unknown`，不得伪造分数。
-- 当前 `MI-0016` 已先落地单小时 `HourlyMarineAssessment`、`RiskContribution`、`RiskLevel` 和 `MarineRiskRuleEngine`；`MI-0017` 已补充 `ActivityType`、`ActivityProfile`、`ActivityMarineAssessment` 和活动评分服务，并把活动结果投影到查询结果、API 和 Dashboard。完整 `AnalysisReport` 持久化聚合、推荐窗口和返航截止仍由后续任务补齐。
+- 当前 `MI-0016` 已先落地单小时 `HourlyMarineAssessment`、`RiskContribution`、`RiskLevel` 和 `MarineRiskRuleEngine`；`MI-0017` 已补充 `ActivityType`、`ActivityProfile`、`ActivityMarineAssessment` 和活动评分服务，并把活动结果投影到查询结果、API 和 Dashboard；`MI-0018` 已补充 `RecommendationWindow` 和推荐窗口规划服务。完整 `AnalysisReport` 持久化聚合仍由后续任务补齐。
 
 ### 4.5 UserProfile 聚合
 
@@ -113,7 +113,7 @@ flowchart LR
 | `ConfidenceCalculator` | 根据完整性/时效/分歧计算置信度 | DataQuality | Confidence |
 | `CoastExposureService` | 根据风浪方向和岸线朝向判断暴露 | Direction, CoastOrientation | ExposureLevel |
 
-当前 `MI-0016` 以 `MarineRiskRuleEngine` 合并单小时 Safety Gate、基础惩罚、组合风险和简化置信度计算；后续可拆分为独立 `SafetyGateEvaluator`、`ScoreCalculator` 和 `ConfidenceCalculator`，以支持版本化参数和活动配置。
+当前 `MI-0016` 以 `MarineRiskRuleEngine` 合并单小时 Safety Gate、基础惩罚、组合风险和简化置信度计算；`MI-0018` 使用 `MarineRecommendationWindowPlanner` 在逐小时活动评估之上计算推荐窗口、风险上升点和返航截止。后续可拆分为独立 `SafetyGateEvaluator`、`ScoreCalculator`、`WindowPlanner` 和 `ConfidenceCalculator`，以支持版本化参数和活动配置。
 
 ## 7. 领域事件
 
@@ -165,3 +165,4 @@ flowchart LR
 | 1.3 | 2026-07-16 | 增加 ForecastBatch Application 仓储端口、EF 追加/读取实现及来源和质量映射 |
 | 1.4 | 2026-07-30 | 增加 `MI-0016` 单小时海况风险评估值对象和领域规则引擎实现边界 |
 | 1.5 | 2026-07-30 | 增加 `MI-0017` 活动 Profile、活动评分值对象和 API/Dashboard 查询投影边界 |
+| 1.6 | 2026-07-31 | 增加 `MI-0018` 推荐窗口值对象、窗口规划服务和返航截止边界 |

@@ -35,6 +35,13 @@ public sealed class MarineAnalysisApiTests
         Assert.Equal("good", firstDocument.RootElement.GetProperty("overall").GetProperty("riskLevel").GetString());
         Assert.Equal(1, firstDocument.RootElement.GetProperty("activities").GetArrayLength());
         Assert.Equal("boat", firstDocument.RootElement.GetProperty("activities")[0].GetProperty("type").GetString());
+        Assert.True(firstDocument.RootElement.GetProperty("recommendedWindows").GetArrayLength() > 0);
+        Assert.Equal(
+            "boat",
+            firstDocument.RootElement
+                .GetProperty("recommendedWindows")[0]
+                .GetProperty("activity")
+                .GetString());
         Assert.True(firstDocument.RootElement.GetProperty("risks").GetArrayLength() > 0);
         Assert.Equal(2, firstDocument.RootElement.GetProperty("sources").GetArrayLength());
         Assert.All(

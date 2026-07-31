@@ -124,15 +124,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0017` |
+| 当前任务 ID | `MI-0018` |
 | 当前状态 | `DONE` |
-| 当前目标 | 实现阶段 2 活动 Profile 与逐小时活动评分纵向闭环：在 Domain 计算海钓/乘船/登岛/露营/摄影活动分数，并投影到 Application、API 和 Dashboard；暂不实现地图、AI、潮汐、算法参数后台和截图验证 |
-| 最后完成动作 | 完成 `MI-0017`：新增五类 Activity Profile 和活动评分服务；Application 查询生成逐小时综合/活动评估；API 返回 `analyzed`、`overall`、`activities`、`risks` 和逐小时评估；Dashboard 展示综合结论、活动评分、主要风险和逐小时评分表；同步相关设计文档 |
-| 下一步动作 | 建议继续阶段 2 的推荐时间窗、风险快速上升识别、返航截止、趋势 Tabs 和小时详情；不进入地图/AI/潮汐等阶段 3 能力 |
-| 涉及文件 | `src/MarineInsight.Domain/Analysis/`、`src/MarineInsight.Application/Analysis/`、`src/MarineInsight.Web/Api/`、`src/MarineInsight.Web/Components/Features/Dashboard/`、`src/MarineInsight.Web/Components/Pages/Dashboard.razor`、相关测试和设计文档 |
-| 验证结果 | Domain 测试 25/25 通过；全量测试 94/94 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 通过；`git diff --check` 通过；本次 28 个非 JSON/YAML 文本 UTF-8 BOM/CRLF 检查通过；仍有 NU1903 SQLite 漏洞警告；按用户指令未执行截图验证 |
-| 阻塞/待确认 | 无代码阻塞；推荐时间窗、返航截止、趋势 Tabs、小时详情、地图、AI、潮汐和算法参数后台未纳入本项 |
-| 最后更新 | 2026-07-30 |
+| 当前目标 | 实现阶段 2 推荐时间窗、风险快速上升识别和保守返航截止：在 Domain 基于逐小时活动评估计算连续推荐窗口，并投影到 Application、API 和 Dashboard；暂不实现趋势图 JS、小时详情抽屉、地图、AI、潮汐或算法参数后台 |
+| 最后完成动作 | 已完成 `RecommendationWindow`、`MarineRecommendationWindowPlanner`、Application 查询结果、API `recommendedWindows`、Dashboard 推荐时间窗展示和自动化测试；已同步分析、评分、DDD、API、UI、Blazor、测试和 RoadMap 文档 |
+| 下一步动作 | 建议继续阶段 2 趋势 Tabs、图表时间带、小时详情抽屉或黄金样本集；仍不提前进入阶段 3 |
+| 涉及文件 | `src/MarineInsight.Domain/Analysis/MarineRecommendationWindowPlanner.cs`、`src/MarineInsight.Domain/Analysis/RecommendationWindow.cs`、`src/MarineInsight.Application/Analysis/`、`src/MarineInsight.Web/Api/`、`src/MarineInsight.Web/Components/Features/Dashboard/`、`src/MarineInsight.Web/Components/Pages/Dashboard.razor`、相关测试和设计文档 |
+| 验证结果 | Domain 测试 29/29 通过；全量测试 98/98 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；仍有既有 `NU1903 SQLitePCLRaw.lib.e_sqlite3` 漏洞警告；按用户指令未执行截图验证 |
+| 阻塞/待确认 | 无；按用户既定指令不执行截图验证，由用户自行人工验证 Dashboard 视觉 |
+| 最后更新 | 2026-07-31 |
 
 <!-- agent-state:end -->
 
@@ -183,6 +183,7 @@
 | [x] | `MI-0015` | 2026-07-30 | 实现基础 Blazor Dashboard 查询闭环 | Web 根路径切换为海况 Dashboard；新增 `DashboardQuerySession` 管理地点搜索、候选选择、请求取消和 metrics-only 查询投影；页面展示来源状态、抓取/发布时间、缓存状态、质量、关键指标和逐小时指标表；不实现评分、活动建议、地图、收藏或登录；同步 UI/Blazor/测试/RoadMap 文档 |
 | [x] | `MI-0016` | 2026-07-30 | 建立领域层 Safety Gates 与基础评分骨架 | Domain 新增 `RiskLevel`、`RiskContribution`、`HourlyMarineAssessment` 和 `MarineRiskRuleEngine`；支持单小时综合分、Avoid/Unknown 不变式、算法版本、置信度和风险贡献；覆盖雷暴/大风/大浪/强阵风/低能见度 Gate、基础惩罚、风小浪大、阵风异常、短周期浪、长周期涌浪和海况关键数据缺失；暂不接入 API/Dashboard/Activity Profile |
 | [x] | `MI-0017` | 2026-07-30 | 实现 Activity Profile 与逐小时活动评分 API/Dashboard 闭环 | Domain 新增 `ActivityType`、`ActivityProfile`、`ActivityMarineAssessment` 和活动评分服务；Application 生成逐小时综合/活动评估；API 返回 analyzed、overall、activities、risks 和 hourly assessment 投影并校验未知活动；Dashboard 展示综合结论、活动评分、主要风险和逐小时评分表；不实现推荐时间窗、返航截止、趋势 Tabs、小时详情或截图验证 |
+| [x] | `MI-0018` | 2026-07-31 | 实现推荐时间窗、风险快速上升和返航截止闭环 | Domain 新增 `RecommendationWindow` 和 `MarineRecommendationWindowPlanner`；Application 查询结果携带推荐窗口；API 返回 `recommendedWindows`；Dashboard 展示推荐窗口、风险上升提示和保守返航截止；不实现趋势图 JS、小时详情、地图、AI、潮汐或参数后台 |
 
 ### 9.2 取消任务
 
@@ -194,6 +195,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-07-31 | `MI-0018` | 完成推荐时间窗、风险快速上升和保守返航截止闭环；新增领域窗口值对象与规划服务，按活动最低分、置信度、Safety Gate 和连续小时生成窗口；Application/API/Dashboard 已投影 `recommendedWindows`、返航截止、风险上升点和风险原因；同步分析、评分、DDD、API、UI、Blazor、测试和 RoadMap 文档 | Domain 测试 29/29 通过；全量测试 98/98 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；仍有 NU1903 SQLite 漏洞警告；按用户指令未执行截图验证 | 建议继续阶段 2 趋势 Tabs、图表时间带、小时详情抽屉或黄金样本集；不提前进入阶段 3 |
 | 2026-07-30 | `MI-0017` | 完成 Activity Profile 与逐小时活动评分 API/Dashboard 闭环；新增五类活动默认乘数、活动评分值对象和服务；Application 查询结果携带逐小时评估；API 响应升级为 `analyzed` 并返回综合分、活动分和风险贡献；Dashboard 展示综合结论、活动评分、主要风险和逐小时评分表；同步分析、评分、DDD、API、UI、Blazor、测试和 RoadMap 文档 | Domain 测试 25/25 通过；全量测试 94/94 通过；构建 0 错误；`dotnet format --verify-no-changes --no-restore` 和 `git diff --check` 通过；本次 28 个非 JSON/YAML 文本 BOM/CRLF 检查通过；仍有 NU1903 SQLite 漏洞警告；按用户指令未执行截图验证 | 建议继续阶段 2 推荐时间窗、风险快速上升识别、返航截止、趋势 Tabs 和小时详情；不提前进入阶段 3 |
 | 2026-07-30 | `MI-0016` | 完成领域层单小时 Safety Gates 与基础评分骨架；新增 `MarineRiskRuleEngine`、等级/严重度/贡献/评估值对象和 13 个 Domain 测试；同步分析引擎、评分算法、DDD、测试和 RoadMap 文档；不改变现有 metrics-only API/Dashboard 行为 | Domain 测试 23/23 通过；全量测试 91/91 通过；构建 0 错误；`dotnet format`、`git diff --check` 和本次 13 个非 JSON/YAML 文本 BOM/CRLF 检查通过；并发构建/测试曾因输出文件锁出现一次构建失败，单独重跑通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续实现 Activity Profile，并把活动分数、风险贡献和算法版本投影到 API/Dashboard |
 | 2026-07-30 | `MI-0015` | 完成基础 Blazor Dashboard 查询闭环；根路径进入 Dashboard，支持地点搜索候选、UTC 起报时间、24/72/168 小时范围、metrics-only 查询提交、来源状态、关键指标和逐小时表格；用户明确接手人工视觉验证，本次不执行截图验证 | 构建 0 错误；全量测试 78/78 通过；`dotnet format`、`git diff --check`、12 个非 JSON/YAML 文本 BOM/CRLF 检查通过；本地 `/`、`/health/live` 和地点搜索 HTTP 200；仍有 NU1903 SQLite 漏洞警告 | 等待用户人工验证 Dashboard；后续按用户指令进入阶段 2 评分/活动分析或继续补 UI/P1 能力 |
