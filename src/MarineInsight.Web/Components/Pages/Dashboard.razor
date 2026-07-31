@@ -9,7 +9,7 @@
         <div>
             <p class="eyebrow">Marine Insight</p>
             <h1 id="dashboard-title">海况 Dashboard</h1>
-            <p class="dashboard-subtitle">选择预置地点和时间范围，查看标准化逐小时指标、来源与数据质量。</p>
+            <p class="dashboard-subtitle">选择预置地点和时间范围，查看逐小时评分、活动建议、主要风险、来源与数据质量。</p>
         </div>
         <div class="disclaimer" role="note">
             结果仅供辅助决策，请以官方预警和现场管理为准。
@@ -91,7 +91,7 @@
     {
         <section class="empty-state">
             <h2>等待查询</h2>
-            <p>先搜索并选择一个预置地点，再提交 24h、72h 或 7d 查询。当前阶段展示 metrics-only 指标，不展示评分或活动建议。</p>
+            <p>先搜索并选择一个预置地点，再提交 24h、72h 或 7d 查询。</p>
         </section>
     }
     else
@@ -108,6 +108,18 @@
                     <dd>@result.Hours 小时</dd>
                 </div>
                 <div>
+                    <dt>综合分</dt>
+                    <dd>@(result.Overall?.Score ?? "暂无") · @(result.Overall?.RiskLevelText ?? "数据不足")</dd>
+                </div>
+                <div>
+                    <dt>置信度</dt>
+                    <dd>@(result.Overall?.Confidence ?? "暂无")</dd>
+                </div>
+                <div>
+                    <dt>算法</dt>
+                    <dd>@(result.Overall?.AlgorithmVersion ?? "暂无")</dd>
+                </div>
+                <div>
                     <dt>质量</dt>
                     <dd>@result.QualityStatus / @result.Freshness</dd>
                 </div>
@@ -121,6 +133,40 @@
                 </div>
             </dl>
         </section>
+
+        @if (result.ActivityScores.Count > 0)
+        {
+            <section class="activity-section" aria-labelledby="activity-title">
+                <h2 id="activity-title">活动评分</h2>
+                <div class="activity-list">
+                    @foreach (var activity in result.ActivityScores)
+                    {
+                        <article class="activity-item risk-@activity.RiskLevel">
+                            <span>@activity.Label</span>
+                            <strong>@activity.Score</strong>
+                            <em>@activity.RiskLevelText</em>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (result.TopRisks.Count > 0)
+        {
+            <section class="risk-section" aria-labelledby="risk-title">
+                <h2 id="risk-title">主要风险</h2>
+                <div class="risk-list">
+                    @foreach (var risk in result.TopRisks)
+                    {
+                        <article class="risk-item severity-@risk.Severity">
+                            <strong>@risk.Code</strong>
+                            <span>@risk.Message</span>
+                            <em>扣分 @risk.Penalty</em>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
 
         @if (result.MissingMetrics.Count > 0 || result.MissingDomains.Count > 0 || result.Flags.Count > 0)
         {
@@ -190,6 +236,8 @@
                             <th>浪高 m</th>
                             <th>涌浪 m</th>
                             <th>能见度 km</th>
+                            <th>综合分</th>
+                            <th>等级</th>
                             <th>质量</th>
                         </tr>
                     </thead>
@@ -203,6 +251,8 @@
                                 <td>@row.WaveHeightM</td>
                                 <td>@row.SwellHeightM</td>
                                 <td>@row.VisibilityKm</td>
+                                <td>@row.Score</td>
+                                <td>@row.RiskLevel</td>
                                 <td>@row.QualityStatus</td>
                             </tr>
                         }

@@ -123,6 +123,44 @@ public sealed class MarineRiskRuleEngineTests
     }
 
     [Fact]
+    public void ActivityScoringAppliesProfileMultipliers()
+    {
+        var assessment = Evaluate(ForecastMetricSet.Create(
+            windSpeedMs: 4,
+            windGustMs: 6,
+            waveHeightM: 1.0,
+            wavePeriodS: 8,
+            swellHeightM: 0.2,
+            visibilityM: 15_000,
+            thunderstorm: false));
+        var activityScores = MarineActivityScoringService.Evaluate(assessment, ActivityProfile.Defaults);
+
+        var camping = activityScores.Single(activity => activity.ActivityType == ActivityType.Camping);
+        var landing = activityScores.Single(activity => activity.ActivityType == ActivityType.Landing);
+
+        Assert.True(camping.Score > landing.Score);
+        Assert.Equal(RiskLevel.Good, camping.RiskLevel);
+        Assert.Equal(RiskLevel.Avoid, landing.RiskLevel);
+    }
+
+    [Fact]
+    public void ActivityScoringKeepsSafetyGateAsAvoidForEveryActivity()
+    {
+        var assessment = Evaluate(ForecastMetricSet.Create(
+            windSpeedMs: 3,
+            windGustMs: 5,
+            waveHeightM: 0.4,
+            thunderstorm: true));
+        var activityScores = MarineActivityScoringService.Evaluate(assessment, ActivityProfile.Defaults);
+
+        Assert.All(activityScores, activity =>
+        {
+            Assert.Equal(RiskLevel.Avoid, activity.RiskLevel);
+            Assert.True(activity.Score <= 49);
+        });
+    }
+
+    [Fact]
     public void EvaluateShortPeriodWaveAddsSteepWaveRisk()
     {
         var assessment = Evaluate(ForecastMetricSet.Create(

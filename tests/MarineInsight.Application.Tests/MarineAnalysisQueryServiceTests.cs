@@ -41,6 +41,9 @@ public sealed class MarineAnalysisQueryServiceTests
         Assert.Equal(4, first.Snapshot.Points[0].Metrics.WindSpeedMs);
         Assert.Equal(0.8, first.Snapshot.Points[0].Metrics.WaveHeightM);
         Assert.Equal(ForecastQualityStatus.Valid, first.Snapshot.Quality.Status);
+        Assert.Equal(25, first.HourlyAssessments.Count);
+        Assert.Equal(5, first.HourlyAssessments[0].ActivityAssessments.Count);
+        Assert.Equal("marine-score-1.0.0", first.HourlyAssessments[0].AlgorithmVersion);
     }
 
     private sealed class FakeCacheKeyFactory : IForecastCacheKeyFactory

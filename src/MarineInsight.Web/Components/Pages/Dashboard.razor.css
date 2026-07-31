@@ -11,6 +11,11 @@
     --error: #9b1c1c;
     --error-bg: #ffe4e4;
     --ok: #236b43;
+    --danger-bg: #fde8e8;
+    --caution-bg: #fff0d8;
+    --moderate-bg: #fff7cc;
+    --good-bg: #ddf5ed;
+    --unknown-bg: #e9eef0;
     background: #eef2f3;
     color: var(--text);
     min-height: 100vh;
@@ -21,6 +26,8 @@
 .query-band,
 .summary-band,
 .source-section,
+.activity-section,
+.risk-section,
 .metric-section,
 .hourly-section,
 .empty-state,
@@ -39,6 +46,8 @@
 .dashboard-header h1,
 .query-band h2,
 .source-section h2,
+.activity-section h2,
+.risk-section h2,
 .metric-section h2,
 .hourly-section h2,
 .empty-state h2,
@@ -79,6 +88,8 @@
 
 .query-band,
 .source-section,
+.activity-section,
+.risk-section,
 .metric-section,
 .hourly-section {
     background: var(--surface-muted);
@@ -286,6 +297,73 @@ dd {
     margin-top: 12px;
 }
 
+.activity-list,
+.risk-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.activity-list {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.activity-item,
+.risk-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: grid;
+    gap: 6px;
+    min-height: 104px;
+    padding: 12px;
+}
+
+.activity-item span,
+.risk-item span {
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+
+.activity-item strong {
+    font-size: 1.6rem;
+    letter-spacing: 0;
+    line-height: 1.1;
+}
+
+.activity-item em,
+.risk-item em {
+    font-style: normal;
+    font-weight: 700;
+}
+
+.risk-veryGood,
+.risk-good {
+    background: var(--good-bg);
+}
+
+.risk-moderate {
+    background: var(--moderate-bg);
+}
+
+.risk-caution {
+    background: var(--caution-bg);
+}
+
+.risk-avoid,
+.severity-danger,
+.severity-blocking {
+    background: var(--danger-bg);
+}
+
+.risk-unknown {
+    background: var(--unknown-bg);
+}
+
+.risk-item strong {
+    overflow-wrap: anywhere;
+}
+
 .source-item {
     display: grid;
     gap: 14px;
@@ -352,7 +430,7 @@ dd {
 
 table {
     border-collapse: collapse;
-    min-width: 760px;
+    min-width: 920px;
     width: 100%;
 }
 
@@ -385,6 +463,7 @@ th {
 
     .summary-grid,
     .source-item dl,
+    .activity-list,
     .metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -410,6 +489,7 @@ th {
     }
 
     .summary-grid,
+    .activity-list,
     .metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }

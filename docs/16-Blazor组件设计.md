@@ -110,7 +110,7 @@ public sealed partial class RiskSummary
 
 不引入全局状态框架作为 MVP 前置条件。跨组件状态先使用 Scoped State Container 和不可变快照；复杂度真实增加后再评估 Fluxor。
 
-当前 `MI-0015` 使用 scoped `DashboardQuerySession` 管理地点搜索、候选选择、请求取消、查询版本和 metrics-only 结果投影；页面组件只负责表单绑定和状态展示。
+当前 `MI-0015` 使用 scoped `DashboardQuerySession` 管理地点搜索、候选选择、请求取消和查询版本；`MI-0017` 已让该状态容器投影综合结论、五类活动评分、主要风险和逐小时评分表。页面组件只负责表单绑定和状态展示。
 
 ## 8. 数据加载与取消
 
@@ -152,7 +152,7 @@ public sealed partial class RiskSummary
 - 视觉回归：360x800、768x1024、1440x900，检查文字截断、重叠和图表非空。
 - JS 互操作测试：地图选点、图表更新、Dispose 和失败降级。
 
-当前 `MI-0015` 自动化覆盖根 Dashboard SSR 壳层、`DashboardQuerySession` 地点搜索、成功查询投影和 Provider 失败错误状态；按用户指令，本次视觉效果由用户自行人工验证。
+当前 `MI-0015` 自动化覆盖根 Dashboard SSR 壳层、`DashboardQuerySession` 地点搜索、成功查询投影和 Provider 失败错误状态；`MI-0017` 追加活动评分、综合结论和主要风险投影测试。按用户指令，本次视觉效果由用户自行人工验证。
 
 ## 13. 变更记录
 
@@ -161,3 +161,4 @@ public sealed partial class RiskSummary
 | 1.0 | 2026-07-13 | 定义 Blazor 渲染模式、组件边界、状态和测试策略 |
 | 1.1 | 2026-07-13 | 更新为多 Provider 数据源边界 |
 | 1.2 | 2026-07-30 | 记录 `MI-0015` Dashboard scoped 状态容器、metrics-only 结果投影和测试覆盖 |
+| 1.3 | 2026-07-30 | 记录 `MI-0017` DashboardQuerySession 活动评分、综合结论和风险摘要投影 |

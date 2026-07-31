@@ -44,6 +44,11 @@ public sealed class DashboardQuerySessionTests
         Assert.Equal("东极岛", session.Result.DisplayName);
         Assert.Equal(2, session.Result.Sources.Count);
         Assert.Equal(25, session.Result.HourlyRows.Count);
+        Assert.NotNull(session.Result.Overall);
+        Assert.Equal("适宜", session.Result.Overall.RiskLevelText);
+        Assert.Equal(5, session.Result.ActivityScores.Count);
+        Assert.Contains(session.Result.ActivityScores, activity => activity.Type == "boat" && activity.RiskLevelText == "适宜");
+        Assert.NotEmpty(session.Result.TopRisks);
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "风速" && metric.Value == "4.0");
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "有效波高" && metric.Value == "0.8");
     }

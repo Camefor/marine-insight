@@ -1,6 +1,7 @@
 ﻿using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
+using MarineInsight.Domain.Analysis;
 using MarineInsight.Infrastructure.Caching;
 using MarineInsight.Infrastructure.Persistence;
 using MarineInsight.Infrastructure.Providers.OpenMeteo;
@@ -39,6 +40,7 @@ builder.Services.AddMarineInsightPersistence(builder.Configuration);
 builder.Services.AddMarineInsightCaching(builder.Configuration);
 builder.Services.AddOpenMeteoForecastProviders(builder.Configuration);
 builder.Services.AddSingleton<ForecastSnapshotAssembler>();
+builder.Services.AddSingleton<MarineRiskRuleEngine>();
 builder.Services.AddScoped<MarineAnalysisQueryService>();
 builder.Services.AddScoped<LocationQueryService>();
 builder.Services.AddScoped<DashboardQuerySession>();

@@ -1,19 +1,23 @@
 ﻿namespace MarineInsight.Domain.Analysis;
 
-public sealed record HourlyMarineAssessment
+public sealed record ActivityMarineAssessment
 {
-    public HourlyMarineAssessment(
+    public ActivityMarineAssessment(
+        ActivityType activityType,
         DateTimeOffset forecastTime,
         double? score,
         RiskLevel riskLevel,
         double confidence,
-        string algorithmVersion,
-        IEnumerable<RiskContribution> contributions,
-        IEnumerable<ActivityMarineAssessment>? activityAssessments = null)
+        string algorithmVersion)
     {
         if (score.HasValue && (!double.IsFinite(score.Value) || score.Value is < 0 or > 100))
         {
             throw new ArgumentOutOfRangeException(nameof(score), score, "Score must be between 0 and 100 or null.");
+        }
+
+        if (riskLevel == RiskLevel.Unknown && score.HasValue)
+        {
+            throw new ArgumentException("Unknown risk level cannot carry a numeric score.", nameof(score));
         }
 
         if (!double.IsFinite(confidence) || confidence is < 0 or > 1)
@@ -26,22 +30,15 @@ public sealed record HourlyMarineAssessment
             throw new ArgumentException("Algorithm version is required.", nameof(algorithmVersion));
         }
 
-        ArgumentNullException.ThrowIfNull(contributions);
-        var contributionArray = contributions.ToArray();
-        var activityAssessmentArray = activityAssessments?.ToArray() ?? [];
-        if (riskLevel == RiskLevel.Unknown && score.HasValue)
-        {
-            throw new ArgumentException("Unknown risk level cannot carry a numeric score.", nameof(score));
-        }
-
+        ActivityType = activityType;
         ForecastTimeUtc = forecastTime.ToUniversalTime();
         Score = score;
         RiskLevel = riskLevel;
         Confidence = confidence;
         AlgorithmVersion = algorithmVersion;
-        Contributions = Array.AsReadOnly(contributionArray);
-        ActivityAssessments = Array.AsReadOnly(activityAssessmentArray);
     }
+
+    public ActivityType ActivityType { get; }
 
     public DateTimeOffset ForecastTimeUtc { get; }
 
@@ -52,10 +49,4 @@ public sealed record HourlyMarineAssessment
     public double Confidence { get; }
 
     public string AlgorithmVersion { get; }
-
-    public IReadOnlyList<RiskContribution> Contributions { get; }
-
-    public IReadOnlyList<ActivityMarineAssessment> ActivityAssessments { get; }
-
-    public bool HasSafetyGate => Contributions.Any(contribution => contribution.Kind == RiskContributionKind.SafetyGate);
 }

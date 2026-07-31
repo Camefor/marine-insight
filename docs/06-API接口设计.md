@@ -81,7 +81,7 @@
 
 约束：`hours` 仅允许 `24`、`72`、`168`；经纬度必须成对出现；活动类型必须来自服务端枚举。
 
-当前 `MI-0014` 已支持预置地点的 `locationId` 输入：API 先从只读地点目录解析坐标、展示名称和 IANA 时区，再执行 metrics-only 查询；未知地点返回 `404 LOCATION_NOT_FOUND`。`locationId` 与坐标不能同时提供。`activities` 和 `units` 已保留为协议字段，但当前 metrics-only 响应不会执行活动评分或单位偏好转换。
+当前 `MI-0014` 已支持预置地点的 `locationId` 输入：API 先从只读地点目录解析坐标、展示名称和 IANA 时区，再执行分析查询；未知地点返回 `404 LOCATION_NOT_FOUND`。`locationId` 与坐标不能同时提供。`MI-0017` 已校验 `activities` 并按请求活动返回活动分数；`units` 仍仅保留为协议字段，暂不做展示单位换算。
 
 ### 5.2 响应
 
@@ -156,13 +156,13 @@
 
 `hourly` 可按产品性能策略返回组装后的摘要。完整原始标准点位通过 `sourceBatchIds` 对应的 `/forecast-batches/{id}/points` 分别获取，每个指标仍携带来源引用。
 
-### 5.3 当前 metrics-only 响应
+### 5.3 当前分析响应
 
-`MI-0013` 已实现 `POST /api/v1/marine-analyses` 的坐标查询骨架。当前响应使用以下稳定字段，不返回 `overall.score`、活动分数、风险规则、推荐窗口或分析持久化标识：
+`MI-0017` 已在 `POST /api/v1/marine-analyses` 返回确定性单小时分析投影。当前响应包含 `overall`、`activities`、`risks` 和逐小时 `hourly[].overall/hourly[].activities/hourly[].risks`；仍不返回推荐时间窗、返航截止或持久化分析报告。
 
 ```json
 {
-  "analysisStatus": "metricsOnly",
+  "analysisStatus": "analyzed",
   "analysisId": "82f9ff76-bb11-4456-93e5-78d669e609ea",
   "location": { "latitude": 30.194, "longitude": 122.687 },
   "range": {
@@ -190,12 +190,37 @@
     "missingMetrics": [],
     "missingDomains": []
   },
+  "overall": {
+    "score": 85,
+    "riskLevel": "good",
+    "confidence": 1,
+    "algorithmVersion": "marine-score-1.0.0"
+  },
+  "activities": [
+    { "type": "boat", "score": 81, "riskLevel": "good", "confidence": 1 }
+  ],
+  "risks": [
+    {
+      "code": "WAVE_HEIGHT_BASE",
+      "kind": "basePenalty",
+      "severity": "info",
+      "forecastTime": "2026-07-15T00:00:00Z",
+      "metric": "waveHeightM",
+      "actual": 0.8,
+      "threshold": null,
+      "penalty": 12,
+      "message": "基础指标惩罚。"
+    }
+  ],
   "hourly": [
     {
       "forecastTime": "2026-07-15T00:00:00Z",
       "metrics": { "windSpeedMs": 4.2, "waveHeightM": 0.6 },
       "quality": { "status": "valid", "freshness": "fresh" },
-      "sources": []
+      "sources": [],
+      "overall": { "score": 85, "riskLevel": "good", "confidence": 1, "algorithmVersion": "marine-score-1.0.0" },
+      "activities": [],
+      "risks": []
     }
   ],
   "disclaimer": "结果仅供辅助决策，请以官方预警和现场管理为准。",
@@ -203,7 +228,7 @@
 }
 ```
 
-`sources[].cacheStatus` 为 `hit`、`miss` 或 `stale`；当 Provider 在 Stale 窗口内失败时，响应保留旧批次并通过 `quality.freshness` 与质量 flags 表达降级。
+`sources[].cacheStatus` 为 `hit`、`miss` 或 `stale`；当 Provider 在 Stale 窗口内失败时，响应保留旧批次并通过 `quality.freshness` 与质量 flags 表达降级。`activities` 为空或缺省时服务端默认返回五类活动分；传入未知活动返回 `400 VALIDATION_FAILED`。
 
 ## 6. 地点目录查询
 
@@ -285,3 +310,4 @@
 | 1.0 | 2026-07-13 | 定义版本化业务 API、ProblemDetails 和分析响应 |
 | 1.1 | 2026-07-13 | 分析响应改为返回 Open-Meteo 等多个来源批次及数据域 |
 | 1.2 | 2026-07-16 | 增加 `POST /api/v1/marine-analyses` metrics-only 查询骨架、质量/来源/缓存投影和坐标校验契约 |
+| 1.3 | 2026-07-30 | 增加 `MI-0017` 分析响应 `overall`、`activities`、`risks`、逐小时评估投影和活动参数校验 |

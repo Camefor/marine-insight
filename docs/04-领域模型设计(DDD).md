@@ -75,7 +75,7 @@ flowchart LR
 - 实体：`HourlyAssessment`、`RiskFactor`、`ActivityAssessment`、`RecommendationWindow`。
 - 值对象：`Score`、`RiskLevel`、`Confidence`、`AlgorithmVersion`。
 - 不变式：分数范围为 0-100；硬性风险触发时等级必须为 `Avoid`；数据不足时允许 `Unknown`，不得伪造分数。
-- 当前 `MI-0016` 已先落地单小时 `HourlyMarineAssessment`、`RiskContribution`、`RiskLevel` 和 `MarineRiskRuleEngine`；完整 `AnalysisReport` 聚合、活动结果和推荐窗口仍由后续任务补齐。
+- 当前 `MI-0016` 已先落地单小时 `HourlyMarineAssessment`、`RiskContribution`、`RiskLevel` 和 `MarineRiskRuleEngine`；`MI-0017` 已补充 `ActivityType`、`ActivityProfile`、`ActivityMarineAssessment` 和活动评分服务，并把活动结果投影到查询结果、API 和 Dashboard。完整 `AnalysisReport` 持久化聚合、推荐窗口和返航截止仍由后续任务补齐。
 
 ### 4.5 UserProfile 聚合
 
@@ -164,3 +164,4 @@ flowchart LR
 | 1.2 | 2026-07-16 | 落地 ForecastSnapshot、来源批次引用、质量传递和 UTC 时间轴组装不变式 |
 | 1.3 | 2026-07-16 | 增加 ForecastBatch Application 仓储端口、EF 追加/读取实现及来源和质量映射 |
 | 1.4 | 2026-07-30 | 增加 `MI-0016` 单小时海况风险评估值对象和领域规则引擎实现边界 |
+| 1.5 | 2026-07-30 | 增加 `MI-0017` 活动 Profile、活动评分值对象和 API/Dashboard 查询投影边界 |

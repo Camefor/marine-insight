@@ -3,6 +3,7 @@ using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Errors;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
+using MarineInsight.Domain.Analysis;
 using MarineInsight.Domain.Forecast;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -130,7 +131,8 @@ public static class MarineAnalysisEndpointExtensions
             Query = new MarineAnalysisQuery(
                 coordinateResult.Query.Location,
                 coordinateResult.Query.Range,
-                location)
+                location,
+                coordinateResult.Query.Activities)
         };
     }
 
@@ -216,7 +218,8 @@ public static class MarineAnalysisEndpointExtensions
                 new GeoPoint(
                     request.Location!.Latitude!.Value,
                     request.Location.Longitude!.Value),
-                new ForecastRange(request.From, request.Hours));
+                new ForecastRange(request.From, request.Hours),
+                activities: ParseActivities(request));
             return true;
         }
         catch (ArgumentException exception)
@@ -225,6 +228,22 @@ public static class MarineAnalysisEndpointExtensions
             return false;
         }
     }
+
+    private static ActivityType[] ParseActivities(MarineAnalysisRequest request) =>
+        request.Activities?
+            .Select(ParseActivity)
+            .ToArray() ?? [];
+
+    private static ActivityType ParseActivity(string value) =>
+        value switch
+        {
+            "shoreFishing" => ActivityType.ShoreFishing,
+            "boat" => ActivityType.Boat,
+            "landing" => ActivityType.Landing,
+            "camping" => ActivityType.Camping,
+            "photography" => ActivityType.Photography,
+            _ => throw new ArgumentException($"Unsupported activity '{value}'.", nameof(value))
+        };
 
     private sealed record QueryCreationResult(
         MarineAnalysisQuery? Query,
@@ -253,6 +272,17 @@ public static class MarineAnalysisEndpointExtensions
                 ToQuality(source.Quality)))
             .ToArray();
 
+        var assessmentsByTime = result.HourlyAssessments.ToDictionary(
+            assessment => assessment.ForecastTimeUtc);
+        var rootAssessment = result.HourlyAssessments
+            .OrderBy(assessment => assessment.ForecastTimeUtc)
+            .FirstOrDefault();
+        var rootRisks = result.HourlyAssessments
+            .SelectMany(ProjectRisks)
+            .OrderByDescending(risk => risk.Penalty)
+            .ThenBy(risk => risk.ForecastTime)
+            .Take(8)
+            .ToArray();
         var hourly = result.Snapshot.Points
             .Select(point => new MarineAnalysisHourlyResponse(
                 point.ForecastTimeUtc,
@@ -268,11 +298,20 @@ public static class MarineAnalysisEndpointExtensions
                         source.ForecastTimeUtc,
                         ToApiName(source.QualityStatus),
                         ToApiName(source.Freshness)))
-                    .ToArray()))
+                    .ToArray(),
+                assessmentsByTime.TryGetValue(point.ForecastTimeUtc, out var assessment)
+                    ? ProjectOverall(assessment)
+                    : null,
+                assessment is null
+                    ? []
+                    : ProjectActivities(assessment),
+                assessment is null
+                    ? []
+                    : ProjectRisks(assessment)))
             .ToArray();
 
         return new MarineAnalysisResponse(
-            "metricsOnly",
+            "analyzed",
             result.Snapshot.SnapshotId,
             new MarineAnalysisLocationResponse(
                 result.Snapshot.RequestedLocation.Latitude,
@@ -286,10 +325,46 @@ public static class MarineAnalysisEndpointExtensions
                 result.Snapshot.Range.Hours),
             sourceBatches,
             ToQuality(result.Snapshot.Quality),
+            rootAssessment is null ? null : ProjectOverall(rootAssessment),
+            rootAssessment is null ? [] : ProjectActivities(rootAssessment),
+            rootRisks,
             hourly,
             "结果仅供辅助决策，请以官方预警和现场管理为准。",
             traceId);
     }
+
+    private static MarineAnalysisOverallResponse ProjectOverall(
+        HourlyMarineAssessment assessment) => new(
+            assessment.Score,
+            ToApiName(assessment.RiskLevel),
+            assessment.Confidence,
+            assessment.AlgorithmVersion);
+
+    private static MarineAnalysisActivityResponse[] ProjectActivities(
+        HourlyMarineAssessment assessment) =>
+        assessment.ActivityAssessments
+            .Select(activity => new MarineAnalysisActivityResponse(
+                ToApiName(activity.ActivityType),
+                activity.Score,
+                ToApiName(activity.RiskLevel),
+                activity.Confidence))
+            .ToArray();
+
+    private static MarineAnalysisRiskResponse[] ProjectRisks(
+        HourlyMarineAssessment assessment) =>
+        assessment.Contributions
+            .Where(contribution => contribution.Penalty > 0)
+            .Select(contribution => new MarineAnalysisRiskResponse(
+                contribution.Code,
+                ToApiName(contribution.Kind),
+                ToApiName(contribution.Severity),
+                assessment.ForecastTimeUtc,
+                contribution.Metric,
+                contribution.Actual,
+                contribution.Threshold,
+                contribution.Penalty,
+                contribution.Message))
+            .ToArray();
 
     private static MarineAnalysisMetricsResponse ToMetrics(ForecastMetricSet metrics) => new(
         metrics.WindSpeedMs,

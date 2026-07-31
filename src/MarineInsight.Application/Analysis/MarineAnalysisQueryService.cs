@@ -1,11 +1,12 @@
 ﻿using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Forecast.Ports;
+using MarineInsight.Domain.Analysis;
 using MarineInsight.Domain.Forecast;
 
 namespace MarineInsight.Application.Analysis;
 
 /// <summary>
-/// Fetches independent Weather and Marine batches, then creates the metrics-only snapshot.
+/// Fetches independent Weather and Marine batches, then creates the deterministic analysis projection.
 /// </summary>
 public sealed class MarineAnalysisQueryService
 {
@@ -14,13 +15,15 @@ public sealed class MarineAnalysisQueryService
     private readonly IForecastCacheKeyFactory _cacheKeyFactory;
     private readonly ForecastBatchCacheCoordinator _cacheCoordinator;
     private readonly ForecastSnapshotAssembler _snapshotAssembler;
+    private readonly MarineRiskRuleEngine _riskRuleEngine;
 
     public MarineAnalysisQueryService(
         IWeatherForecastProvider weatherProvider,
         IMarineForecastProvider marineProvider,
         IForecastCacheKeyFactory cacheKeyFactory,
         ForecastBatchCacheCoordinator cacheCoordinator,
-        ForecastSnapshotAssembler snapshotAssembler)
+        ForecastSnapshotAssembler snapshotAssembler,
+        MarineRiskRuleEngine? riskRuleEngine = null)
     {
         ArgumentNullException.ThrowIfNull(weatherProvider);
         ArgumentNullException.ThrowIfNull(marineProvider);
@@ -33,6 +36,7 @@ public sealed class MarineAnalysisQueryService
         _cacheKeyFactory = cacheKeyFactory;
         _cacheCoordinator = cacheCoordinator;
         _snapshotAssembler = snapshotAssembler;
+        _riskRuleEngine = riskRuleEngine ?? new MarineRiskRuleEngine();
     }
 
     public async Task<MarineAnalysisQueryResult> ExecuteAsync(
@@ -52,8 +56,26 @@ public sealed class MarineAnalysisQueryService
         var snapshot = _snapshotAssembler.Assemble(
             [weather.Batch, marine.Batch],
             query.Range);
+        var activityProfiles = ActivityProfile.SelectDefaults(query.Activities);
+        var assessments = snapshot.Points
+            .OrderBy(point => point.ForecastTimeUtc)
+            .Select(point =>
+            {
+                var baseAssessment = _riskRuleEngine.Evaluate(point);
+                var activityAssessments = MarineActivityScoringService.Evaluate(baseAssessment, activityProfiles);
 
-        return new MarineAnalysisQueryResult(query, snapshot, weather, marine);
+                return new HourlyMarineAssessment(
+                    baseAssessment.ForecastTimeUtc,
+                    baseAssessment.Score,
+                    baseAssessment.RiskLevel,
+                    baseAssessment.Confidence,
+                    baseAssessment.AlgorithmVersion,
+                    baseAssessment.Contributions,
+                    activityAssessments);
+            })
+            .ToArray();
+
+        return new MarineAnalysisQueryResult(query, snapshot, assessments, weather, marine);
     }
 
     private Task<ForecastCacheResult> LoadWeatherAsync(

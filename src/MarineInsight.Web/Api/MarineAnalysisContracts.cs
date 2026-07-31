@@ -38,6 +38,9 @@ public sealed record MarineAnalysisResponse(
     MarineAnalysisRangeResponse Range,
     IReadOnlyList<MarineAnalysisSourceResponse> Sources,
     MarineAnalysisQualityResponse Quality,
+    MarineAnalysisOverallResponse? Overall,
+    IReadOnlyList<MarineAnalysisActivityResponse> Activities,
+    IReadOnlyList<MarineAnalysisRiskResponse> Risks,
     IReadOnlyList<MarineAnalysisHourlyResponse> Hourly,
     string Disclaimer,
     string TraceId);
@@ -68,7 +71,33 @@ public sealed record MarineAnalysisHourlyResponse(
     DateTimeOffset ForecastTime,
     MarineAnalysisMetricsResponse Metrics,
     MarineAnalysisQualityResponse Quality,
-    IReadOnlyList<MarineAnalysisMetricSourceResponse> Sources);
+    IReadOnlyList<MarineAnalysisMetricSourceResponse> Sources,
+    MarineAnalysisOverallResponse? Overall,
+    IReadOnlyList<MarineAnalysisActivityResponse> Activities,
+    IReadOnlyList<MarineAnalysisRiskResponse> Risks);
+
+public sealed record MarineAnalysisOverallResponse(
+    double? Score,
+    string RiskLevel,
+    double Confidence,
+    string AlgorithmVersion);
+
+public sealed record MarineAnalysisActivityResponse(
+    string Type,
+    double? Score,
+    string RiskLevel,
+    double Confidence);
+
+public sealed record MarineAnalysisRiskResponse(
+    string Code,
+    string Kind,
+    string Severity,
+    DateTimeOffset ForecastTime,
+    string Metric,
+    double? Actual,
+    double? Threshold,
+    double Penalty,
+    string Message);
 
 public sealed record MarineAnalysisMetricSourceResponse(
     string Metric,

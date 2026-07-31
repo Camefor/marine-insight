@@ -17,6 +17,8 @@ namespace MarineInsight.Web.Tests;
 
 public sealed class MarineAnalysisApiTests
 {
+    private static readonly string[] UnsupportedActivities = ["diving"];
+
     [Fact]
     public async Task CoordinateQueryReturnsMetricsQualitySourcesAndCacheStatuses()
     {
@@ -29,7 +31,11 @@ public sealed class MarineAnalysisApiTests
 
         Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
         Assert.False(string.IsNullOrWhiteSpace(firstResponse.Headers.GetValues("Trace-Id").Single()));
-        Assert.Equal("metricsOnly", firstDocument.RootElement.GetProperty("analysisStatus").GetString());
+        Assert.Equal("analyzed", firstDocument.RootElement.GetProperty("analysisStatus").GetString());
+        Assert.Equal("good", firstDocument.RootElement.GetProperty("overall").GetProperty("riskLevel").GetString());
+        Assert.Equal(1, firstDocument.RootElement.GetProperty("activities").GetArrayLength());
+        Assert.Equal("boat", firstDocument.RootElement.GetProperty("activities")[0].GetProperty("type").GetString());
+        Assert.True(firstDocument.RootElement.GetProperty("risks").GetArrayLength() > 0);
         Assert.Equal(2, firstDocument.RootElement.GetProperty("sources").GetArrayLength());
         Assert.All(
             firstDocument.RootElement.GetProperty("sources").EnumerateArray(),
@@ -43,6 +49,13 @@ public sealed class MarineAnalysisApiTests
                 .GetProperty("metrics")
                 .GetProperty("waveHeightM")
                 .GetDouble());
+        Assert.Equal(
+            "good",
+            firstDocument.RootElement
+                .GetProperty("hourly")[0]
+                .GetProperty("overall")
+                .GetProperty("riskLevel")
+                .GetString());
 
         using var secondResponse = await client.PostAsJsonAsync("/api/v1/marine-analyses", request);
         using var secondDocument = JsonDocument.Parse(await secondResponse.Content.ReadAsStringAsync());
@@ -53,6 +66,27 @@ public sealed class MarineAnalysisApiTests
             source => Assert.Equal("hit", source.GetProperty("cacheStatus").GetString()));
         Assert.Equal(1, factory.Weather.CallCount);
         Assert.Equal(1, factory.Marine.CallCount);
+    }
+
+    [Fact]
+    public async Task UnknownActivityReturnsValidationProblemDetails()
+    {
+        using var factory = new ApiTestApplicationFactory();
+        using var client = factory.CreateClient();
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/v1/marine-analyses",
+            new
+            {
+                location = new { latitude = 30.194, longitude = 122.687 },
+                from = "2026-07-16T00:00:00Z",
+                hours = 24,
+                activities = UnsupportedActivities
+            });
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("VALIDATION_FAILED", document.RootElement.GetProperty("code").GetString());
     }
 
     [Fact]

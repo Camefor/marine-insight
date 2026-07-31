@@ -3,6 +3,7 @@ using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Errors;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
+using MarineInsight.Domain.Analysis;
 using MarineInsight.Domain.Forecast;
 using MarineInsight.Domain.Location;
 
@@ -187,6 +188,9 @@ public sealed class DashboardQuerySession : IDisposable
         var selectedPoint = result.Snapshot.Points
             .OrderBy(point => point.ForecastTimeUtc)
             .FirstOrDefault();
+        var selectedAssessment = result.HourlyAssessments
+            .OrderBy(assessment => assessment.ForecastTimeUtc)
+            .FirstOrDefault();
 
         var metricCards = selectedPoint is null
             ? Array.Empty<DashboardMetricCard>()
@@ -213,14 +217,22 @@ public sealed class DashboardQuerySession : IDisposable
 
         var hourlyRows = result.Snapshot.Points
             .OrderBy(point => point.ForecastTimeUtc)
-            .Select(point => new DashboardHourlyRow(
-                point.ForecastTimeUtc,
-                FormatMetric(point.Metrics.WindSpeedMs, "0.0"),
-                FormatMetric(point.Metrics.WindGustMs, "0.0"),
-                FormatMetric(point.Metrics.WaveHeightM, "0.0"),
-                FormatMetric(point.Metrics.SwellHeightM, "0.0"),
-                FormatVisibilityKm(point.Metrics.VisibilityM),
-                ToApiName(point.Quality.Status)))
+            .Select(point =>
+            {
+                var assessment = result.HourlyAssessments.FirstOrDefault(item =>
+                    item.ForecastTimeUtc == point.ForecastTimeUtc);
+
+                return new DashboardHourlyRow(
+                    point.ForecastTimeUtc,
+                    FormatMetric(point.Metrics.WindSpeedMs, "0.0"),
+                    FormatMetric(point.Metrics.WindGustMs, "0.0"),
+                    FormatMetric(point.Metrics.WaveHeightM, "0.0"),
+                    FormatMetric(point.Metrics.SwellHeightM, "0.0"),
+                    FormatVisibilityKm(point.Metrics.VisibilityM),
+                    assessment is null ? "暂无" : FormatScore(assessment.Score),
+                    assessment is null ? "unknown" : ToApiName(assessment.RiskLevel),
+                    ToApiName(point.Quality.Status));
+            })
             .ToArray();
 
         return new DashboardAnalysisResult(
@@ -238,6 +250,9 @@ public sealed class DashboardQuerySession : IDisposable
             ToFlags(result.Snapshot.Quality.Flags),
             result.Snapshot.Quality.MissingMetrics.Select(ToApiName).ToArray(),
             result.Snapshot.Quality.MissingDomains.Select(ToApiName).ToArray(),
+            selectedAssessment is null ? null : ToDashboardOverall(selectedAssessment),
+            selectedAssessment is null ? [] : ToActivityScores(selectedAssessment),
+            selectedAssessment is null ? [] : ToRiskSummaries(selectedAssessment),
             sources,
             metricCards,
             hourlyRows,
@@ -248,7 +263,6 @@ public sealed class DashboardQuerySession : IDisposable
     {
         var metrics = point.Metrics;
 
-        // metrics-only 阶段只展示原始指标可用性，不能在确定性评分规则落地前暗示安全结论。
         yield return CreateMetric("风速", metrics.WindSpeedMs, "m/s", "平均风", point.Quality, ForecastMetricName.WindSpeedMs);
         yield return CreateMetric("阵风", metrics.WindGustMs, "m/s", "突增风", point.Quality, ForecastMetricName.WindGustMs);
         yield return CreateMetric("有效波高", metrics.WaveHeightM, "m", "海浪", point.Quality, ForecastMetricName.WaveHeightM);
@@ -260,7 +274,7 @@ public sealed class DashboardQuerySession : IDisposable
             metrics.Thunderstorm is null ? "暂无数据" : metrics.Thunderstorm.Value ? "是" : "否",
             string.Empty,
             "对流信号",
-            metrics.Thunderstorm.HasValue ? "待评分" : "暂无数据",
+            metrics.Thunderstorm.HasValue ? "已评分" : "暂无数据",
             ToApiName(point.Quality.Status));
     }
 
@@ -278,9 +292,67 @@ public sealed class DashboardQuerySession : IDisposable
             FormatMetric(value, "0.0"),
             value.HasValue ? unit : string.Empty,
             detail,
-            value.HasValue && !hasMissingFlag ? "待评分" : "暂无数据",
+            value.HasValue && !hasMissingFlag ? "已评分" : "暂无数据",
             ToApiName(quality.Status));
     }
+
+    private static DashboardOverallAssessment ToDashboardOverall(
+        HourlyMarineAssessment assessment) => new(
+            FormatScore(assessment.Score),
+            ToApiName(assessment.RiskLevel),
+            ToRiskLevelText(assessment.RiskLevel),
+            assessment.Confidence.ToString("P0", CultureInfo.InvariantCulture),
+            assessment.AlgorithmVersion);
+
+    private static DashboardActivityScore[] ToActivityScores(
+        HourlyMarineAssessment assessment) =>
+        assessment.ActivityAssessments
+            .Select(activity => new DashboardActivityScore(
+                ToActivityLabel(activity.ActivityType),
+                ToApiName(activity.ActivityType),
+                FormatScore(activity.Score),
+                ToApiName(activity.RiskLevel),
+                ToRiskLevelText(activity.RiskLevel)))
+            .ToArray();
+
+    private static DashboardRiskSummary[] ToRiskSummaries(
+        HourlyMarineAssessment assessment) =>
+        assessment.Contributions
+            .Where(contribution => contribution.Penalty > 0)
+            .OrderByDescending(contribution => contribution.Penalty)
+            .Take(5)
+            .Select(contribution => new DashboardRiskSummary(
+                contribution.Code,
+                ToApiName(contribution.Severity),
+                FormatMetric(contribution.Penalty, "0.#"),
+                contribution.Message))
+            .ToArray();
+
+    private static string FormatScore(double? score) =>
+        score.HasValue
+            ? score.Value.ToString("0", CultureInfo.InvariantCulture)
+            : "暂无";
+
+    private static string ToActivityLabel(ActivityType activityType) => activityType switch
+    {
+        ActivityType.ShoreFishing => "岸钓",
+        ActivityType.Boat => "乘船",
+        ActivityType.Landing => "登岛",
+        ActivityType.Camping => "露营",
+        ActivityType.Photography => "摄影",
+        _ => activityType.ToString()
+    };
+
+    private static string ToRiskLevelText(RiskLevel riskLevel) => riskLevel switch
+    {
+        RiskLevel.VeryGood => "非常适宜",
+        RiskLevel.Good => "适宜",
+        RiskLevel.Moderate => "一般",
+        RiskLevel.Caution => "谨慎",
+        RiskLevel.Avoid => "不建议",
+        RiskLevel.Unknown => "数据不足",
+        _ => riskLevel.ToString()
+    };
 
     private static string FormatSwellDetail(double? swellPeriodS) =>
         swellPeriodS.HasValue
@@ -355,6 +427,9 @@ public sealed record DashboardAnalysisResult(
     IReadOnlyList<string> Flags,
     IReadOnlyList<string> MissingMetrics,
     IReadOnlyList<string> MissingDomains,
+    DashboardOverallAssessment? Overall,
+    IReadOnlyList<DashboardActivityScore> ActivityScores,
+    IReadOnlyList<DashboardRiskSummary> TopRisks,
     IReadOnlyList<DashboardSourceStatus> Sources,
     IReadOnlyList<DashboardMetricCard> MetricCards,
     IReadOnlyList<DashboardHourlyRow> HourlyRows,
@@ -378,6 +453,26 @@ public sealed record DashboardMetricCard(
     string StatusText,
     string QualityStatus);
 
+public sealed record DashboardOverallAssessment(
+    string Score,
+    string RiskLevel,
+    string RiskLevelText,
+    string Confidence,
+    string AlgorithmVersion);
+
+public sealed record DashboardActivityScore(
+    string Label,
+    string Type,
+    string Score,
+    string RiskLevel,
+    string RiskLevelText);
+
+public sealed record DashboardRiskSummary(
+    string Code,
+    string Severity,
+    string Penalty,
+    string Message);
+
 public sealed record DashboardHourlyRow(
     DateTimeOffset ForecastTimeUtc,
     string WindSpeedMs,
@@ -385,4 +480,6 @@ public sealed record DashboardHourlyRow(
     string WaveHeightM,
     string SwellHeightM,
     string VisibilityKm,
+    string Score,
+    string RiskLevel,
     string QualityStatus);
