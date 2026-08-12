@@ -333,6 +333,15 @@
     margin: 6px 0 0;
 }
 
+.summary-action {
+    margin-top: 12px;
+}
+
+.workspace-inline-status {
+    display: inline-block;
+    margin-left: 10px;
+}
+
 .summary-grid,
 .source-item dl {
     display: grid;

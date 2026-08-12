@@ -1,0 +1,96 @@
+@page "/favorites"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserWorkspaceService Workspace
+
+<PageTitle>收藏地点 - Marine Insight</PageTitle>
+
+<main class="workspace-page">
+    <header class="workspace-heading">
+        <div>
+            <p class="workspace-eyebrow">个人工作区</p>
+            <h1>收藏地点</h1>
+        </div>
+        <a class="workspace-primary" href="/">查询新地点</a>
+    </header>
+
+    @if (_loading)
+    {
+        <p class="workspace-status" role="status">正在加载收藏地点…</p>
+    }
+    else if (_favorites.Count == 0)
+    {
+        <section class="workspace-empty">
+            <h2>还没有收藏地点</h2>
+            <p>在 Dashboard 选择预置地点并完成查询后即可收藏。</p>
+        </section>
+    }
+    else
+    {
+        <div class="workspace-list">
+            @foreach (var favorite in _favorites)
+            {
+                <article class="workspace-row" @key="favorite.Id">
+                    <div class="workspace-row-main">
+                        <h2>@favorite.DisplayName</h2>
+                        <p>@favorite.Latitude.ToString("0.###"), @favorite.Longitude.ToString("0.###")</p>
+                        @if (!string.IsNullOrWhiteSpace(favorite.Note))
+                        {
+                            <p>@favorite.Note</p>
+                        }
+                    </div>
+                    <dl class="workspace-meta">
+                        <div><dt>默认活动</dt><dd>@ActivityText(favorite.DefaultActivity)</dd></div>
+                        <div><dt>排序</dt><dd>@favorite.SortOrder</dd></div>
+                    </dl>
+                    <div class="workspace-actions">
+                        <a class="workspace-icon-button" title="再次查询" aria-label="再次查询 @favorite.DisplayName" href="/?locationId=@favorite.LocationId">↻</a>
+                        <button class="workspace-icon-button danger" type="button" title="删除收藏" aria-label="删除收藏 @favorite.DisplayName" @onclick="() => DeleteAsync(favorite.Id)">×</button>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</main>
+
+@code {
+    private Guid _userId;
+    private bool _loading = true;
+    private IReadOnlyList<FavoriteLocation> _favorites = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _userId = await GetUserIdAsync();
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        _favorites = await Workspace.ListFavoritesAsync(_userId);
+        _loading = false;
+    }
+
+    private async Task DeleteAsync(Guid favoriteId)
+    {
+        await Workspace.DeleteFavoriteAsync(_userId, favoriteId);
+        await ReloadAsync();
+    }
+
+    private async Task<Guid> GetUserIdAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return UserWorkspaceEndpointExtensions.GetUserId(state.User);
+    }
+
+    private static string ActivityText(ActivityType? activity) => activity switch
+    {
+        ActivityType.ShoreFishing => "海钓",
+        ActivityType.Boat => "乘船",
+        ActivityType.Landing => "登岛",
+        ActivityType.Camping => "露营",
+        ActivityType.Photography => "摄影",
+        _ => "全部活动"
+    };
+}

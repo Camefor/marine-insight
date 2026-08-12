@@ -16,7 +16,8 @@ public sealed class MarineAnalysisQueryResult
         IEnumerable<RecommendationWindow> recommendedWindows,
         MarineAnalysisCacheIdentity cacheIdentity,
         ForecastCacheResult weather,
-        ForecastCacheResult marine)
+        ForecastCacheResult marine,
+        TideQueryStatus? tide = null)
     {
         ArgumentNullException.ThrowIfNull(query);
         ArgumentNullException.ThrowIfNull(snapshot);
@@ -33,6 +34,7 @@ public sealed class MarineAnalysisQueryResult
         CacheIdentity = cacheIdentity;
         Weather = weather;
         Marine = marine;
+        Tide = tide ?? TideQueryStatus.Disabled;
     }
 
     public MarineAnalysisQuery Query { get; }
@@ -48,4 +50,16 @@ public sealed class MarineAnalysisQueryResult
     public ForecastCacheResult Weather { get; }
 
     public ForecastCacheResult Marine { get; }
+
+    public TideQueryStatus Tide { get; }
+}
+
+public sealed record TideQueryStatus(
+    string Status,
+    string CacheStatus,
+    int? RemainingCredits,
+    string? ErrorCode,
+    ProviderTideResult? Result)
+{
+    public static TideQueryStatus Disabled { get; } = new("disabled", "none", null, null, null);
 }

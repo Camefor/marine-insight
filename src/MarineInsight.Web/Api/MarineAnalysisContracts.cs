@@ -36,6 +36,7 @@ public sealed record MarineAnalysisResponse(
     Guid AnalysisId,
     string AlgorithmVersion,
     MarineAnalysisCacheResponse Cache,
+    MarineAnalysisTideResponse Tide,
     MarineAnalysisLocationResponse Location,
     MarineAnalysisRangeResponse Range,
     IReadOnlyList<MarineAnalysisSourceResponse> Sources,
@@ -47,6 +48,12 @@ public sealed record MarineAnalysisResponse(
     IReadOnlyList<MarineAnalysisHourlyResponse> Hourly,
     string Disclaimer,
     string TraceId);
+
+public sealed record MarineAnalysisTideResponse(
+    string Status,
+    string CacheStatus,
+    int? RemainingCredits,
+    string? ErrorCode);
 
 public sealed record MarineAnalysisCacheResponse(
     string Key,

@@ -7,7 +7,7 @@ namespace MarineInsight.Application.Forecast;
 /// </summary>
 public sealed record ProviderTideResult
 {
-    public ProviderTideResult(ForecastBatch batch)
+    public ProviderTideResult(ForecastBatch batch, bool fromCache = false, int? remainingCredits = null)
     {
         ArgumentNullException.ThrowIfNull(batch);
 
@@ -17,7 +17,13 @@ public sealed record ProviderTideResult
         }
 
         Batch = batch;
+        FromCache = fromCache;
+        RemainingCredits = remainingCredits;
     }
 
     public ForecastBatch Batch { get; }
+
+    public bool FromCache { get; }
+
+    public int? RemainingCredits { get; }
 }

@@ -2,7 +2,10 @@
 @rendermode InteractiveServer
 @inject DashboardQuerySession Session
 @inject IJSRuntime Js
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserWorkspaceService Workspace
 @implements IAsyncDisposable
+
 
 <PageTitle>海况 Dashboard</PageTitle>
 
@@ -167,6 +170,18 @@
             <div>
                 <h2 id="summary-title">@result.DisplayName</h2>
                 <p>@result.Latitude.ToString("0.###"), @result.Longitude.ToString("0.###") · @(result.TimeZone ?? "UTC")</p>
+                <AuthorizeView>
+                    <Authorized>
+                        @if (Session.SelectedLocation is not null)
+                        {
+                            <button class="secondary-button summary-action" type="button" @onclick="SaveFavoriteAsync">收藏当前地点</button>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(_workspaceStatus))
+                        {
+                            <span class="workspace-inline-status" role="status">@_workspaceStatus</span>
+                        }
+                    </Authorized>
+                </AuthorizeView>
             </div>
             <dl class="summary-grid">
                 <div>
@@ -499,10 +514,75 @@
     private DotNetObjectReference<Dashboard>? _mapCallback;
     private bool _mapInitialized;
     private bool _mapInitializationAttempted;
+    private Guid? _userId;
+    private string? _workspaceStatus;
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "locationId")]
+    public Guid? LocationId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "hours")]
+    public int? QueryHours { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            _userId = UserWorkspaceEndpointExtensions.GetUserId(state.User);
+            Session.ApplySettings(await Workspace.GetSettingsAsync(_userId.Value));
+        }
+
+        if (QueryHours is 24 or 72 or 168)
+        {
+            Session.Hours = QueryHours.Value;
+        }
+
+        if (LocationId.HasValue)
+        {
+            await Session.SelectCatalogLocationAsync(LocationId.Value);
+        }
+    }
 
     private Task SearchLocationsAsync() => Session.SearchLocationsAsync();
 
-    private Task SubmitAsync() => Session.SubmitAnalysisAsync();
+    private async Task SubmitAsync()
+    {
+        await Session.SubmitAnalysisAsync();
+        if (_userId.HasValue && Session.Result is { } result)
+        {
+            await Workspace.RecordHistoryAsync(_userId.Value, new RecordQueryHistoryCommand(
+                Session.SelectedLocation?.Id,
+                result.DisplayName,
+                result.Latitude,
+                result.Longitude,
+                result.FromUtc,
+                result.Hours,
+                [],
+                result.SnapshotId,
+                result.Overall?.RiskLevel ?? "unknown",
+                double.TryParse(result.Overall?.Score, out var score) ? score : null));
+        }
+    }
+
+    private async Task SaveFavoriteAsync()
+    {
+        if (!_userId.HasValue || Session.SelectedLocation is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await Workspace.AddFavoriteAsync(_userId.Value, new SaveFavoriteCommand(Session.SelectedLocation.Id, null, null, 0));
+            _workspaceStatus = "已收藏。";
+        }
+        catch (FavoriteAlreadyExistsException)
+        {
+            _workspaceStatus = "该地点已经在收藏中。";
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

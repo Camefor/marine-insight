@@ -60,6 +60,226 @@
     gap: 8px;
 }
 
+.workspace-nav {
+    align-items: center;
+    display: flex;
+}
+
+.workspace-page {
+    margin: 0 auto;
+    max-width: 1120px;
+    min-height: calc(100vh - 56px);
+    padding: 32px 24px 64px;
+}
+
+.workspace-page.compact {
+    max-width: 720px;
+}
+
+.workspace-heading {
+    align-items: end;
+    border-bottom: 1px solid #d9e1df;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+}
+
+.workspace-heading h1,
+.workspace-row h2,
+.workspace-empty h2 {
+    letter-spacing: 0;
+    margin: 0;
+}
+
+.workspace-heading h1 {
+    font-size: 1.75rem;
+}
+
+.workspace-eyebrow {
+    color: #52736d;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin: 0 0 5px;
+    text-transform: uppercase;
+}
+
+.workspace-primary {
+    align-items: center;
+    background: #1f6b5d;
+    border: 1px solid #1f6b5d;
+    border-radius: 4px;
+    color: #ffffff;
+    display: inline-flex;
+    font: inherit;
+    font-weight: 700;
+    justify-content: center;
+    min-height: 42px;
+    padding: 8px 14px;
+    text-decoration: none;
+}
+
+.workspace-list {
+    border-top: 1px solid #d9e1df;
+}
+
+.workspace-row {
+    align-items: center;
+    border-bottom: 1px solid #d9e1df;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(220px, 1fr) minmax(220px, 0.7fr) auto;
+    padding: 16px 4px;
+}
+
+.workspace-row-main h2 {
+    font-size: 1rem;
+}
+
+.workspace-row-main p,
+.workspace-empty p {
+    color: #53635f;
+    margin: 5px 0 0;
+}
+
+.workspace-meta {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+}
+
+.workspace-meta dt {
+    color: #667773;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.workspace-meta dd {
+    margin: 3px 0 0;
+}
+
+.workspace-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.workspace-icon-button {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #9db0ab;
+    border-radius: 4px;
+    color: #245e55;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 1.25rem;
+    height: 40px;
+    justify-content: center;
+    text-decoration: none;
+    width: 40px;
+}
+
+.workspace-icon-button.danger {
+    color: #9a3329;
+}
+
+.workspace-empty,
+.workspace-status {
+    padding: 28px 0;
+}
+
+.workspace-form {
+    display: grid;
+    gap: 16px;
+}
+
+.workspace-form label {
+    color: #304a46;
+    display: grid;
+    font-weight: 600;
+    gap: 7px;
+}
+
+.workspace-form select,
+.workspace-form input {
+    border: 1px solid #aebdb9;
+    border-radius: 4px;
+    font: inherit;
+    min-height: 44px;
+    padding: 8px 10px;
+}
+
+.workspace-form .workspace-primary {
+    justify-self: start;
+}
+
+.workspace-success,
+.workspace-inline-status {
+    color: #275747;
+    font-weight: 700;
+}
+
+.admin-page {
+    display: grid;
+    gap: 24px;
+}
+
+.admin-page .workspace-heading {
+    margin-bottom: 0;
+}
+
+.admin-section {
+    min-width: 0;
+}
+
+.admin-section h2 {
+    font-size: 1.1rem;
+    letter-spacing: 0;
+    margin: 0 0 10px;
+}
+
+.admin-table-wrap {
+    border: 1px solid #d9e1df;
+    overflow-x: auto;
+}
+
+.admin-table-wrap table {
+    border-collapse: collapse;
+    min-width: 760px;
+    width: 100%;
+}
+
+.admin-table-wrap th,
+.admin-table-wrap td {
+    border-bottom: 1px solid #d9e1df;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+.admin-table-wrap th {
+    background: #edf3f4;
+    font-size: 0.8rem;
+}
+
+.admin-definition {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+}
+
+.admin-definition div {
+    border-bottom: 1px solid #d9e1df;
+    min-width: 0;
+    padding: 8px 0;
+}
+
+.admin-definition dd {
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+}
+
 .account-email {
     color: #465956;
     font-size: 0.875rem;
@@ -200,7 +420,50 @@
     }
 
     .account-email {
-        max-width: 130px;
+        display: none;
+    }
+
+    .app-header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding-bottom: 6px;
+        padding-top: 6px;
+    }
+
+    .account-links,
+    .workspace-nav {
+        gap: 0;
+    }
+
+    .account-link {
+        min-height: 40px;
+        padding: 9px 7px;
+    }
+
+    .workspace-page {
+        padding: 20px 12px 48px;
+    }
+
+    .workspace-heading {
+        align-items: stretch;
+        display: grid;
+        gap: 12px;
+    }
+
+    .workspace-row {
+        gap: 12px;
+        grid-template-columns: 1fr auto;
+    }
+
+    .workspace-row-main,
+    .workspace-meta {
+        grid-column: 1 / -1;
+    }
+
+    .workspace-actions {
+        grid-column: 2;
+        grid-row: 1;
     }
 
     .account-page {

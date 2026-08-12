@@ -3,6 +3,7 @@ using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Errors;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
+using MarineInsight.Application.Users;
 using MarineInsight.Domain.Analysis;
 using MarineInsight.Domain.Forecast;
 using MarineInsight.Domain.Location;
@@ -15,6 +16,7 @@ public sealed class DashboardQuerySession : IDisposable
     private readonly LocationQueryService _locationQueryService;
     private CancellationTokenSource? _activeRequest;
     private long _requestVersion;
+    private UserSettings _settings = UserSettings.Default;
 
     public DashboardQuerySession(
         MarineAnalysisQueryService analysisQueryService,
@@ -80,6 +82,28 @@ public sealed class DashboardQuerySession : IDisposable
     }
 
     public bool CanSubmit => (SelectedLocation is not null || SelectedMapPoint is not null) && !IsLoadingAnalysis;
+
+    public void ApplySettings(UserSettings settings) => _settings = settings ?? UserSettings.Default;
+
+    public async Task<bool> SelectCatalogLocationAsync(Guid locationId, CancellationToken cancellationToken = default)
+    {
+        var location = await _locationQueryService.GetByIdAsync(locationId, cancellationToken);
+        if (location is null)
+        {
+            SearchError = "链接中的地点已不存在，请重新搜索。";
+            return false;
+        }
+
+        var option = ToLocationOption(location);
+        LocationResults = [option];
+        SelectedLocation = option;
+        SelectedMapPoint = null;
+        SearchText = option.DisplayName;
+        MapLatitude = option.Latitude;
+        MapLongitude = option.Longitude;
+        SearchError = null;
+        return true;
+    }
 
     public void ToggleMapPicker()
     {
@@ -217,7 +241,7 @@ public sealed class DashboardQuerySession : IDisposable
 
             if (requestVersion == _requestVersion)
             {
-                Result = Project(result);
+                Result = Project(result, _settings);
                 SelectedTrendKey = DashboardTrendKeys.Score;
                 SelectedForecastTimeUtc = Result.HourlyDetails.Count == 0
                     ? null
@@ -308,7 +332,7 @@ public sealed class DashboardQuerySession : IDisposable
         location.TimeZoneId,
         location.IsPreset ? "preset" : "catalog");
 
-    private static DashboardAnalysisResult Project(MarineAnalysisQueryResult result)
+    private static DashboardAnalysisResult Project(MarineAnalysisQueryResult result, UserSettings settings)
     {
         var selectedPoint = result.Snapshot.Points
             .OrderBy(point => point.ForecastTimeUtc)
@@ -319,7 +343,7 @@ public sealed class DashboardQuerySession : IDisposable
 
         var metricCards = selectedPoint is null
             ? Array.Empty<DashboardMetricCard>()
-            : CreateMetricCards(selectedPoint).ToArray();
+            : CreateMetricCards(selectedPoint, settings).ToArray();
 
         var cacheStatusByBatchId = new Dictionary<Guid, string>
         {
@@ -349,10 +373,10 @@ public sealed class DashboardQuerySession : IDisposable
 
                 return new DashboardHourlyRow(
                     point.ForecastTimeUtc,
-                    FormatMetric(point.Metrics.WindSpeedMs, "0.0"),
-                    FormatMetric(point.Metrics.WindGustMs, "0.0"),
-                    FormatMetric(point.Metrics.WaveHeightM, "0.0"),
-                    FormatMetric(point.Metrics.SwellHeightM, "0.0"),
+                    FormatWind(point.Metrics.WindSpeedMs, settings).Value,
+                    FormatWind(point.Metrics.WindGustMs, settings).Value,
+                    FormatWave(point.Metrics.WaveHeightM, settings).Value,
+                    FormatWave(point.Metrics.SwellHeightM, settings).Value,
                     FormatVisibilityKm(point.Metrics.VisibilityM),
                     assessment is null ? "暂无" : FormatScore(assessment.Score),
                     assessment is null ? "unknown" : ToApiName(assessment.RiskLevel),
@@ -373,7 +397,7 @@ public sealed class DashboardQuerySession : IDisposable
                     FormatScore(assessment?.Score),
                     assessment is null ? "unknown" : ToApiName(assessment.RiskLevel),
                     assessment is null ? "数据不足" : ToRiskLevelText(assessment.RiskLevel),
-                    CreateDetailMetrics(point).ToArray(),
+                    CreateDetailMetrics(point, settings).ToArray(),
                     assessment is null ? [] : ToActivityScores(assessment),
                     assessment is null ? [] : ToRiskSummaries(assessment),
                     point.MetricSources
@@ -411,22 +435,22 @@ public sealed class DashboardQuerySession : IDisposable
             selectedAssessment is null ? [] : ToRiskSummaries(selectedAssessment),
             sources,
             metricCards,
-            CreateTrendTabs(result, timelineWindows).ToArray(),
+            CreateTrendTabs(result, timelineWindows, settings).ToArray(),
             timelineWindows,
             hourlyDetails,
             hourlyRows,
             "结果仅供辅助决策，请以官方预警和现场管理为准。");
     }
 
-    private static IEnumerable<DashboardMetricCard> CreateMetricCards(ForecastSnapshotPoint point)
+    private static IEnumerable<DashboardMetricCard> CreateMetricCards(ForecastSnapshotPoint point, UserSettings settings)
     {
         var metrics = point.Metrics;
 
-        yield return CreateMetric("风速", metrics.WindSpeedMs, "m/s", "平均风", point.Quality, ForecastMetricName.WindSpeedMs);
-        yield return CreateMetric("阵风", metrics.WindGustMs, "m/s", "突增风", point.Quality, ForecastMetricName.WindGustMs);
-        yield return CreateMetric("有效波高", metrics.WaveHeightM, "m", "海浪", point.Quality, ForecastMetricName.WaveHeightM);
+        yield return CreateMetric("风速", FormatWind(metrics.WindSpeedMs, settings), "平均风", point.Quality, ForecastMetricName.WindSpeedMs);
+        yield return CreateMetric("阵风", FormatWind(metrics.WindGustMs, settings), "突增风", point.Quality, ForecastMetricName.WindGustMs);
+        yield return CreateMetric("有效波高", FormatWave(metrics.WaveHeightM, settings), "海浪", point.Quality, ForecastMetricName.WaveHeightM);
         yield return CreateMetric("浪周期", metrics.WavePeriodS, "s", "波浪间隔", point.Quality, ForecastMetricName.WavePeriodS);
-        yield return CreateMetric("涌浪", metrics.SwellHeightM, "m", FormatSwellDetail(metrics.SwellPeriodS), point.Quality, ForecastMetricName.SwellHeightM);
+        yield return CreateMetric("涌浪", FormatWave(metrics.SwellHeightM, settings), FormatSwellDetail(metrics.SwellPeriodS), point.Quality, ForecastMetricName.SwellHeightM);
         yield return CreateMetric("能见度", metrics.VisibilityM is null ? null : metrics.VisibilityM / 1000, "km", "水平能见度", point.Quality, ForecastMetricName.VisibilityM);
         yield return new DashboardMetricCard(
             "雷暴",
@@ -452,6 +476,23 @@ public sealed class DashboardQuerySession : IDisposable
             value.HasValue ? unit : string.Empty,
             detail,
             value.HasValue && !hasMissingFlag ? "已评分" : "暂无数据",
+            ToApiName(quality.Status));
+    }
+
+    private static DashboardMetricCard CreateMetric(
+        string label,
+        FormattedMeasurement measurement,
+        string detail,
+        SnapshotQuality quality,
+        ForecastMetricName metricName)
+    {
+        var hasMissingFlag = quality.MissingMetrics.Contains(metricName);
+        return new DashboardMetricCard(
+            label,
+            measurement.Value,
+            measurement.HasValue ? measurement.Unit : string.Empty,
+            detail,
+            measurement.HasValue && !hasMissingFlag ? "已评分" : "暂无数据",
             ToApiName(quality.Status));
     }
 
@@ -505,7 +546,8 @@ public sealed class DashboardQuerySession : IDisposable
 
     private static IEnumerable<DashboardTrendTab> CreateTrendTabs(
         MarineAnalysisQueryResult result,
-        IReadOnlyList<DashboardTimelineWindow> timelineWindows)
+        IReadOnlyList<DashboardTimelineWindow> timelineWindows,
+        UserSettings settings)
     {
         var orderedPoints = result.Snapshot.Points
             .OrderBy(point => point.ForecastTimeUtc)
@@ -546,8 +588,8 @@ public sealed class DashboardQuerySession : IDisposable
                 point.Metrics.WindSpeedMs,
                 point.Metrics.WindGustMs,
                 maxWind,
-                FormatMetric(point.Metrics.WindSpeedMs, "0.0"),
-                FormatMetric(point.Metrics.WindGustMs, "0.0"),
+                FormatWind(point.Metrics.WindSpeedMs, settings).Value,
+                FormatWind(point.Metrics.WindGustMs, settings).Value,
                 assessmentByTime.TryGetValue(point.ForecastTimeUtc, out var assessment)
                     ? ToApiName(assessment.RiskLevel)
                     : "unknown",
@@ -564,8 +606,8 @@ public sealed class DashboardQuerySession : IDisposable
                 point.Metrics.WaveHeightM,
                 point.Metrics.SwellHeightM,
                 maxWave,
-                FormatMetric(point.Metrics.WaveHeightM, "0.0"),
-                FormatMetric(point.Metrics.SwellHeightM, "0.0"),
+                FormatWave(point.Metrics.WaveHeightM, settings).Value,
+                FormatWave(point.Metrics.SwellHeightM, settings).Value,
                 assessmentByTime.TryGetValue(point.ForecastTimeUtc, out var assessment)
                     ? ToApiName(assessment.RiskLevel)
                     : "unknown",
@@ -621,22 +663,27 @@ public sealed class DashboardQuerySession : IDisposable
             .ToArray();
     }
 
-    private static IEnumerable<DashboardDetailMetric> CreateDetailMetrics(ForecastSnapshotPoint point)
+    private static IEnumerable<DashboardDetailMetric> CreateDetailMetrics(ForecastSnapshotPoint point, UserSettings settings)
     {
         var metrics = point.Metrics;
 
-        yield return new DashboardDetailMetric("风速", FormatMetric(metrics.WindSpeedMs, "0.0"), "m/s");
-        yield return new DashboardDetailMetric("阵风", FormatMetric(metrics.WindGustMs, "0.0"), "m/s");
+        var wind = FormatWind(metrics.WindSpeedMs, settings);
+        var gust = FormatWind(metrics.WindGustMs, settings);
+        var wave = FormatWave(metrics.WaveHeightM, settings);
+        var swell = FormatWave(metrics.SwellHeightM, settings);
+        var temperature = FormatTemperature(metrics.TemperatureC, settings);
+        yield return new DashboardDetailMetric("风速", wind.Value, wind.Unit);
+        yield return new DashboardDetailMetric("阵风", gust.Value, gust.Unit);
         yield return new DashboardDetailMetric("风向", FormatMetric(metrics.WindDirectionDeg, "0"), "deg");
-        yield return new DashboardDetailMetric("有效波高", FormatMetric(metrics.WaveHeightM, "0.0"), "m");
+        yield return new DashboardDetailMetric("有效波高", wave.Value, wave.Unit);
         yield return new DashboardDetailMetric("浪周期", FormatMetric(metrics.WavePeriodS, "0.0"), "s");
-        yield return new DashboardDetailMetric("涌浪", FormatMetric(metrics.SwellHeightM, "0.0"), "m");
+        yield return new DashboardDetailMetric("涌浪", swell.Value, swell.Unit);
         yield return new DashboardDetailMetric("涌浪周期", FormatMetric(metrics.SwellPeriodS, "0.0"), "s");
         yield return new DashboardDetailMetric("能见度", FormatVisibilityKm(metrics.VisibilityM), "km");
         yield return new DashboardDetailMetric("降水", FormatMetric(metrics.PrecipitationMmPerHour, "0.0"), "mm/h");
         yield return new DashboardDetailMetric("CAPE", FormatMetric(metrics.CapeJkg, "0"), "J/kg");
         yield return new DashboardDetailMetric("雷暴", metrics.Thunderstorm is null ? "暂无数据" : metrics.Thunderstorm.Value ? "是" : "否", string.Empty);
-        yield return new DashboardDetailMetric("气温", FormatMetric(metrics.TemperatureC, "0.0"), "C");
+        yield return new DashboardDetailMetric("气温", temperature.Value, temperature.Unit);
     }
 
     private static int ToPercent(double? value, double scale) =>
@@ -681,6 +728,28 @@ public sealed class DashboardQuerySession : IDisposable
     private static string FormatMetric(double? value, string format) =>
         value.HasValue ? value.Value.ToString(format, CultureInfo.InvariantCulture) : "暂无数据";
 
+    private static FormattedMeasurement FormatWind(double? valueMs, UserSettings settings)
+    {
+        var factor = settings.WindSpeedUnit switch { "kph" => 3.6, "knot" => 1.943844, _ => 1 };
+        var unit = settings.WindSpeedUnit switch { "kph" => "km/h", "knot" => "kn", _ => "m/s" };
+        return FormatMeasurement(valueMs, factor, 0, unit);
+    }
+
+    private static FormattedMeasurement FormatWave(double? valueM, UserSettings settings) =>
+        FormatMeasurement(valueM, settings.WaveHeightUnit == "foot" ? 3.28084 : 1, 0, settings.WaveHeightUnit == "foot" ? "ft" : "m");
+
+    private static FormattedMeasurement FormatTemperature(double? valueC, UserSettings settings)
+    {
+        var converted = valueC.HasValue && settings.TemperatureUnit == "fahrenheit" ? valueC.Value * 9 / 5 + 32 : valueC;
+        return new FormattedMeasurement(FormatMetric(converted, "0.0"), converted.HasValue, settings.TemperatureUnit == "fahrenheit" ? "F" : "C");
+    }
+
+    private static FormattedMeasurement FormatMeasurement(double? value, double factor, double offset, string unit)
+    {
+        double? converted = value.HasValue ? value.Value * factor + offset : null;
+        return new FormattedMeasurement(FormatMetric(converted, "0.0"), converted.HasValue, unit);
+    }
+
     private static string FormatVisibilityKm(double? visibilityM) =>
         visibilityM.HasValue
             ? (visibilityM.Value / 1000).ToString("0.0", CultureInfo.InvariantCulture)
@@ -721,6 +790,8 @@ public sealed class DashboardQuerySession : IDisposable
             TimeSpan.Zero).AddHours(1);
     }
 }
+
+internal sealed record FormattedMeasurement(string Value, bool HasValue, string Unit);
 
 public sealed record DashboardLocationOption(
     Guid Id,

@@ -1,0 +1,67 @@
+@page "/admin"
+@attribute [Authorize(Policy = "Administrator")]
+@rendermode InteractiveServer
+@inject OperationsOverviewService OperationsService
+
+<PageTitle>运行状态 - Marine Insight</PageTitle>
+
+<main class="workspace-page admin-page">
+    <header class="workspace-heading">
+        <div><p class="workspace-eyebrow">管理员</p><h1>运行状态</h1></div>
+    </header>
+
+    @if (_overview is null)
+    {
+        <p class="workspace-status" role="status">正在加载运行状态…</p>
+    }
+    else
+    {
+        <section class="admin-section" aria-labelledby="provider-title">
+            <h2 id="provider-title">Provider</h2>
+            <div class="admin-table-wrap">
+                <table>
+                    <thead><tr><th>Provider</th><th>数据域</th><th>状态</th><th>端点</th><th>模型</th><th>说明</th></tr></thead>
+                    <tbody>
+                        @foreach (var provider in _overview.Providers)
+                        {
+                            <tr><td>@provider.ProviderCode</td><td>@provider.DataDomain</td><td>@provider.Status</td><td>@provider.EndpointHost</td><td>@provider.Model</td><td>@provider.Detail</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="admin-section" aria-labelledby="algorithm-title">
+            <h2 id="algorithm-title">算法版本</h2>
+            <dl class="admin-definition">
+                <div><dt>版本</dt><dd>@_overview.Algorithm.Version</dd></div>
+                <div><dt>Schema</dt><dd>@_overview.Algorithm.SchemaVersion</dd></div>
+                <div><dt>状态</dt><dd>@_overview.Algorithm.Status</dd></div>
+                <div><dt>配置哈希</dt><dd>@_overview.Algorithm.ConfigurationHash</dd></div>
+            </dl>
+        </section>
+
+        <section class="admin-section" aria-labelledby="audit-title">
+            <h2 id="audit-title">审计记录</h2>
+            @if (_overview.AuditLogs.Count == 0)
+            {
+                <p class="workspace-status">暂无管理操作审计记录。</p>
+            }
+            else
+            {
+                <div class="admin-table-wrap"><table><thead><tr><th>时间</th><th>事件</th><th>目标</th><th>摘要</th></tr></thead><tbody>
+                    @foreach (var item in _overview.AuditLogs)
+                    {
+                        <tr><td>@item.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td><td>@item.EventType</td><td>@item.TargetType / @item.TargetId</td><td>@item.Summary</td></tr>
+                    }
+                </tbody></table></div>
+            }
+        </section>
+    }
+</main>
+
+@code {
+    private OperationsOverview? _overview;
+
+    protected override async Task OnInitializedAsync() => _overview = await OperationsService.GetAsync();
+}

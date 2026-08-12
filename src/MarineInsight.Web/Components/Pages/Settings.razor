@@ -1,0 +1,69 @@
+@page "/settings"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserWorkspaceService Workspace
+
+<PageTitle>单位设置 - Marine Insight</PageTitle>
+
+<main class="workspace-page compact">
+    <header class="workspace-heading"><div><p class="workspace-eyebrow">个人工作区</p><h1>单位与偏好</h1></div></header>
+    @if (_loading)
+    {
+        <p class="workspace-status" role="status">正在加载设置…</p>
+    }
+    else
+    {
+        <form class="workspace-form" @onsubmit="SaveAsync" @onsubmit:preventDefault>
+            <label>风速单位
+                <select @bind="_windSpeedUnit"><option value="mps">米/秒</option><option value="kph">千米/时</option><option value="knot">节</option></select>
+            </label>
+            <label>波高单位
+                <select @bind="_waveHeightUnit"><option value="meter">米</option><option value="foot">英尺</option></select>
+            </label>
+            <label>温度单位
+                <select @bind="_temperatureUnit"><option value="celsius">摄氏度</option><option value="fahrenheit">华氏度</option></select>
+            </label>
+            <label>默认活动
+                <select @bind="_defaultActivity"><option value="">全部活动</option><option value="ShoreFishing">海钓</option><option value="Boat">乘船</option><option value="Landing">登岛</option><option value="Camping">露营</option><option value="Photography">摄影</option></select>
+            </label>
+            <label>显示时区<input maxlength="100" placeholder="例如 Asia/Shanghai" @bind="_timeZoneId" /></label>
+            <button class="workspace-primary" type="submit">保存设置</button>
+            @if (_saved)
+            {
+                <p class="workspace-success" role="status">设置已保存。</p>
+            }
+        </form>
+    }
+</main>
+
+@code {
+    private Guid _userId;
+    private bool _loading = true;
+    private bool _saved;
+    private string _windSpeedUnit = "mps";
+    private string _waveHeightUnit = "meter";
+    private string _temperatureUnit = "celsius";
+    private string _defaultActivity = string.Empty;
+    private string? _timeZoneId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _userId = UserWorkspaceEndpointExtensions.GetUserId(state.User);
+        var settings = await Workspace.GetSettingsAsync(_userId);
+        _windSpeedUnit = settings.WindSpeedUnit;
+        _waveHeightUnit = settings.WaveHeightUnit;
+        _temperatureUnit = settings.TemperatureUnit;
+        _defaultActivity = settings.DefaultActivity?.ToString() ?? string.Empty;
+        _timeZoneId = settings.TimeZoneId;
+        _loading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        ActivityType? activity = Enum.TryParse<ActivityType>(_defaultActivity, out var parsed) ? parsed : null;
+        await Workspace.SaveSettingsAsync(_userId, new UserSettings(_windSpeedUnit, _waveHeightUnit, _temperatureUnit, activity, _timeZoneId));
+        _saved = true;
+    }
+}

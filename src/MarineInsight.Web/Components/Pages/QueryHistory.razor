@@ -1,0 +1,57 @@
+@page "/query-history"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserWorkspaceService Workspace
+
+<PageTitle>查询历史 - Marine Insight</PageTitle>
+
+<main class="workspace-page">
+    <header class="workspace-heading">
+        <div><p class="workspace-eyebrow">个人工作区</p><h1>查询历史</h1></div>
+    </header>
+    @if (_loading)
+    {
+        <p class="workspace-status" role="status">正在加载查询历史…</p>
+    }
+    else if (_history.Count == 0)
+    {
+        <section class="workspace-empty"><h2>暂无查询记录</h2><p>登录后完成的海况查询会保留最近记录。</p></section>
+    }
+    else
+    {
+        <div class="workspace-list">
+            @foreach (var item in _history)
+            {
+                <article class="workspace-row" @key="item.Id">
+                    <div class="workspace-row-main">
+                        <h2>@item.DisplayName</h2>
+                        <p>@item.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @item.Hours 小时</p>
+                    </div>
+                    <dl class="workspace-meta">
+                        <div><dt>风险</dt><dd>@item.RiskLevel</dd></div>
+                        <div><dt>评分</dt><dd>@(item.Score?.ToString("0") ?? "暂无")</dd></div>
+                    </dl>
+                    <div class="workspace-actions">
+                        @if (item.LocationId.HasValue)
+                        {
+                            <a class="workspace-icon-button" title="按原条件再次查询" aria-label="再次查询 @item.DisplayName" href="/?locationId=@item.LocationId&hours=@item.Hours">↻</a>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</main>
+
+@code {
+    private bool _loading = true;
+    private IReadOnlyList<QueryHistoryItem> _history = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _history = await Workspace.ListHistoryAsync(UserWorkspaceEndpointExtensions.GetUserId(state.User));
+        _loading = false;
+    }
+}

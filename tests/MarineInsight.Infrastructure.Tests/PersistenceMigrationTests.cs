@@ -35,6 +35,10 @@ public sealed class PersistenceMigrationTests
         Assert.Contains("user_logins", tables);
         Assert.Contains("user_roles", tables);
         Assert.Contains("user_tokens", tables);
+        Assert.Contains("favorite_locations", tables);
+        Assert.Contains("query_history", tables);
+        Assert.Contains("user_settings", tables);
+        Assert.Contains("audit_logs", tables);
         Assert.Contains("IX_forecast_points_batch_id_forecast_time", indexes);
         Assert.Contains("UserNameIndex", indexes);
         Assert.Contains("EmailIndex", indexes);

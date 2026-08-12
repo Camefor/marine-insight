@@ -16,6 +16,7 @@ public sealed class MarineAnalysisQueryService
     private readonly ForecastBatchCacheCoordinator _cacheCoordinator;
     private readonly ForecastSnapshotAssembler _snapshotAssembler;
     private readonly MarineRiskRuleEngine _riskRuleEngine;
+    private readonly ITideProvider? _tideProvider;
 
     public MarineAnalysisQueryService(
         IWeatherForecastProvider weatherProvider,
@@ -23,7 +24,8 @@ public sealed class MarineAnalysisQueryService
         IForecastCacheKeyFactory cacheKeyFactory,
         ForecastBatchCacheCoordinator cacheCoordinator,
         ForecastSnapshotAssembler snapshotAssembler,
-        MarineRiskRuleEngine? riskRuleEngine = null)
+        MarineRiskRuleEngine? riskRuleEngine = null,
+        IEnumerable<ITideProvider>? tideProviders = null)
     {
         ArgumentNullException.ThrowIfNull(weatherProvider);
         ArgumentNullException.ThrowIfNull(marineProvider);
@@ -37,6 +39,7 @@ public sealed class MarineAnalysisQueryService
         _cacheCoordinator = cacheCoordinator;
         _snapshotAssembler = snapshotAssembler;
         _riskRuleEngine = riskRuleEngine ?? new MarineRiskRuleEngine();
+        _tideProvider = tideProviders?.SingleOrDefault();
     }
 
     public async Task<MarineAnalysisQueryResult> ExecuteAsync(
@@ -53,8 +56,14 @@ public sealed class MarineAnalysisQueryService
 
         var weather = await weatherTask;
         var marine = await marineTask;
+        var tide = await LoadTideAsync(query, cancellationToken);
+        var batches = new List<ForecastBatch> { weather.Batch, marine.Batch };
+        if (tide.Result is not null)
+        {
+            batches.Add(tide.Result.Batch);
+        }
         var snapshot = _snapshotAssembler.Assemble(
-            [weather.Batch, marine.Batch],
+            batches,
             query.Range);
         var activityProfiles = ActivityProfile.SelectDefaults(query.Activities);
         var assessments = snapshot.Points
@@ -84,7 +93,7 @@ public sealed class MarineAnalysisQueryService
             query.Activities,
             algorithmVersion);
 
-        return new MarineAnalysisQueryResult(query, snapshot, assessments, recommendedWindows, cacheIdentity, weather, marine);
+        return new MarineAnalysisQueryResult(query, snapshot, assessments, recommendedWindows, cacheIdentity, weather, marine, tide);
     }
 
     private Task<ForecastCacheResult> LoadWeatherAsync(
@@ -133,5 +142,25 @@ public sealed class MarineAnalysisQueryService
                 return result.Batch;
             },
             cancellationToken);
+    }
+
+    private async Task<TideQueryStatus> LoadTideAsync(MarineAnalysisQuery query, CancellationToken cancellationToken)
+    {
+        if (_tideProvider is null)
+        {
+            return TideQueryStatus.Disabled;
+        }
+
+        try
+        {
+            var result = await _tideProvider.GetTidesAsync(query.Location, query.Range, cancellationToken);
+            return new TideQueryStatus("available", result.FromCache ? "hit" : "miss", result.RemainingCredits, null, result);
+        }
+        catch (MarineInsight.Application.Errors.ProviderException exception)
+        {
+            // Tide is an optional enrichment. Provider faults must remain visible without
+            // suppressing the deterministic weather and marine safety assessment.
+            return new TideQueryStatus("unavailable", "none", null, exception.ErrorCode, null);
+        }
     }
 }

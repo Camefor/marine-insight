@@ -266,6 +266,10 @@ public static class MarineAnalysisEndpointExtensions
             [result.Weather.Batch.BatchId] = ToCacheStatus(result.Weather.Kind),
             [result.Marine.Batch.BatchId] = ToCacheStatus(result.Marine.Kind)
         };
+        if (result.Tide.Result is { } tideResult)
+        {
+            cacheStatusByBatchId[tideResult.Batch.BatchId] = result.Tide.CacheStatus;
+        }
 
         var sourceBatches = result.Snapshot.SourceBatches
             .Select(source => new MarineAnalysisSourceResponse(
@@ -328,6 +332,11 @@ public static class MarineAnalysisEndpointExtensions
                 result.CacheIdentity.SourceSelectionPolicy,
                 result.CacheIdentity.AlgorithmVersion,
                 result.CacheIdentity.Activities.Select(ToApiName).ToArray()),
+            new MarineAnalysisTideResponse(
+                result.Tide.Status,
+                result.Tide.CacheStatus,
+                result.Tide.RemainingCredits,
+                result.Tide.ErrorCode),
             new MarineAnalysisLocationResponse(
                 result.Snapshot.RequestedLocation.Latitude,
                 result.Snapshot.RequestedLocation.Longitude,

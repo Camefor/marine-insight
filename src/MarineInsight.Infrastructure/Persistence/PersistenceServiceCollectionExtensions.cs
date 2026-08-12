@@ -1,5 +1,7 @@
 ﻿using MarineInsight.Application.Forecast.Ports;
 using MarineInsight.Application.Locations.Ports;
+using MarineInsight.Application.Operations.Ports;
+using MarineInsight.Application.Users.Ports;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,6 +54,8 @@ public static class PersistenceServiceCollectionExtensions
             .AddDefaultTokenProviders();
         services.AddScoped<IForecastBatchRepository, ForecastBatchRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
+        services.AddScoped<IUserWorkspaceRepository, UserWorkspaceRepository>();
+        services.AddScoped<IOperationalReadRepository, OperationalReadRepository>();
 
         return services;
     }

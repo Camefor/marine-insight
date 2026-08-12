@@ -2,16 +2,19 @@
 using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
+using MarineInsight.Application.Users;
 using MarineInsight.Domain.Analysis;
 using MarineInsight.Infrastructure.Caching;
 using MarineInsight.Infrastructure.Persistence;
 using MarineInsight.Infrastructure.Providers.OpenMeteo;
+using MarineInsight.Infrastructure.Providers.WorldTides;
 using MarineInsight.Web.Api;
 using MarineInsight.Web.Authentication;
 using MarineInsight.Web.Components;
 using MarineInsight.Web.Components.Features.Dashboard;
 using MarineInsight.Web.Health;
 using MarineInsight.Web.Observability;
+using MarineInsight.Web.Operations;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -55,7 +58,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/account/login";
     options.AccessDeniedPath = "/account/access-denied";
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy("Administrator", policy => policy.RequireRole("Administrator")));
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddRateLimiter(options =>
 {
@@ -72,10 +76,13 @@ builder.Services.AddRateLimiter(options =>
 });
 builder.Services.AddMarineInsightCaching(builder.Configuration);
 builder.Services.AddOpenMeteoForecastProviders(builder.Configuration);
+builder.Services.AddWorldTidesProvider(builder.Configuration);
 builder.Services.AddSingleton<ForecastSnapshotAssembler>();
 builder.Services.AddSingleton<MarineRiskRuleEngine>();
 builder.Services.AddScoped<MarineAnalysisQueryService>();
 builder.Services.AddScoped<LocationQueryService>();
+builder.Services.AddScoped<UserWorkspaceService>();
+builder.Services.AddScoped<OperationsOverviewService>();
 builder.Services.AddScoped<DashboardQuerySession>();
 builder.Services.AddMarineInsightTelemetry(builder.Configuration);
 builder.Services
@@ -140,6 +147,8 @@ app.MapRazorComponents<App>()
 app.MapLocationEndpoints();
 app.MapMarineAnalysisEndpoints();
 app.MapAccountEndpoints();
+app.MapUserWorkspaceEndpoints();
+app.MapOperationsEndpoints();
 
 app.Run();
 

@@ -16,6 +16,14 @@ public sealed class MarineInsightDbContext(DbContextOptions<MarineInsightDbConte
 
     public DbSet<ForecastPointSourceEntity> ForecastPointSources => Set<ForecastPointSourceEntity>();
 
+    public DbSet<FavoriteLocationEntity> FavoriteLocations => Set<FavoriteLocationEntity>();
+
+    public DbSet<QueryHistoryEntity> QueryHistory => Set<QueryHistoryEntity>();
+
+    public DbSet<UserSettingEntity> UserSettings => Set<UserSettingEntity>();
+
+    public DbSet<AuditLogEntity> AuditLogs => Set<AuditLogEntity>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
