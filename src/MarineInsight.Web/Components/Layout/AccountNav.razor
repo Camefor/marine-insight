@@ -1,0 +1,17 @@
+﻿<AuthorizeView>
+    <Authorized Context="authenticationState">
+        <div class="account-links">
+            <span class="account-email">@authenticationState.User.Identity?.Name</span>
+            <form method="post" action="/account/logout">
+                <AntiforgeryToken />
+                <button class="account-link account-button" type="submit">退出</button>
+            </form>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <nav class="account-links" aria-label="账户">
+            <a class="account-link" href="/account/login">登录</a>
+            <a class="account-link account-link-primary" href="/account/register">注册</a>
+        </nav>
+    </NotAuthorized>
+</AuthorizeView>

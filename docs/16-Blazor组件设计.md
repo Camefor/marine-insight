@@ -154,6 +154,8 @@ public sealed partial class RiskSummary
 
 当前 `MI-0015` 自动化覆盖根 Dashboard SSR 壳层、`DashboardQuerySession` 地点搜索、成功查询投影和 Provider 失败错误状态；`MI-0017` 追加活动评分、综合结论和主要风险投影测试；`MI-0018` 追加推荐时间窗投影测试；`MI-0019` 追加趋势 Tabs、时间带、默认小时详情、切换趋势和选中小时测试；`MI-0024` 追加地图/坐标 SSR 壳层、自定义坐标提交和非法坐标降级测试。按用户指令，本次视觉效果由用户自行人工验证。
 
+`MI-0026` 的账户页面通过 `[ExcludeFromInteractiveRouting]` 强制静态 SSR，使 Identity Cookie 可在普通 HTTP 响应中写入或清除；应用路由使用 `AuthorizeRouteView`，Header 的 `AccountNav` 通过 `AuthorizeView` 投影匿名和登录状态。注册、登录和退出均提交带防伪令牌的普通表单，成功后整页跳转，Dashboard 的 Interactive Server 查询状态不承担认证 Cookie 写入。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |
@@ -165,3 +167,4 @@ public sealed partial class RiskSummary
 | 1.4 | 2026-07-31 | 记录 `MI-0018` DashboardQuerySession 推荐窗口、风险上升和返航截止投影 |
 | 1.5 | 2026-07-31 | 记录 `MI-0019` DashboardQuerySession 趋势、时间带和小时详情状态投影 |
 | 1.6 | 2026-07-31 | 记录 `MI-0024` Dashboard 地图/坐标目标状态、Leaflet JS 互操作和失败降级测试 |
+| 1.7 | 2026-08-12 | 记录 `MI-0026` 静态 SSR 账户页、认证路由和账户 Header 状态边界 |

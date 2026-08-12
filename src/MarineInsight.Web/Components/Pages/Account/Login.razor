@@ -1,0 +1,57 @@
+﻿@page "/account/login"
+@attribute [ExcludeFromInteractiveRouting]
+<PageTitle>登录 - Marine Insight</PageTitle>
+
+<main class="account-page">
+    <section class="account-panel" aria-labelledby="login-title">
+        <p class="account-eyebrow">Marine Insight</p>
+        <h1 id="login-title">登录</h1>
+
+        @if (ErrorCode == "locked")
+        {
+            <p class="account-alert" role="alert">登录尝试过多，请在 15 分钟后重试。</p>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorCode))
+        {
+            <p class="account-alert" role="alert">邮箱或密码不正确。</p>
+        }
+        else if (Status == "confirmation-required")
+        {
+            <p class="account-status" role="status">账户已创建，请完成邮箱确认后登录。</p>
+        }
+
+        <form class="account-form" method="post" action="/account/login">
+            <AntiforgeryToken />
+            <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+            <label>
+                <span>邮箱</span>
+                <input name="Email" type="email" autocomplete="username" required maxlength="256" />
+            </label>
+            <label>
+                <span>密码</span>
+                <input name="Password" type="password" autocomplete="current-password" required maxlength="128" />
+            </label>
+            <label class="account-checkbox">
+                <input name="RememberMe" type="checkbox" value="true" />
+                <span>保持登录</span>
+            </label>
+            <button class="account-submit" type="submit">登录</button>
+        </form>
+
+        <p class="account-switch">还没有账户？<a href="/account/register">注册</a></p>
+    </section>
+</main>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    [Parameter]
+    public string? ErrorCode { get; set; }
+
+    [SupplyParameterFromQuery(Name = "status")]
+    [Parameter]
+    public string? Status { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    [Parameter]
+    public string? ReturnUrl { get; set; }
+}

@@ -124,15 +124,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0024` |
+| 当前任务 ID | `MI-0026` |
 | 当前状态 | `DONE` |
-| 当前目标 | 实现阶段 3 Leaflet/OpenStreetMap 地图选点：Dashboard 可通过全宽地图选择坐标并进入同一分析流程，地图加载失败时保留可用坐标输入降级 |
-| 最后完成动作 | 已完成 Dashboard Leaflet/OpenStreetMap 地图选点、坐标输入降级、状态容器坐标提交、Web 自动化测试和相关设计文档同步 |
-| 下一步动作 | 建议继续阶段 3：优先做 ASP.NET Core Identity、收藏地点、查询历史和用户单位设置；或做移动端 360px 导航/可访问性补强 |
-| 涉及文件 | `src/MarineInsight.Web/Components/Pages/Dashboard.razor`、`src/MarineInsight.Web/Components/Features/Dashboard/DashboardQuerySession.cs`、`src/MarineInsight.Web/wwwroot/js/dashboard-map.js`、`tests/MarineInsight.Web.Tests/DashboardQuerySessionTests.cs`、UI/Blazor/测试/RoadMap/台账文档 |
-| 验证结果 | `dotnet build MarineInsight.slnx` 通过；`dotnet build MarineInsight.slnx --no-restore --configuration Release` 通过；`dotnet test MarineInsight.slnx --no-restore --configuration Release` 124/124 通过；`dotnet format MarineInsight.slnx --verify-no-changes --no-restore` 通过；按用户指令未执行截图验证；仍有既有 NU1903 SQLite 警告 |
-| 阻塞/待确认 | 无；本任务不做离线瓦片、瓦片代理、收藏/登录、实时定位或截图验证 |
-| 最后更新 | 2026-07-31 |
+| 当前目标 | 实现 ASP.NET Core Identity 基础认证闭环：注册、登录、退出、安全 Cookie、失败锁定、Identity 数据迁移和自动化测试，同时保持匿名海况查询可用 |
+| 最后完成动作 | 已完成 Identity 用户/角色迁移、注册/登录/退出端点、静态 SSR 账户页、认证 Header、Secure Cookie、密码/锁定、防伪、账户限流和自动化测试，并同步相关设计文档 |
+| 下一步动作 | 新建 `MI-0027`，实现登录用户收藏预置地点、默认活动/备注/排序/删除和一键再次查询闭环，并覆盖重复收藏与所有权隔离 |
+| 涉及文件 | Infrastructure Identity/DbContext/迁移、Web Program/Authentication/账户组件与样式、Infrastructure/Web 测试、权限/数据库/API/UI/Blazor/部署/测试/RoadMap/台账文档 |
+| 验证结果 | Release 构建 0 警告、0 错误；迁移测试 3/3、认证测试 5/5、全量测试 129/129 通过；NuGet 漏洞审计无报告；独立临时 SQLite 全量迁移和真实 HTTPS Dashboard/登录/注册/存活端点检查通过；`dotnet format --verify-no-changes`、`git diff --check`、JSON 解析及 28 个改动文本文件 BOM/CRLF 检查通过 |
+| 阻塞/待确认 | 浏览器视觉/360px 自动化未执行：当前 Node 环境未安装 Playwright；邮箱确认、密码重置、MFA、外部登录和收藏地点留待后续任务 |
+| 最后更新 | 2026-08-12 |
 
 <!-- agent-state:end -->
 
@@ -189,6 +189,8 @@
 | [x] | `MI-0022` | 2026-07-31 | 实现缓存键与算法版本联动 | Application 新增 `MarineAnalysisCacheIdentity`，将来源批次集合哈希、来源选择策略、算法版本和归一化活动集合写入分析语义键和 ETag；查询结果携带缓存身份；API 返回根级 `algorithmVersion`、`cache` 对象、活动级算法版本、`ETag` 响应头并支持 `If-None-Match` 返回 `304`；不包含 Redis L2、分析结果持久化或运行时动态参数切换 |
 | [x] | `MI-0023` | 2026-07-31 | 评审并校准初始阈值 | 对照官方大风、海浪和大雾预警口径评审 `marine-score-1.0.0` 初始阈值；将阵风 Safety Gate 从 18 m/s 校准为 17.2 m/s，并同步默认参数 Schema、惩罚分段和边界测试；浪高 2.0 m、能见度 < 500 m 保持保守边界；不接入实时官方预警 API、潮汐或岸线暴露规则 |
 | [x] | `MI-0024` | 2026-07-31 | 实现 Leaflet/OpenStreetMap 地图选点与失败降级 | Dashboard 增加全宽 Leaflet/OpenStreetMap 地图选点、可见 OSM 署名、瓦片/脚本失败提示和经纬度输入降级；`DashboardQuerySession` 支持预置地点和自定义坐标两类提交目标并复用同一分析流程；不做离线瓦片、瓦片代理、收藏/登录、实时定位或截图验证 |
+| [x] | `MI-0025` | 2026-08-12 | 消除 SQLite 原生库 High 严重性漏洞 | EF Core/Design/SQLite 统一升级到 `10.0.11`，传递依赖解析为 `SQLitePCLRaw 2.1.12`；NuGet 漏洞审计无报告，Release 构建、SQLite 迁移/仓储测试和全量 124 个测试通过 |
+| [x] | `MI-0026` | 2026-08-12 | 实现 ASP.NET Core Identity 基础认证闭环 | 新增 UUID Identity 用户/角色迁移、注册/登录/退出、静态 SSR 账户页、Header 认证状态、Secure Cookie、密码/锁定、防伪、账户限流和 5 个认证集成测试；匿名 Dashboard/API 保持可用 |
 
 ### 9.2 取消任务
 
@@ -200,6 +202,8 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-12 | `MI-0026` | 完成 ASP.NET Core Identity 基础认证闭环；统一用户/角色存储到现有 DbContext，增加注册、登录、退出、账户页面与 Header 状态，落实 Secure/HttpOnly/SameSite Cookie、密码策略、失败锁定、防伪、IP 限流和本地重定向防护；邮箱确认在邮件链路完成前保持关闭；同步权限、数据库、API、UI、Blazor、部署、测试和 RoadMap | Release 构建 0 警告、0 错误；迁移测试 3/3、认证测试 5/5、全量测试 129/129 通过；NuGet 漏洞审计无报告；独立临时 SQLite 全量迁移与 HTTPS `/`、`/account/login`、`/account/register`、`/health/live` 检查通过；`dotnet format --verify-no-changes`、`git diff --check`、JSON 解析及 28 个改动文本文件 BOM/CRLF 检查通过；Playwright 未安装，未执行浏览器视觉/360px 自动化 | 新建 `MI-0027`：实现登录用户收藏地点与一键再次查询闭环，覆盖重复收藏和所有权隔离 |
+| 2026-08-12 | `MI-0025` | 完成 SQLite 原生依赖 High 漏洞修复；EF Core、Design 和 SQLite 从 `10.0.9` 统一升级到 `10.0.11`，由官方补丁依赖链将 SQLitePCLRaw 从 `2.1.11` 提升到 `2.1.12`；同步测试方案和 RoadMap | NuGet 全解决方案传递依赖漏洞审计无报告；Release 构建 0 警告、0 错误；SQLite 迁移/仓储定向测试 9/9、全量测试 124/124 通过；格式、差异和 4 个改动文本文件 BOM/CRLF 检查通过 | 继续阶段 3：先实现 ASP.NET Core Identity 基础认证，再实现登录用户收藏地点和一键再次查询闭环 |
 | 2026-07-31 | `MI-0024` | 完成 Leaflet/OpenStreetMap 地图选点与失败降级；Dashboard 可点击地图或输入经纬度选择自定义坐标并进入同一海况分析流程，地图脚本或瓦片失败时保留坐标输入；页面展示 OSM 署名；同步 UI、Blazor、测试方案和 RoadMap 文档 | Web 测试 23/23 通过；默认 Debug 构建 0 错误；Release 构建 0 错误；全量测试 124/124 通过；`dotnet format --verify-no-changes --no-restore` 通过；一次并行运行 Debug 构建和 Release 测试曾因共享 `obj` 目录出现 `ref` 元数据文件竞争，串行重跑通过；仍有 NU1903 SQLite 警告；按用户指令未执行截图验证 | 建议继续阶段 3：ASP.NET Core Identity、收藏地点、查询历史和用户单位设置；或移动端 360px 导航、键盘和基础可访问性 |
 | 2026-07-31 | `MI-0023` | 完成初始阈值官方预警口径评审；阵风 Safety Gate 从 18 m/s 下调到 17.2 m/s，默认参数 Schema 和 `windGustMs` 惩罚分段同步；补充 17.1/17.2 m/s 边界测试；评分算法文档记录大风、海浪和大雾口径依据，SRS/分析/测试/RoadMap 同步 | Domain 测试 51/51 通过；Release 构建 0 错误；全量测试 122/122 通过；`dotnet format --verify-no-changes`、`git diff --check` 和 9 个改动文本文件 BOM/CRLF 检查通过；仍有 NU1903 SQLite 漏洞警告 | 建议进入阶段 3：优先做 Leaflet/OpenStreetMap 全宽选点与地图失败降级；收藏/历史/用户单位设置和 WorldTides 潮汐可作为后续阶段 3 任务 |
 | 2026-07-31 | `MI-0022` | 完成缓存键与算法版本联动；新增分析缓存身份值对象，稳定生成来源批次集合哈希、来源选择策略、算法版本和活动集合语义键/ETag；Application 查询结果携带缓存身份；API 返回根级算法版本、`cache` 对象、活动算法版本和 `ETag`，并支持相同 `If-None-Match` 返回 `304`；同步缓存、API、测试和 RoadMap 文档 | Application 测试 26/26 通过；Web 测试 21/21 通过；Release 构建 0 错误；全量测试 120/120 通过；`dotnet format --verify-no-changes`、`git diff --check` 和 13 个改动文本文件 BOM/CRLF 检查通过；首次并行测试因输出文件锁出现一次构建失败，已改为串行测试通过；仍有 NU1903 SQLite 漏洞警告 | 建议继续阶段 2 最后一项：用经验样本和官方预警案例评审初始阈值；或进入阶段 3 地图/收藏/潮汐等产品完善任务 |

@@ -1,4 +1,5 @@
-﻿using MarineInsight.Application.Analysis;
+﻿using System.Threading.RateLimiting;
+using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
 using MarineInsight.Domain.Analysis;
@@ -6,11 +7,14 @@ using MarineInsight.Infrastructure.Caching;
 using MarineInsight.Infrastructure.Persistence;
 using MarineInsight.Infrastructure.Providers.OpenMeteo;
 using MarineInsight.Web.Api;
+using MarineInsight.Web.Authentication;
 using MarineInsight.Web.Components;
 using MarineInsight.Web.Components.Features.Dashboard;
 using MarineInsight.Web.Health;
 using MarineInsight.Web.Observability;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
@@ -37,6 +41,35 @@ builder.Host.UseSerilog((context, _, loggerConfiguration) =>
 
 // Keep provider selection in configuration so local SQLite and production PostgreSQL use the same boundary.
 builder.Services.AddMarineInsightPersistence(builder.Configuration);
+builder.Services
+    .AddAuthentication(IdentityConstants.ApplicationScheme)
+    .AddIdentityCookies();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = "__Host-MarineInsight.Auth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = true;
+    options.LoginPath = "/account/login";
+    options.AccessDeniedPath = "/account/access-denied";
+});
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("account", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 builder.Services.AddMarineInsightCaching(builder.Configuration);
 builder.Services.AddOpenMeteoForecastProviders(builder.Configuration);
 builder.Services.AddSingleton<ForecastSnapshotAssembler>();
@@ -86,6 +119,9 @@ app.UseWhen(
     context => !context.Request.Path.StartsWithSegments("/health"),
     branch => branch.UseHttpsRedirection());
 
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
@@ -103,6 +139,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapLocationEndpoints();
 app.MapMarineAnalysisEndpoints();
+app.MapAccountEndpoints();
 
 app.Run();
 

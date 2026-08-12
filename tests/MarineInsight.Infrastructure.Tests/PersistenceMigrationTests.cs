@@ -29,7 +29,15 @@ public sealed class PersistenceMigrationTests
         Assert.Contains("forecast_batches", tables);
         Assert.Contains("forecast_points", tables);
         Assert.Contains("forecast_point_sources", tables);
+        Assert.Contains("users", tables);
+        Assert.Contains("roles", tables);
+        Assert.Contains("user_claims", tables);
+        Assert.Contains("user_logins", tables);
+        Assert.Contains("user_roles", tables);
+        Assert.Contains("user_tokens", tables);
         Assert.Contains("IX_forecast_points_batch_id_forecast_time", indexes);
+        Assert.Contains("UserNameIndex", indexes);
+        Assert.Contains("EmailIndex", indexes);
         Assert.Empty(dbContext.Database.GetPendingMigrations());
     }
 

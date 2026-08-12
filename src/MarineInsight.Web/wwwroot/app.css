@@ -36,3 +36,178 @@
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.app-header {
+    align-items: center;
+    background: #ffffff;
+    border-bottom: 1px solid #dce3e1;
+    display: flex;
+    justify-content: space-between;
+    min-height: 56px;
+    padding: 0 24px;
+}
+
+.app-brand {
+    color: #173a35;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.account-links {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.account-email {
+    color: #465956;
+    font-size: 0.875rem;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-link {
+    border: 0;
+    color: #245e55;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    padding: 8px 10px;
+    text-decoration: none;
+}
+
+.account-link-primary {
+    background: #1f6b5d;
+    color: #ffffff;
+}
+
+.account-button {
+    background: transparent;
+}
+
+.account-page {
+    align-items: flex-start;
+    background: #f4f7f6;
+    display: flex;
+    justify-content: center;
+    min-height: calc(100vh - 56px);
+    padding: 64px 20px;
+}
+
+.account-panel {
+    background: #ffffff;
+    border: 1px solid #d9e1df;
+    border-radius: 6px;
+    max-width: 420px;
+    padding: 32px;
+    width: 100%;
+}
+
+.account-panel h1 {
+    color: #173a35;
+    font-size: 1.75rem;
+    margin: 4px 0 24px;
+}
+
+.account-eyebrow {
+    color: #52736d;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.account-form {
+    display: grid;
+    gap: 18px;
+}
+
+.account-form label:not(.account-checkbox) {
+    display: grid;
+    gap: 7px;
+}
+
+.account-form label > span {
+    color: #304a46;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.account-form input[type="email"],
+.account-form input[type="password"] {
+    border: 1px solid #aebdb9;
+    border-radius: 4px;
+    font: inherit;
+    min-height: 44px;
+    padding: 9px 11px;
+    width: 100%;
+}
+
+.account-checkbox {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.account-submit {
+    background: #1f6b5d;
+    border: 1px solid #1f6b5d;
+    border-radius: 4px;
+    color: #ffffff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    min-height: 44px;
+    padding: 10px 16px;
+}
+
+.account-submit-link {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.account-alert,
+.account-status {
+    border-left: 4px solid #bd3d31;
+    color: #65312c;
+    margin: 0 0 20px;
+    padding: 10px 12px;
+}
+
+.account-status {
+    border-left-color: #357c62;
+    color: #275747;
+}
+
+.account-switch {
+    color: #53635f;
+    margin: 22px 0 0;
+}
+
+.account-switch a {
+    color: #1f6b5d;
+    font-weight: 700;
+}
+
+@media (max-width: 599px) {
+    .app-header {
+        padding: 0 14px;
+    }
+
+    .account-email {
+        max-width: 130px;
+    }
+
+    .account-page {
+        padding: 28px 12px;
+    }
+
+    .account-panel {
+        padding: 24px 20px;
+    }
+}

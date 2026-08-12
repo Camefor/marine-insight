@@ -86,7 +86,7 @@
 ### P1 必做
 
 - 已完成 `MI-0024`：Leaflet/OpenStreetMap 全宽选点与地图失败降级；Dashboard 支持点击地图或输入坐标进入同一分析流程，保留 OSM 署名，不实现离线瓦片或瓦片代理。
-- ASP.NET Core Identity、收藏地点、查询历史和用户单位设置。
+- 已完成 `MI-0026`：ASP.NET Core Identity 基础注册、登录、退出、Cookie 安全配置、失败锁定、账户限流和迁移；收藏地点、查询历史、用户单位设置、邮箱确认/密码重置/MFA 仍待后续。
 - 移动端导航、360px 布局、键盘和基础可访问性。
 - 管理员 Provider 状态、算法版本列表和审计查询。
 - 接入 WorldTides 潮汐、Credit 余额告警、长 TTL 缓存和无潮汐降级。
@@ -110,7 +110,7 @@
 - 完成 PostgreSQL 迁移 SQL、备份、恢复和回滚演练。
 - 接入日志、指标、Trace、Provider 配额和关键告警。
 - 执行性能、故障注入、安全、Playwright 和视觉回归测试。
-- 修复 S1/S2 缺陷，完成操作手册、免责声明和数据署名。
+- 已完成 `MI-0025`：升级 EF Core SQLite 补丁线并消除 `SQLitePCLRaw.lib.e_sqlite3 2.1.11` High 漏洞；继续修复其余 S1/S2 缺陷，完成操作手册、免责声明和数据署名。
 - 发布 `v1.0.0`，观察 5xx、延迟、Stale、数据质量和 Unknown 比例。
 
 ## 8. 版本路线
@@ -182,3 +182,5 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 2.2 | 2026-07-31 | 补充分析缓存身份、算法版本联动、API `ETag` 和条件请求交付物 |
 | 2.3 | 2026-07-31 | 补充初始阈值官方预警口径校准和阵风 17.2 m/s Safety Gate 边界测试 |
 | 2.4 | 2026-07-31 | 补充 Leaflet/OpenStreetMap 全宽地图选点、OSM 署名和坐标输入降级交付物 |
+| 2.5 | 2026-08-12 | 完成 EF Core SQLite 补丁升级和 SQLitePCLRaw High 漏洞清理，提前满足上线阶段的高危依赖准出要求 |
+| 2.6 | 2026-08-12 | 完成 ASP.NET Core Identity 基础认证闭环、账户静态 SSR 页面、Cookie/锁定/防伪安全基线和用户表迁移 |
