@@ -26,15 +26,12 @@ internal static class OpenMeteoForecastNormalizer
     [
         ForecastMetricName.WaveHeightM,
         ForecastMetricName.WavePeriodS,
-        ForecastMetricName.WavePeakPeriodS,
         ForecastMetricName.WaveDirectionDeg,
         ForecastMetricName.WindWaveHeightM,
         ForecastMetricName.WindWavePeriodS,
-        ForecastMetricName.WindWavePeakPeriodS,
         ForecastMetricName.WindWaveDirectionDeg,
         ForecastMetricName.SwellHeightM,
         ForecastMetricName.SwellPeriodS,
-        ForecastMetricName.SwellPeakPeriodS,
         ForecastMetricName.SwellDirectionDeg
     ];
 
@@ -242,8 +239,7 @@ internal static class OpenMeteoForecastNormalizer
             hourly.WavePeriodS,
             index,
             IsNonNegative);
-        var wavePeakPeriod = metrics.ReadDouble(
-            ForecastMetricName.WavePeakPeriodS,
+        var wavePeakPeriod = ReadOptionalDouble(
             hourly.WavePeakPeriodS,
             index,
             IsNonNegative);
@@ -263,8 +259,7 @@ internal static class OpenMeteoForecastNormalizer
             hourly.WindWavePeriodS,
             index,
             IsNonNegative);
-        var windWavePeakPeriod = metrics.ReadDouble(
-            ForecastMetricName.WindWavePeakPeriodS,
+        var windWavePeakPeriod = ReadOptionalDouble(
             hourly.WindWavePeakPeriodS,
             index,
             IsNonNegative);
@@ -284,8 +279,7 @@ internal static class OpenMeteoForecastNormalizer
             hourly.SwellPeriodS,
             index,
             IsNonNegative);
-        var swellPeakPeriod = metrics.ReadDouble(
-            ForecastMetricName.SwellPeakPeriodS,
+        var swellPeakPeriod = ReadOptionalDouble(
             hourly.SwellPeakPeriodS,
             index,
             IsNonNegative);
@@ -432,6 +426,31 @@ internal static class OpenMeteoForecastNormalizer
             .ToArray();
 
         return new DataQuality(status, freshness, completeness, flags, missingMetrics);
+    }
+
+    // Optional enrichment: peak-period metrics depend on a wave-spectrum model the
+    // default `best_match` provider does not return nearshore. A missing value must
+    // neither count against completeness nor surface as a missing metric.
+    private static double? ReadOptionalDouble(
+        double?[]? values,
+        int index,
+        Func<double, bool>? validator = null,
+        Func<double, double>? normalizer = null)
+    {
+        if (values is null)
+        {
+            return null;
+        }
+
+        var rawValue = values[index];
+        if (!rawValue.HasValue ||
+            !double.IsFinite(rawValue.Value) ||
+            (validator is not null && !validator(rawValue.Value)))
+        {
+            return null;
+        }
+
+        return normalizer is null ? rawValue.Value : normalizer(rawValue.Value);
     }
 
     private static bool IsNonNegative(double value) => value >= 0;

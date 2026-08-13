@@ -90,6 +90,39 @@ public sealed class OpenMeteoProviderTests
     }
 
     [Fact]
+    public async Task MissingPeakPeriodsAreOptionalAndDoNotDegradeMarineQuality()
+    {
+        var sample = JsonNode.Parse(ReadSample("marine-response.json"))!.AsObject();
+        var hourly = sample["hourly"]!.AsObject();
+        hourly["wave_peak_period"]!.AsArray()[0] = null;
+        hourly["wind_wave_peak_period"]!.AsArray()[0] = null;
+        hourly["swell_wave_peak_period"]!.AsArray()[0] = null;
+
+        var handler = new StubHttpMessageHandler(_ => JsonResponse(sample.ToJsonString()));
+        using var httpClient = new HttpClient(handler);
+        var provider = new OpenMeteoMarineProvider(
+            httpClient,
+            Options.Create(CreateOptions()),
+            new FixedTimeProvider(FetchedAtUtc));
+
+        var result = await provider.GetMarineAsync(
+            new GeoPoint(30.194, 122.687),
+            new ForecastRange(StartUtc, 72),
+            CancellationToken.None);
+
+        var firstPoint = result.Batch.Points[0];
+
+        Assert.Null(firstPoint.Metrics.WavePeakPeriodS);
+        Assert.Null(firstPoint.Metrics.WindWavePeakPeriodS);
+        Assert.Null(firstPoint.Metrics.SwellPeakPeriodS);
+        Assert.Equal(ForecastQualityStatus.Valid, firstPoint.Quality.Status);
+        Assert.DoesNotContain(ForecastMetricName.WavePeakPeriodS, firstPoint.Quality.MissingMetrics);
+        Assert.DoesNotContain(ForecastMetricName.WindWavePeakPeriodS, firstPoint.Quality.MissingMetrics);
+        Assert.DoesNotContain(ForecastMetricName.SwellPeakPeriodS, firstPoint.Quality.MissingMetrics);
+        Assert.Equal(9, firstPoint.MetricSources.Count);
+    }
+
+    [Fact]
     public async Task MissingArraysAndNullValuesBecomePartialWithoutZeroFilling()
     {
         var sample = JsonNode.Parse(ReadSample("weather-response.json"))!.AsObject();
