@@ -75,7 +75,7 @@ flowchart LR
 - 实体：`HourlyAssessment`、`RiskFactor`、`ActivityAssessment`、`RecommendationWindow`。
 - 值对象：`Score`、`RiskLevel`、`Confidence`、`AlgorithmVersion`。
 - 不变式：分数范围为 0-100；硬性风险触发时等级必须为 `Avoid`；数据不足时允许 `Unknown`，不得伪造分数。
-- 当前 `MI-0016` 已先落地单小时 `HourlyMarineAssessment`、`RiskContribution`、`RiskLevel` 和 `MarineRiskRuleEngine`；`MI-0017` 已补充 `ActivityType`、`ActivityProfile`、`ActivityMarineAssessment` 和活动评分服务，并把活动结果投影到查询结果、API 和 Dashboard；`MI-0018` 已补充 `RecommendationWindow` 和推荐窗口规划服务。完整 `AnalysisReport` 持久化聚合仍由后续任务补齐。
+- 当前 `MI-0016` 已先落地单小时 `HourlyMarineAssessment`、`RiskContribution`、`RiskLevel` 和 `MarineRiskRuleEngine`；`MI-0017` 已补充 `ActivityType`、`ActivityProfile`、`ActivityMarineAssessment` 和活动评分服务，并把活动结果投影到查询结果、API 和 Dashboard；`MI-0018` 已补充 `RecommendationWindow` 和推荐窗口规划服务；`MI-0029` 已落地 `AnalysisReport` 持久化聚合（`AnalysisRisk`、`AnalysisSourceBatch` 值对象 + `IAnalysisReportRepository` 端口），仅登录用户查询时保存摘要（评分/等级/置信度/最佳推荐窗口 + 非 Info 风险 + 来源批次引用），支持按 id 回读。历史对比（多结果并排）仍留后续任务。
 
 ### 4.5 UserProfile 聚合
 
@@ -132,7 +132,7 @@ flowchart LR
 | --- | --- | --- |
 | `ILocationRepository` | Location | 查找、保存、附近查询 |
 | `IForecastBatchRepository` | ForecastBatch | 按地点/Provider/数据域/UTC 范围读取和追加（24/72/168 小时） |
-| `IAnalysisReportRepository` | AnalysisReport | 保存、按查询读取、历史对比 |
+| `IAnalysisReportRepository` | AnalysisReport | 保存、按 id 读取、按用户列表读取 |
 | `IAlgorithmVersionRepository` | AlgorithmVersion | 草稿、发布版本和回滚读取 |
 | `IWeatherForecastProvider` | 常规天气端口 | 获取指定地点和时间范围的 Weather 预报 |
 | `IMarineForecastProvider` | 海浪/涌浪端口 | 获取指定地点和时间范围的 Marine 预报 |

@@ -24,6 +24,12 @@ public sealed class MarineInsightDbContext(DbContextOptions<MarineInsightDbConte
 
     public DbSet<AuditLogEntity> AuditLogs => Set<AuditLogEntity>();
 
+    public DbSet<AnalysisReportEntity> AnalysisResults => Set<AnalysisReportEntity>();
+
+    public DbSet<AnalysisRiskEntity> AnalysisRisks => Set<AnalysisRiskEntity>();
+
+    public DbSet<AnalysisSourceBatchEntity> AnalysisSourceBatches => Set<AnalysisSourceBatchEntity>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

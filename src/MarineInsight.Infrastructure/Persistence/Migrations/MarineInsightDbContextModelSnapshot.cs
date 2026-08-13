@@ -17,6 +17,183 @@ namespace MarineInsight.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
 
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AnalysisReportEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<short?>("ActivityType")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("activity_type");
+
+                    b.Property<string>("AlgorithmVersion")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("algorithm_version");
+
+                    b.Property<double>("Confidence")
+                        .HasColumnType("REAL")
+                        .HasColumnName("confidence");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Hours")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("hours");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("location_id");
+
+                    b.Property<DateTimeOffset>("RangeEndUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("range_end");
+
+                    b.Property<DateTimeOffset>("RangeStartUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("range_start");
+
+                    b.Property<DateTimeOffset?>("RecommendedEndUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("recommended_end");
+
+                    b.Property<DateTimeOffset?>("RecommendedStartUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("recommended_start");
+
+                    b.Property<DateTimeOffset?>("ReturnBeforeUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("return_before");
+
+                    b.Property<short>("RiskLevel")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("risk_level");
+
+                    b.Property<double?>("Score")
+                        .HasColumnType("REAL")
+                        .HasColumnName("score");
+
+                    b.Property<string>("SourceSetHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_set_hash");
+
+                    b.Property<string>("SummaryTemplateCode")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("summary_template_code");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SourceSetHash");
+
+                    b.HasIndex("UserId", "CreatedAtUtc");
+
+                    b.ToTable("analysis_results", (string)null);
+                });
+
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AnalysisRiskEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<double?>("Actual")
+                        .HasColumnType("REAL")
+                        .HasColumnName("actual");
+
+                    b.Property<Guid>("AnalysisResultId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("analysis_result_id");
+
+                    b.Property<DateTimeOffset>("ForecastTimeUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("forecast_time");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("message");
+
+                    b.Property<double>("Penalty")
+                        .HasColumnType("REAL")
+                        .HasColumnName("penalty");
+
+                    b.Property<string>("RuleCode")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("rule_code");
+
+                    b.Property<short>("Severity")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("severity");
+
+                    b.Property<double?>("Threshold")
+                        .HasColumnType("REAL")
+                        .HasColumnName("threshold");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnalysisResultId", "Severity");
+
+                    b.ToTable("analysis_risks", (string)null);
+                });
+
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AnalysisSourceBatchEntity", b =>
+                {
+                    b.Property<Guid>("AnalysisResultId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("analysis_result_id");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("batch_id");
+
+                    b.Property<short>("SourceRole")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("source_role");
+
+                    b.Property<short>("DataDomain")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("data_domain");
+
+                    b.Property<string>("ProviderCode")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("provider_code");
+
+                    b.Property<string>("SelectionPolicy")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("selection_policy");
+
+                    b.Property<string>("SourceModel")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_model");
+
+                    b.HasKey("AnalysisResultId", "BatchId", "SourceRole");
+
+                    b.ToTable("analysis_source_batches", (string)null);
+                });
+
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AuditLogEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -783,6 +960,37 @@ namespace MarineInsight.Infrastructure.Persistence.Migrations
                     b.ToTable("user_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AnalysisReportEntity", b =>
+                {
+                    b.HasOne("MarineInsight.Infrastructure.Persistence.MarineInsightUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AnalysisRiskEntity", b =>
+                {
+                    b.HasOne("MarineInsight.Infrastructure.Persistence.Entities.AnalysisReportEntity", "AnalysisResult")
+                        .WithMany("Risks")
+                        .HasForeignKey("AnalysisResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AnalysisResult");
+                });
+
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AnalysisSourceBatchEntity", b =>
+                {
+                    b.HasOne("MarineInsight.Infrastructure.Persistence.Entities.AnalysisReportEntity", "AnalysisResult")
+                        .WithMany("SourceBatches")
+                        .HasForeignKey("AnalysisResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AnalysisResult");
+                });
+
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.FavoriteLocationEntity", b =>
                 {
                     b.HasOne("MarineInsight.Infrastructure.Persistence.Entities.LocationEntity", "Location")
@@ -900,6 +1108,13 @@ namespace MarineInsight.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AnalysisReportEntity", b =>
+                {
+                    b.Navigation("Risks");
+
+                    b.Navigation("SourceBatches");
                 });
 
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.ForecastBatchEntity", b =>

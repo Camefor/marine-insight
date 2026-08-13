@@ -1,4 +1,5 @@
-﻿using MarineInsight.Application.Forecast.Ports;
+﻿using MarineInsight.Application.Analysis.Ports;
+using MarineInsight.Application.Forecast.Ports;
 using MarineInsight.Application.Locations.Ports;
 using MarineInsight.Application.Operations.Ports;
 using MarineInsight.Application.Users.Ports;
@@ -53,6 +54,7 @@ public static class PersistenceServiceCollectionExtensions
             .AddEntityFrameworkStores<MarineInsightDbContext>()
             .AddDefaultTokenProviders();
         services.AddScoped<IForecastBatchRepository, ForecastBatchRepository>();
+        services.AddScoped<IAnalysisReportRepository, AnalysisReportRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IUserWorkspaceRepository, UserWorkspaceRepository>();
         services.AddScoped<IOperationalReadRepository, OperationalReadRepository>();

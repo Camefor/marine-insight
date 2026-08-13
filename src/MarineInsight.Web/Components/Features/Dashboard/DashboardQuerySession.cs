@@ -15,6 +15,7 @@ public sealed class DashboardQuerySession : IDisposable
     private readonly MarineAnalysisQueryService _analysisQueryService;
     private readonly ExplanationService _explanationService;
     private readonly LocationQueryService _locationQueryService;
+    private readonly AnalysisReportService _analysisReportService;
     private CancellationTokenSource? _activeRequest;
     private long _requestVersion;
     private UserSettings _settings = UserSettings.Default;
@@ -23,15 +24,18 @@ public sealed class DashboardQuerySession : IDisposable
     public DashboardQuerySession(
         MarineAnalysisQueryService analysisQueryService,
         ExplanationService explanationService,
-        LocationQueryService locationQueryService)
+        LocationQueryService locationQueryService,
+        AnalysisReportService analysisReportService)
     {
         ArgumentNullException.ThrowIfNull(analysisQueryService);
         ArgumentNullException.ThrowIfNull(explanationService);
         ArgumentNullException.ThrowIfNull(locationQueryService);
+        ArgumentNullException.ThrowIfNull(analysisReportService);
 
         _analysisQueryService = analysisQueryService;
         _explanationService = explanationService;
         _locationQueryService = locationQueryService;
+        _analysisReportService = analysisReportService;
         ForecastStartUtc = RoundToNextUtcHour(DateTimeOffset.UtcNow).UtcDateTime;
     }
 
@@ -237,7 +241,7 @@ public sealed class DashboardQuerySession : IDisposable
         }
     }
 
-    public async Task SubmitAnalysisAsync(CancellationToken cancellationToken = default)
+    public async Task SubmitAnalysisAsync(Guid? userId = null, CancellationToken cancellationToken = default)
     {
         if (SelectedLocation is null && SelectedMapPoint is null)
         {
@@ -261,6 +265,12 @@ public sealed class DashboardQuerySession : IDisposable
             }
 
             var result = await _analysisQueryService.ExecuteAsync(query, _activeRequest.Token);
+
+            if (userId.HasValue)
+            {
+                await _analysisReportService.SaveAsync(result, userId.Value, _activeRequest.Token);
+            }
+
             var explanation = await _explanationService.GenerateAsync(result, _activeRequest.Token);
 
             if (requestVersion == _requestVersion)

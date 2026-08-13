@@ -112,6 +112,7 @@ builder.Services.AddSingleton<ForecastSnapshotAssembler>();
 builder.Services.AddSingleton<MarineRiskRuleEngine>();
 builder.Services.AddScoped<MarineAnalysisQueryService>();
 builder.Services.AddScoped<ExplanationService>();
+builder.Services.AddScoped<AnalysisReportService>();
 builder.Services.AddScoped<LocationQueryService>();
 builder.Services.AddScoped<UserWorkspaceService>();
 builder.Services.AddScoped<OperationsOverviewService>();
@@ -187,6 +188,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapLocationEndpoints();
 app.MapMarineAnalysisEndpoints();
+app.MapAnalysisReportEndpoints();
 app.MapAccountEndpoints();
 app.MapUserWorkspaceEndpoints();
 app.MapOperationsEndpoints();

@@ -21,4 +21,6 @@ public static class MarineInsightErrorCodes
     public const string CacheUnavailable = "CACHE_UNAVAILABLE";
 
     public const string AiExplanationUnavailable = "AI_EXPLANATION_UNAVAILABLE";
+
+    public const string AnalysisNotFound = "ANALYSIS_NOT_FOUND";
 }

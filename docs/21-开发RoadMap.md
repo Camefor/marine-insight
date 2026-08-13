@@ -91,6 +91,7 @@
 - `MI-0027` 已完成移动端响应式样式和基础键盘/ARIA 控件；1440x900 与 360x800 Playwright 用例已使用本机 Chrome 执行 2/2 通过。
 - `MI-0027` 已实现管理员 Provider 状态、当前算法版本和审计只读查询；Provider 启停和算法发布仍不在本次范围。
 - `MI-0027` 已接入 WorldTides 潮汐、Credit 余额状态、长 TTL 缓存和无潮汐降级；本地 Key 已安全配置，真实付费联调尚未执行。
+- 已完成 `MI-0029`：实现分析结果持久化，登录用户在 Dashboard 查询时落库 `analysis_results`/`analysis_risks`/`analysis_source_batches` 摘要，并提供 `GET /api/v1/marine-analyses/{id}` 属主读取端点；匿名查询不落库，历史对比与 `algorithm_versions` 外键升级留待后续。
 
 ### P1 可选增量
 
@@ -186,3 +187,4 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 2.5 | 2026-08-12 | 完成 EF Core SQLite 补丁升级和 SQLitePCLRaw High 漏洞清理，提前满足上线阶段的高危依赖准出要求 |
 | 2.6 | 2026-08-12 | 完成 ASP.NET Core Identity 基础认证闭环、账户静态 SSR 页面、Cookie/锁定/防伪安全基线和用户表迁移 |
 | 2.7 | 2026-08-13 | 完成 P1 可选增量 AI 解读引擎：OpenAI 兼容适配器、事实校验、缓存与规则模板降级（MI-0028） |
+| 2.8 | 2026-08-13 | 完成分析结果持久化（MI-0029）：登录用户查询落库 `analysis_results`/`analysis_risks`/`analysis_source_batches` 摘要，新增 `GET /api/v1/marine-analyses/{id}` 属主读取端点 |

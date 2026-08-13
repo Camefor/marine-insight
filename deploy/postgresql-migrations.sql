@@ -441,3 +441,98 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260813092803_AddAnalysisReports') THEN
+    CREATE TABLE analysis_results (
+        id uuid NOT NULL,
+        user_id uuid NOT NULL,
+        location_id uuid,
+        range_start timestamp with time zone NOT NULL,
+        range_end timestamp with time zone NOT NULL,
+        hours integer NOT NULL,
+        algorithm_version character varying(80) NOT NULL,
+        source_set_hash character varying(64) NOT NULL,
+        activity_type smallint,
+        score double precision,
+        risk_level smallint NOT NULL,
+        confidence double precision NOT NULL,
+        recommended_start timestamp with time zone,
+        recommended_end timestamp with time zone,
+        return_before timestamp with time zone,
+        summary_template_code character varying(80) NOT NULL,
+        created_at timestamp with time zone NOT NULL,
+        CONSTRAINT "PK_analysis_results" PRIMARY KEY (id),
+        CONSTRAINT "FK_analysis_results_users_user_id" FOREIGN KEY (user_id) REFERENCES users ("Id") ON DELETE CASCADE
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260813092803_AddAnalysisReports') THEN
+    CREATE TABLE analysis_risks (
+        id uuid NOT NULL,
+        analysis_result_id uuid NOT NULL,
+        forecast_time timestamp with time zone NOT NULL,
+        rule_code character varying(80) NOT NULL,
+        severity smallint NOT NULL,
+        actual double precision,
+        threshold double precision,
+        penalty double precision NOT NULL,
+        message character varying(500) NOT NULL,
+        CONSTRAINT "PK_analysis_risks" PRIMARY KEY (id),
+        CONSTRAINT "FK_analysis_risks_analysis_results_analysis_result_id" FOREIGN KEY (analysis_result_id) REFERENCES analysis_results (id) ON DELETE CASCADE
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260813092803_AddAnalysisReports') THEN
+    CREATE TABLE analysis_source_batches (
+        analysis_result_id uuid NOT NULL,
+        batch_id uuid NOT NULL,
+        source_role smallint NOT NULL,
+        data_domain smallint NOT NULL,
+        provider_code character varying(40) NOT NULL,
+        source_model character varying(40) NOT NULL,
+        selection_policy character varying(120) NOT NULL,
+        CONSTRAINT "PK_analysis_source_batches" PRIMARY KEY (analysis_result_id, batch_id, source_role),
+        CONSTRAINT "FK_analysis_source_batches_analysis_results_analysis_result_id" FOREIGN KEY (analysis_result_id) REFERENCES analysis_results (id) ON DELETE CASCADE
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260813092803_AddAnalysisReports') THEN
+    CREATE INDEX "IX_analysis_results_source_set_hash" ON analysis_results (source_set_hash);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260813092803_AddAnalysisReports') THEN
+    CREATE INDEX "IX_analysis_results_user_id_created_at" ON analysis_results (user_id, created_at);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260813092803_AddAnalysisReports') THEN
+    CREATE INDEX "IX_analysis_risks_analysis_result_id_severity" ON analysis_risks (analysis_result_id, severity);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260813092803_AddAnalysisReports') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260813092803_AddAnalysisReports', '10.0.11');
+    END IF;
+END $EF$;
+COMMIT;
+

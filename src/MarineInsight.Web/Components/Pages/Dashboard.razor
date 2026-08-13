@@ -593,7 +593,7 @@
 
     private async Task SubmitAsync()
     {
-        await Session.SubmitAnalysisAsync();
+        await Session.SubmitAnalysisAsync(_userId);
         if (_userId.HasValue && Session.Result is { } result)
         {
             await Workspace.RecordHistoryAsync(_userId.Value, new RecordQueryHistoryCommand(

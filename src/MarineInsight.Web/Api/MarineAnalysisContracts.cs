@@ -194,3 +194,39 @@ public sealed record MarineAnalysisMetricsResponse(
     double? CurrentDirectionDeg,
     double? TideHeightM,
     string? TideType);
+
+public sealed record MarineAnalysisReportResponse(
+    Guid Id,
+    MarineAnalysisReportLocationResponse Location,
+    MarineAnalysisRangeResponse Range,
+    string AlgorithmVersion,
+    MarineAnalysisOverallResponse Overall,
+    IReadOnlyList<MarineAnalysisReportRiskResponse> Risks,
+    IReadOnlyList<MarineAnalysisReportSourceResponse> Sources,
+    MarineAnalysisReportRecommendedWindowResponse? RecommendedWindow,
+    DateTimeOffset CreatedAtUtc);
+
+public sealed record MarineAnalysisReportLocationResponse(
+    Guid? LocationId);
+
+public sealed record MarineAnalysisReportRiskResponse(
+    DateTimeOffset ForecastTimeUtc,
+    string RuleCode,
+    string Severity,
+    double? Actual,
+    double? Threshold,
+    double Penalty,
+    string Message);
+
+public sealed record MarineAnalysisReportSourceResponse(
+    Guid BatchId,
+    string DataDomain,
+    string ProviderCode,
+    string SourceModel,
+    string SourceRole,
+    string SelectionPolicy);
+
+public sealed record MarineAnalysisReportRecommendedWindowResponse(
+    DateTimeOffset StartUtc,
+    DateTimeOffset EndUtc,
+    DateTimeOffset? ReturnBeforeUtc);

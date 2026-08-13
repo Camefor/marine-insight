@@ -33,7 +33,7 @@
 | 地点 | GET | `/locations/search?q={text}` | 搜索地点 | 匿名 |
 | 地点 | GET | `/locations/nearby?lat=&lon=` | 查询附近预置地点 | 匿名 |
 | 分析 | POST | `/marine-analyses` | 查询并生成海况分析 | 匿名 |
-| 分析 | GET | `/marine-analyses/{id}` | 获取已生成结果 | 匿名/所有者策略 |
+| 分析 | GET | `/marine-analyses/{id}` | 获取已持久化分析报告（属主） | 登录 |
 | 预报 | GET | `/forecast-batches/{id}/points` | 获取逐小时标准预报 | 匿名 |
 | 收藏 | GET | `/favorites` | 收藏列表 | 登录 |
 | 收藏 | POST | `/favorites` | 新增收藏 | 登录 |
@@ -158,7 +158,29 @@
 
 ### 5.3 当前分析响应
 
-`MI-0018` 已在 `POST /api/v1/marine-analyses` 返回确定性分析投影。当前响应包含 `overall`、`activities`、`recommendedWindows`、`risks` 和逐小时 `hourly[].overall/hourly[].activities/hourly[].risks`；仍不返回持久化分析报告。
+`MI-0018` 已在 `POST /api/v1/marine-analyses` 返回确定性分析投影。当前响应包含 `overall`、`activities`、`recommendedWindows`、`risks` 和逐小时 `hourly[].overall/hourly[].activities/hourly[].risks`。
+
+### 5.4 获取持久化分析报告
+
+`GET /api/v1/marine-analyses/{id}`（`MI-0029`，需登录）返回登录用户在 Dashboard 查询时已落库的分析结果摘要。匿名请求重定向至登录页；非属主或不存在的 `id` 返回 `404 ANALYSIS_NOT_FOUND`。
+
+```json
+{
+  "id": "82f9ff76-bb11-4456-93e5-78d669e609ea",
+  "location": { "locationId": "8a477d67-73fa-4f43-b954-cd29d238a89d" },
+  "range": { "startUtc": "2026-07-16T00:00:00Z", "endUtc": "2026-07-17T00:00:00Z", "hours": 24 },
+  "algorithmVersion": "marine-score-1.0.0",
+  "overall": { "score": 72, "riskLevel": "caution", "confidence": 0.8 },
+  "risks": [
+    { "forecastTimeUtc": "2026-07-16T02:00:00Z", "ruleCode": "swell-high", "severity": "warning", "actual": 2.5, "threshold": 2.0, "penalty": 15, "message": "长周期涌浪偏高" }
+  ],
+  "sources": [
+    { "batchId": "…", "dataDomain": "weather", "providerCode": "open-meteo", "sourceModel": "weather-v1", "sourceRole": "primary", "selectionPolicy": "forecast-snapshot-assembler.v1" }
+  ],
+  "recommendedWindow": { "startUtc": "2026-07-16T03:00:00Z", "endUtc": "2026-07-16T08:00:00Z", "returnBeforeUtc": "2026-07-16T07:00:00Z" },
+  "createdAtUtc": "2026-07-16T12:00:00Z"
+}
+```
 
 ```json
 {
@@ -358,4 +380,5 @@
 | 1.5 | 2026-07-31 | 增加 `MI-0022` 根级 `algorithmVersion`、`cache` 对象、`ETag` 响应头和 `If-None-Match` 条件请求 |
 | 1.6 | 2026-08-12 | 记录 `MI-0026` 静态 SSR 账户表单端点、防伪、限流和本地重定向约束 |
 | 1.7 | 2026-08-13 | 记录用户工作区、管理员运行状态和可降级 WorldTides 状态契约 |
+| 1.8 | 2026-08-13 | 增加 `MI-0029` `GET /api/v1/marine-analyses/{id}` 持久化分析报告读取端点与 `ANALYSIS_NOT_FOUND` 错误码 |
 | 1.8 | 2026-08-13 | 增加分析响应 `explanation` 字段与 AI/模板降级标记（MI-0028） |
