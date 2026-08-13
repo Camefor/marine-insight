@@ -79,9 +79,13 @@ function notifyUnavailable(dotNetReference, message) {
 
 function normalizeLatLng(latitude, longitude) {
     return {
-        latitude: clamp(toFiniteNumber(latitude, 0), -90, 90),
-        longitude: clamp(toFiniteNumber(longitude, 0), -180, 180)
+        latitude: roundCoordinate(clamp(toFiniteNumber(latitude, 0), -90, 90)),
+        longitude: roundCoordinate(clamp(toFiniteNumber(longitude, 0), -180, 180))
     };
+}
+
+function roundCoordinate(value) {
+    return Math.round(value * 1e6) / 1e6;
 }
 
 function toFiniteNumber(value, fallback) {

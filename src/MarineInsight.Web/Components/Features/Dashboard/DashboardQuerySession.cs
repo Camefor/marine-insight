@@ -12,6 +12,8 @@ namespace MarineInsight.Web.Components.Features.Dashboard;
 
 public sealed class DashboardQuerySession : IDisposable
 {
+    private const int CoordinatePrecision = 6;
+
     private readonly MarineAnalysisQueryService _analysisQueryService;
     private readonly ExplanationService _explanationService;
     private readonly LocationQueryService _locationQueryService;
@@ -155,7 +157,7 @@ public sealed class DashboardQuerySession : IDisposable
     {
         try
         {
-            var point = new GeoPoint(latitude, longitude);
+            var point = new GeoPoint(RoundCoordinate(latitude), RoundCoordinate(longitude));
             MapLatitude = point.Latitude;
             MapLongitude = point.Longitude;
             SelectedMapPoint = new DashboardMapPoint(point.Latitude, point.Longitude);
@@ -172,6 +174,9 @@ public sealed class DashboardQuerySession : IDisposable
             return false;
         }
     }
+
+    private static double RoundCoordinate(double value) =>
+        Math.Round(value, CoordinatePrecision, MidpointRounding.AwayFromZero);
 
     public void SelectTrend(string trendKey)
     {

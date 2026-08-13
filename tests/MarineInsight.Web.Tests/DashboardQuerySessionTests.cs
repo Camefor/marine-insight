@@ -157,4 +157,20 @@ public sealed class DashboardQuerySessionTests
         Assert.Null(session.Result);
         Assert.Contains("地图/坐标", session.AnalysisError, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void SelectMapPointRoundsCoordinatesToSixDecimalPlaces()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+
+        Assert.True(session.SelectMapPoint(30.1941234567, 122.6879876543));
+
+        Assert.Equal(30.194123, session.MapLatitude, 6);
+        Assert.Equal(122.687988, session.MapLongitude, 6);
+        Assert.NotNull(session.SelectedMapPoint);
+        Assert.Equal(30.194123, session.SelectedMapPoint.Latitude, 6);
+        Assert.Equal(122.687988, session.SelectedMapPoint.Longitude, 6);
+    }
 }
