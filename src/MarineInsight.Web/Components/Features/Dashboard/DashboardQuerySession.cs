@@ -13,6 +13,7 @@ namespace MarineInsight.Web.Components.Features.Dashboard;
 public sealed class DashboardQuerySession : IDisposable
 {
     private readonly MarineAnalysisQueryService _analysisQueryService;
+    private readonly ExplanationService _explanationService;
     private readonly LocationQueryService _locationQueryService;
     private CancellationTokenSource? _activeRequest;
     private long _requestVersion;
@@ -21,12 +22,15 @@ public sealed class DashboardQuerySession : IDisposable
 
     public DashboardQuerySession(
         MarineAnalysisQueryService analysisQueryService,
+        ExplanationService explanationService,
         LocationQueryService locationQueryService)
     {
         ArgumentNullException.ThrowIfNull(analysisQueryService);
+        ArgumentNullException.ThrowIfNull(explanationService);
         ArgumentNullException.ThrowIfNull(locationQueryService);
 
         _analysisQueryService = analysisQueryService;
+        _explanationService = explanationService;
         _locationQueryService = locationQueryService;
         ForecastStartUtc = RoundToNextUtcHour(DateTimeOffset.UtcNow).UtcDateTime;
     }
@@ -257,10 +261,11 @@ public sealed class DashboardQuerySession : IDisposable
             }
 
             var result = await _analysisQueryService.ExecuteAsync(query, _activeRequest.Token);
+            var explanation = await _explanationService.GenerateAsync(result, _activeRequest.Token);
 
             if (requestVersion == _requestVersion)
             {
-                Result = Project(result, _settings);
+                Result = Project(result, explanation, _settings);
                 SelectedTrendKey = DashboardTrendKeys.Score;
                 SelectedForecastTimeUtc = Result.HourlyDetails.Count == 0
                     ? null
@@ -352,7 +357,10 @@ public sealed class DashboardQuerySession : IDisposable
         location.TimeZoneId,
         location.IsPreset ? "preset" : "catalog");
 
-    private static DashboardAnalysisResult Project(MarineAnalysisQueryResult result, UserSettings settings)
+    private static DashboardAnalysisResult Project(
+        MarineAnalysisQueryResult result,
+        AnalysisExplanation explanation,
+        UserSettings settings)
     {
         var selectedPoint = result.Snapshot.Points
             .OrderBy(point => point.ForecastTimeUtc)
@@ -459,6 +467,18 @@ public sealed class DashboardQuerySession : IDisposable
             timelineWindows,
             hourlyDetails,
             hourlyRows,
+            new DashboardExplanation(
+                ToApiName(explanation.Source),
+                explanation.Degraded,
+                explanation.Headline,
+                explanation.Summary,
+                explanation.ActivityNotes
+                    .Select(note => new DashboardActivityNote(
+                        ToActivityLabel(note.Activity),
+                        note.Text))
+                    .ToArray(),
+                explanation.RiskWindowText,
+                explanation.UncertaintyText),
             "结果仅供辅助决策，请以官方预警和现场管理为准。");
     }
 
@@ -851,7 +871,21 @@ public sealed record DashboardAnalysisResult(
     IReadOnlyList<DashboardTimelineWindow> TimelineWindows,
     IReadOnlyList<DashboardHourlyDetail> HourlyDetails,
     IReadOnlyList<DashboardHourlyRow> HourlyRows,
+    DashboardExplanation Explanation,
     string Disclaimer);
+
+public sealed record DashboardExplanation(
+    string Source,
+    bool Degraded,
+    string Headline,
+    string Summary,
+    IReadOnlyList<DashboardActivityNote> ActivityNotes,
+    string? RiskWindowText,
+    string? UncertaintyText);
+
+public sealed record DashboardActivityNote(
+    string Label,
+    string Text);
 
 public sealed record DashboardSourceStatus(
     string DataDomain,

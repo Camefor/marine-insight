@@ -127,10 +127,10 @@
 | 当前任务 ID | `MI-0027` |
 | 当前状态 | `BLOCKED` |
 | 当前目标 | 一次性完成阶段 3 剩余产品闭环与阶段 4 可部署基线：收藏/历史/单位设置、移动端可访问性、管理员运维视图、WorldTides 可配置降级、容器化、备份恢复和上线验证 |
-| 最后完成动作 | WorldTides Key 已写入当前用户的 .NET User Secrets 并启用；新增安全提示式配置/删除脚本、Git 和 Docker 构建上下文排除、可选 Compose 外部 Secret 覆盖及轮换规范；WebApplicationFactory 和 Playwright 均强制关闭真实 Provider，防止自动化测试消耗 Credit |
-| 下一步动作 | 人工本地联调时直接运行 Web 并提交一次受控海况查询，核对 WorldTides 状态、潮位和 Credit；轮换使用 `scripts/configure-worldtides-secret.ps1`，删除使用 `-Disable`；Docker/Staging 使用 `compose.worldtides.yaml` 和仓库外 Secret 文件 |
-| 涉及文件 | Application/Infrastructure/Web 用户工作区与 WorldTides、独立 PostgreSQL 迁移项目、Docker/Caddy/Secret、运维脚本、CI、Playwright 测试及数据库/API/Provider/UI/部署/测试/RoadMap 文档 |
-| 验证结果 | Release 构建 0 警告、0 错误；.NET 测试基线 138 个，其中 Web 30/30、WorldTides 契约 2/2 通过；User Secrets 的启用状态和非空 Key 已验证，仓库/差异明文扫描通过；`dotnet format`、PowerShell AST 和 `git diff --check` 通过 |
+| 最后完成动作 | `MI-0028` AI 解读引擎已闭环：OpenAI 兼容适配器、事实/安全校验、24 小时缓存和规则模板降级已落地，API/Dashboard 均投影 `explanation`；WorldTides Key 已写入当前用户的 .NET User Secrets 并启用，WebApplicationFactory 和 Playwright 均强制关闭真实 Provider 与 AI，防止自动化测试消耗付费额度 |
+| 下一步动作 | AI 真实联调由用户自验：`scripts/configure-ai-secret.ps1` 配置 `AI:ApiKey`+`Enabled=true` 后查询应返回 `source=ai`，断网/超时应自动降级 `degraded=true`；MI-0027 仍待人工受控 WorldTides 查询与 Docker/Staging 外部验证 |
+| 涉及文件 | Application/Infrastructure/Web 的 AI 解读与用户工作区、WorldTides、独立 PostgreSQL 迁移项目、Docker/Caddy/Secret、运维脚本、CI、Playwright 测试及数据库/API/Provider/UI/部署/测试/RoadMap 文档 |
+| 验证结果 | Release 构建 0 警告、0 错误；.NET 测试基线 161 个（Domain 51、Application 47、Infrastructure 32、Web 31）全量通过；AI 适配器错误映射、事实校验和降级路径已覆盖；测试宿主显式关闭 AI 与 WorldTides，无真实付费调用 |
 | 阻塞/待确认 | 当前机器仍无 Docker CLI，不能验证 Docker Secret 注入及真实 Compose/PostgreSQL/代理/备份恢复；真实 WorldTides 请求会消耗 Credit，本次未自动调用；后台 Web 启动探针被环境策略阻止 |
 | 最后更新 | 2026-08-13 |
 
@@ -202,6 +202,7 @@
 | [x] | `MI-0024` | 2026-07-31 | 实现 Leaflet/OpenStreetMap 地图选点与失败降级 | Dashboard 增加全宽 Leaflet/OpenStreetMap 地图选点、可见 OSM 署名、瓦片/脚本失败提示和经纬度输入降级；`DashboardQuerySession` 支持预置地点和自定义坐标两类提交目标并复用同一分析流程；不做离线瓦片、瓦片代理、收藏/登录、实时定位或截图验证 |
 | [x] | `MI-0025` | 2026-08-12 | 消除 SQLite 原生库 High 严重性漏洞 | EF Core/Design/SQLite 统一升级到 `10.0.11`，传递依赖解析为 `SQLitePCLRaw 2.1.12`；NuGet 漏洞审计无报告，Release 构建、SQLite 迁移/仓储测试和全量 124 个测试通过 |
 | [x] | `MI-0026` | 2026-08-12 | 实现 ASP.NET Core Identity 基础认证闭环 | 新增 UUID Identity 用户/角色迁移、注册/登录/退出、静态 SSR 账户页、Header 认证状态、Secure Cookie、密码/锁定、防伪、账户限流和 5 个认证集成测试；匿名 Dashboard/API 保持可用 |
+| [x] | `MI-0028` | 2026-08-13 | 实现 AI 解读引擎（OpenAI 兼容协议） | Application 定义 `IExplanationProvider`/`IExplanationCache` 端口、`ExplanationService` 编排、规则模板和事实/安全校验；Infrastructure 提供 OpenAI 兼容适配器、`IMemoryCache` 缓存和 `AI` 配置校验；Web 的 API 与 Dashboard 均投影 `explanation`，AI 关闭/失败降级为模板；密钥脚本与 `.secrets` 文档同步；新增 23 个自动化用例 |
 
 ### 9.2 取消任务
 
@@ -213,6 +214,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-13 | `MI-0028` | 完成 AI 解读引擎闭环：Application 新增解释端口、事实 DTO、规则模板、事实/安全校验器和 `ExplanationService` 编排；Infrastructure 新增 OpenAI 兼容适配器、`AI` 配置校验和 `IMemoryCache` 缓存；Web 的 API 与 Dashboard 均投影 `explanation`，AI 默认关闭且失败一律降级模板；修复 `AI:CacheLifetime` 用 `"24:00:00"` 被 `TimeSpan` 解析为 24 天的问题，改为 `"1.00:00:00"` | .NET 全量测试 161/161 通过（Application 47、Domain 51、Infrastructure 32、Web 31）；AI 适配器 401/403/429/5xx/非法 JSON/超时错误映射与事实校验/降级路径均已覆盖；测试宿主显式关闭 AI，无真实模型调用 | 真实 Key 联调由用户自验：`scripts/configure-ai-secret.ps1` 配置 `AI:ApiKey`+`Enabled=true` 后查询应返回 `explanation.source=ai`；断网/超时应自动降级 `degraded=true`；MI-0027 仍等待 Docker/Staging 与真实 WorldTides 外部验证 |
 | 2026-08-13 | `MI-0027` | 完成 WorldTides 密钥维护设计和本机配置：真实 Key 仅存入当前用户的 .NET User Secrets；增加安全提示式配置/删除脚本、可选 Compose 外部 Secret、Git/Docker 排除规则、CI/E2E 付费调用隔离和轮换/泄露处置文档；未把明文写入仓库或输出 | User Secrets 中 `Enabled=true` 且 Key 非空；仓库跟踪内容和当前差异无明文 Key；本地/部署 Secret 路径均被 Git 忽略；Release 构建 0 警告/0 错误，Web 30/30、WorldTides 契约 2/2、格式和 PowerShell AST 通过；后台启动探针被策略阻止，未发出真实 WorldTides 请求 | 明确接受一次 Credit 消耗后做真实潮汐/Credit 联调；Docker 可用后用 `compose.worldtides.yaml` 验证 Key-per-file 注入；由于 Key 曾出现在对话中，若对话可能共享或长期保留，应在供应商控制台轮换 |
 | 2026-08-13 | `MI-0027` | 代理网络调整后重新安装 Playwright 管理的 Chromium，浏览器测试环境阻塞已解除；未修改业务代码 | `npx playwright install chromium` 成功安装 Chromium、Headless Shell、FFmpeg 和 Winldd；Playwright `1.62.1` 默认浏览器路径存在，并通过 API 成功启动 Chromium `151.0.7922.34` 后正常关闭 | 下次直接执行 `npm run test:e2e`，无需设置 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`；任务仍等待 Docker/Staging 和 WorldTides API Key 完成外部发布验证 |
 | 2026-08-13 | `MI-0027` | 从提交 `ef0a673` 恢复并完成本地收尾：确认该提交已实现收藏/历史/设置、运维视图、WorldTides 和用户工作区迁移；随后修复 SQLite 时间排序、再次查询/单位/活动恢复、Dashboard SSR 和资源错误，补齐 WorldTides 降级契约、Docker/Caddy/Secret、PostgreSQL 专用迁移、备份恢复/冒烟脚本、CI E2E 和设计文档；因外部发布验证条件不足转为 `BLOCKED` | Release 构建 0 警告、0 错误；Domain 51、Application 29、Infrastructure 28、Web 29，合计 137/137 通过；本机 Chrome 的桌面/移动 Playwright 2/2 通过；`dotnet format`、PowerShell AST、npm audit 0 漏洞、`git diff --check` 和 BOM/CRLF 检查通过；NuGet 在线审计因 TLS EOF 未完成；Docker CLI 不可用，真实 PostgreSQL/代理/备份恢复未执行；无 WorldTides API Key，未执行付费联调 | 提供 Docker/Staging 后执行完整 Compose、PostgreSQL、代理、备份恢复和冒烟演练；提供 WorldTides Key 后执行真实 Credit/潮汐联调，再评估阶段 4 准出 |

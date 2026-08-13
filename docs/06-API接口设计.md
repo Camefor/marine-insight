@@ -245,12 +245,29 @@
       "risks": []
     }
   ],
+  "explanation": {
+    "source": "template",
+    "degraded": false,
+    "headline": "整体海况良好，适宜乘船活动。",
+    "summary": "风浪较小，适合安排乘船活动。",
+    "activityNotes": [
+      { "activity": "boat", "text": "可以安排乘船活动。" }
+    ],
+    "riskWindowText": null,
+    "uncertaintyText": null,
+    "disclaimer": "结果仅供辅助决策，请以官方预警和现场管理为准。",
+    "promptVersion": "v1",
+    "modelVersion": null,
+    "locale": "zh-CN"
+  },
   "disclaimer": "结果仅供辅助决策，请以官方预警和现场管理为准。",
   "traceId": "00-..."
 }
 ```
 
 `MI-0022` 后，响应头返回与 `cache.eTag` 一致的 `ETag`；客户端带相同 `If-None-Match` 时返回 `304 Not Modified`，不重复传输响应体。`cache.key` 和 `cache.eTag` 均由来源批次集合、来源选择策略、算法版本和归一化活动集合决定。`sources[].cacheStatus` 为 `hit`、`miss` 或 `stale`；当 Provider 在 Stale 窗口内失败时，响应保留旧批次并通过 `quality.freshness` 与质量 flags 表达降级。`activities` 为空或缺省时服务端默认返回五类活动分；传入未知活动返回 `400 VALIDATION_FAILED`。
+
+`MI-0028` 后，响应新增非空 `explanation` 对象：`source` 为 `template`（规则模板）或 `ai`（模型生成）；`degraded=true` 表示 AI 关闭、调用失败或校验不通过时已降级为模板，但 HTTP 状态仍为 `200`，不因可选 AI 失败阻断分析。`explanation` 字段位于 `hourly` 之后、`disclaimer` 之前，作为纯增量不升级 API 主版本。
 
 ## 6. 地点目录查询
 
@@ -341,3 +358,4 @@
 | 1.5 | 2026-07-31 | 增加 `MI-0022` 根级 `algorithmVersion`、`cache` 对象、`ETag` 响应头和 `If-None-Match` 条件请求 |
 | 1.6 | 2026-08-12 | 记录 `MI-0026` 静态 SSR 账户表单端点、防伪、限流和本地重定向约束 |
 | 1.7 | 2026-08-13 | 记录用户工作区、管理员运行状态和可降级 WorldTides 状态契约 |
+| 1.8 | 2026-08-13 | 增加分析响应 `explanation` 字段与 AI/模板降级标记（MI-0028） |

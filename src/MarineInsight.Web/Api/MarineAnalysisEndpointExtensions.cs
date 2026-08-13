@@ -34,6 +34,7 @@ public static class MarineAnalysisEndpointExtensions
     private static async Task<IResult> HandleAsync(
         MarineAnalysisRequest? request,
         MarineAnalysisQueryService queryService,
+        ExplanationService explanationService,
         LocationQueryService locationQueryService,
         HttpContext httpContext,
         CancellationToken cancellationToken)
@@ -73,7 +74,8 @@ public static class MarineAnalysisEndpointExtensions
                 return Results.StatusCode(StatusCodes.Status304NotModified);
             }
 
-            return Results.Ok(Project(result, traceId));
+            var explanation = await explanationService.GenerateAsync(result, cancellationToken);
+            return Results.Ok(Project(result, explanation, traceId));
         }
         catch (ProviderException exception)
         {
@@ -259,6 +261,7 @@ public static class MarineAnalysisEndpointExtensions
 
     private static MarineAnalysisResponse Project(
         MarineAnalysisQueryResult result,
+        AnalysisExplanation explanation,
         string traceId)
     {
         var cacheStatusByBatchId = new Dictionary<Guid, string>
@@ -354,6 +357,22 @@ public static class MarineAnalysisEndpointExtensions
             ProjectRecommendedWindows(result),
             rootRisks,
             hourly,
+            new MarineAnalysisExplanationResponse(
+                ToApiName(explanation.Source),
+                explanation.Degraded,
+                explanation.Headline,
+                explanation.Summary,
+                explanation.ActivityNotes
+                    .Select(note => new MarineAnalysisExplanationActivityNoteResponse(
+                        ToApiName(note.Activity),
+                        note.Text))
+                    .ToArray(),
+                explanation.RiskWindowText,
+                explanation.UncertaintyText,
+                explanation.Disclaimer,
+                explanation.PromptVersion,
+                explanation.ModelVersion,
+                explanation.Locale),
             "结果仅供辅助决策，请以官方预警和现场管理为准。",
             traceId);
     }

@@ -19,4 +19,6 @@ public static class MarineInsightErrorCodes
     public const string ProviderQuotaExceeded = "PROVIDER_QUOTA_EXCEEDED";
 
     public const string CacheUnavailable = "CACHE_UNAVAILABLE";
+
+    public const string AiExplanationUnavailable = "AI_EXPLANATION_UNAVAILABLE";
 }

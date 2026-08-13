@@ -1,0 +1,10 @@
+{
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "{\"headline\":\"整体海况良好，适宜乘船活动。\",\"summary\":\"综合评分约 72 分，风浪较小。\",\"activityNotes\":[{\"activity\":\"boat\",\"text\":\"可以安排乘船活动。\"}],\"riskWindowText\":null,\"uncertaintyText\":null,\"disclaimer\":\"结果仅供辅助决策，请以官方预警和现场管理为准。\"}"
+      }
+    }
+  ]
+}

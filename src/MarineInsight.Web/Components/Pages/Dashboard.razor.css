@@ -25,6 +25,7 @@
 .dashboard-header,
 .query-band,
 .summary-band,
+.explanation-section,
 .source-section,
 .activity-section,
 .recommendation-section,
@@ -54,6 +55,7 @@
 .trend-section h2,
 .metric-section h2,
 .hourly-section h2,
+.explanation-section h2,
 .empty-state h2,
 .summary-band h2 {
     letter-spacing: 0;
@@ -97,7 +99,8 @@
 .risk-section,
 .trend-section,
 .metric-section,
-.hourly-section {
+.hourly-section,
+.explanation-section {
     background: var(--surface-muted);
     border-bottom: 1px solid var(--border);
     border-top: 1px solid var(--border);
@@ -377,6 +380,62 @@ dd {
     display: flex;
     gap: 14px;
     justify-content: space-between;
+}
+
+.explanation-badge {
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 3px 9px;
+}
+
+.explanation-badge.ai {
+    background: var(--good-bg);
+    color: var(--ok);
+}
+
+.explanation-badge.degraded {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+.explanation-headline {
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin: 14px 0 8px;
+}
+
+.explanation-summary,
+.explanation-risk,
+.explanation-uncertainty {
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0 0 8px;
+}
+
+.explanation-uncertainty {
+    color: var(--muted);
+}
+
+.explanation-notes {
+    display: grid;
+    gap: 6px;
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.explanation-notes li {
+    line-height: 1.5;
+}
+
+.explanation-notes strong {
+    color: var(--accent-strong);
+}
+
+.explanation-risk {
+    border-left: 3px solid var(--warning);
+    padding-left: 10px;
 }
 
 .activity-list,

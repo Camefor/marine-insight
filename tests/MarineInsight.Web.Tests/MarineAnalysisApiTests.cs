@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using MarineInsight.Application.Analysis;
+using MarineInsight.Application.Analysis.Ports;
 using MarineInsight.Application.Errors;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Forecast.Ports;
@@ -85,6 +87,10 @@ public sealed class MarineAnalysisApiTests
                 .GetProperty("overall")
                 .GetProperty("riskLevel")
                 .GetString());
+        Assert.Equal(
+            "template",
+            firstDocument.RootElement.GetProperty("explanation").GetProperty("source").GetString());
+        Assert.False(firstDocument.RootElement.GetProperty("explanation").GetProperty("degraded").GetBoolean());
 
         using var secondResponse = await client.PostAsJsonAsync("/api/v1/marine-analyses", request);
         using var secondDocument = JsonDocument.Parse(await secondResponse.Content.ReadAsStringAsync());
@@ -105,6 +111,21 @@ public sealed class MarineAnalysisApiTests
         Assert.Equal(etag, conditionalResponse.Headers.GetValues("ETag").Single());
         Assert.Equal(1, factory.Weather.CallCount);
         Assert.Equal(1, factory.Marine.CallCount);
+    }
+
+    [Fact]
+    public async Task AiExplanationReturnsSourceAiWhenProviderIsEnabled()
+    {
+        using var factory = new ApiTestApplicationFactory { EnableAiExplanation = true };
+        using var client = factory.CreateClient();
+
+        using var response = await client.PostAsJsonAsync("/api/v1/marine-analyses", CreateRequest());
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("ai", document.RootElement.GetProperty("explanation").GetProperty("source").GetString());
+        Assert.False(document.RootElement.GetProperty("explanation").GetProperty("degraded").GetBoolean());
+        Assert.Equal(1, factory.ExplanationProvider.CallCount);
     }
 
     [Fact]
@@ -258,11 +279,16 @@ public sealed class MarineAnalysisApiTests
         {
             Weather = new FakeWeatherProvider();
             Marine = new FakeMarineProvider();
+            ExplanationProvider = new FakeExplanationProvider();
         }
 
         public FakeWeatherProvider Weather { get; }
 
         public FakeMarineProvider Marine { get; }
+
+        public FakeExplanationProvider ExplanationProvider { get; }
+
+        public bool EnableAiExplanation { get; init; }
 
         public async Task MigrateDatabaseAsync()
         {
@@ -291,6 +317,11 @@ public sealed class MarineAnalysisApiTests
                 services.RemoveAll<IMarineForecastProvider>();
                 services.AddSingleton<IWeatherForecastProvider>(Weather);
                 services.AddSingleton<IMarineForecastProvider>(Marine);
+                if (EnableAiExplanation)
+                {
+                    services.RemoveAll<IExplanationProvider>();
+                    services.AddSingleton<IExplanationProvider>(ExplanationProvider);
+                }
             });
         }
 
@@ -358,6 +389,31 @@ public sealed class MarineAnalysisApiTests
                 location,
                 range,
                 ForecastMetricSet.Create(waveHeightM: 0.8))));
+        }
+    }
+
+    public sealed class FakeExplanationProvider : IExplanationProvider
+    {
+        public string ProviderCode => "fake-ai";
+
+        public string ModelVersion => "fake-model";
+
+        public bool IsEnabled => true;
+
+        public int CallCount { get; private set; }
+
+        public Task<ExplanationCandidate> ExplainAsync(
+            ExplanationFacts facts,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CallCount++;
+            return Task.FromResult(new ExplanationCandidate
+            {
+                Headline = "整体海况良好，适宜乘船活动。",
+                Summary = "风浪较小，适合安排乘船活动。",
+                ActivityNotes = [new ExplanationActivityNote { Activity = "boat", Text = "可以安排乘船活动。" }]
+            });
         }
     }
 

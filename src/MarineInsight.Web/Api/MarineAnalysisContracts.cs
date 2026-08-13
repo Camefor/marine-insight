@@ -46,6 +46,7 @@ public sealed record MarineAnalysisResponse(
     IReadOnlyList<MarineAnalysisRecommendedWindowResponse> RecommendedWindows,
     IReadOnlyList<MarineAnalysisRiskResponse> Risks,
     IReadOnlyList<MarineAnalysisHourlyResponse> Hourly,
+    MarineAnalysisExplanationResponse Explanation,
     string Disclaimer,
     string TraceId);
 
@@ -145,6 +146,23 @@ public sealed record MarineAnalysisQualityResponse(
     IReadOnlyList<string> Flags,
     IReadOnlyList<string> MissingMetrics,
     IReadOnlyList<string> MissingDomains);
+
+public sealed record MarineAnalysisExplanationResponse(
+    string Source,
+    bool Degraded,
+    string Headline,
+    string Summary,
+    IReadOnlyList<MarineAnalysisExplanationActivityNoteResponse> ActivityNotes,
+    string? RiskWindowText,
+    string? UncertaintyText,
+    string Disclaimer,
+    string PromptVersion,
+    string? ModelVersion,
+    string Locale);
+
+public sealed record MarineAnalysisExplanationActivityNoteResponse(
+    string Activity,
+    string Text);
 
 public sealed record MarineAnalysisMetricsResponse(
     double? WindSpeedMs,

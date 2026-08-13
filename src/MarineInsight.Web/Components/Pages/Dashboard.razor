@@ -216,6 +216,39 @@
             </dl>
         </section>
 
+        <section class="explanation-section" aria-labelledby="explanation-title">
+            <div class="section-heading">
+                <h2 id="explanation-title">智能解读</h2>
+                @if (result.Explanation.Degraded)
+                {
+                    <span class="explanation-badge degraded">智能解读已降级</span>
+                }
+                else if (result.Explanation.Source == "ai")
+                {
+                    <span class="explanation-badge ai">AI 生成</span>
+                }
+            </div>
+            <p class="explanation-headline">@result.Explanation.Headline</p>
+            <p class="explanation-summary">@result.Explanation.Summary</p>
+            @if (result.Explanation.ActivityNotes.Count > 0)
+            {
+                <ul class="explanation-notes">
+                    @foreach (var note in result.Explanation.ActivityNotes)
+                    {
+                        <li><strong>@note.Label</strong>：@note.Text</li>
+                    }
+                </ul>
+            }
+            @if (!string.IsNullOrWhiteSpace(result.Explanation.RiskWindowText))
+            {
+                <p class="explanation-risk">@result.Explanation.RiskWindowText</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(result.Explanation.UncertaintyText))
+            {
+                <p class="explanation-uncertainty">@result.Explanation.UncertaintyText</p>
+            }
+        </section>
+
         @if (result.ActivityScores.Count > 0)
         {
             <section class="activity-section" aria-labelledby="activity-title">

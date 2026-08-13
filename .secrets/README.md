@@ -17,4 +17,8 @@ $env:MARINE_INSIGHT_WORLDTIDES_SECRET_FILE = 'D:\secure\marine-insight\worldtide
 docker compose -f compose.yaml -f compose.worldtides.yaml up -d --build
 ```
 
+For the optional AI explanation engine (OpenAI-compatible), run `scripts/configure-ai-secret.ps1`. It stores `AI:ApiKey` and enables `AI:Enabled` in .NET User Secrets; pass `-Disable` to remove the key and turn the provider off. The AI provider is disabled by default and never required for the deterministic rule-template explanation.
+
+In Docker, mount the key via the key-per-file pattern: a file whose name is `AI__ApiKey` under `/run/secrets`, or set the `AI__ApiKey` environment variable.
+
 Prefer an external secret manager or a host file readable only by the deployment account in staging and production.
