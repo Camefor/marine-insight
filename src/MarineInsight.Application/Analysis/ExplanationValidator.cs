@@ -188,6 +188,24 @@ public static partial class ExplanationValidator
             AddIfPresent(values, risk.Actual);
             AddIfPresent(values, risk.Threshold);
             AddIfPresent(values, risk.Penalty);
+            AddTimeComponents(values, risk.ForecastTimeUtc, facts.TimeZoneId);
+        }
+
+        AddTimeComponents(values, facts.FromUtc, facts.TimeZoneId);
+        AddTimeComponents(values, facts.ToUtc, facts.TimeZoneId);
+        foreach (var window in facts.RecommendedWindows)
+        {
+            AddTimeComponents(values, window.StartUtc, facts.TimeZoneId);
+            AddTimeComponents(values, window.EndUtc, facts.TimeZoneId);
+            if (window.ReturnBeforeUtc is { } returnBeforeUtc)
+            {
+                AddTimeComponents(values, returnBeforeUtc, facts.TimeZoneId);
+            }
+
+            if (window.RiskRisesAtUtc is { } riskRisesAtUtc)
+            {
+                AddTimeComponents(values, riskRisesAtUtc, facts.TimeZoneId);
+            }
         }
 
         return values.ToArray();
@@ -199,6 +217,37 @@ public static partial class ExplanationValidator
         {
             values.Add(value.Value);
         }
+    }
+
+    // The AI describes risk windows in local time (e.g. "2026年8月14日 05:30"), so the
+    // year/hour/minute components must be admissible alongside the raw fact numbers.
+    private static void AddTimeComponents(List<double> values, DateTimeOffset utc, string? timeZoneId)
+    {
+        var local = ToLocalTime(utc, timeZoneId);
+        values.Add(local.Year);
+        values.Add(local.Month);
+        values.Add(local.Day);
+        values.Add(local.Hour);
+        values.Add(local.Minute);
+    }
+
+    private static DateTimeOffset ToLocalTime(DateTimeOffset utc, string? timeZoneId)
+    {
+        if (timeZoneId is { Length: > 0 })
+        {
+            try
+            {
+                return TimeZoneInfo.ConvertTime(utc, TimeZoneInfo.FindSystemTimeZoneById(timeZoneId));
+            }
+            catch (TimeZoneNotFoundException)
+            {
+            }
+            catch (InvalidTimeZoneException)
+            {
+            }
+        }
+
+        return utc;
     }
 
     private static string? NormalizeOptional(string? value, int maxLength, out bool valid)

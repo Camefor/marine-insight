@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text;
+using System.Text.Json;
 using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Errors;
 using MarineInsight.Domain.Analysis;
@@ -70,6 +71,30 @@ public sealed class OpenAiCompatibleExplanationProviderTests
 
         await Assert.ThrowsAsync<ProviderTimeoutException>(() =>
             provider.ExplainAsync(CreateFacts(), default));
+    }
+
+    [Fact]
+    public async Task FencedJsonResponseIsNormalized()
+    {
+        using var sample = JsonDocument.Parse(ReadSample());
+        var content = sample.RootElement.GetProperty("choices")[0]
+            .GetProperty("message").GetProperty("content").GetString()!;
+
+        var fenced = $"```json\n{content}\n```";
+        var responsePayload = JsonSerializer.Serialize(new
+        {
+            choices = new[]
+            {
+                new { message = new { role = "assistant", content = fenced } }
+            }
+        });
+
+        using var client = new HttpClient(new StubHttpMessageHandler(_ => JsonResponse(responsePayload)));
+        var provider = CreateProvider(client);
+
+        var candidate = await provider.ExplainAsync(CreateFacts(), default);
+
+        Assert.Equal("整体海况良好，适宜乘船活动。", candidate.Headline);
     }
 
     private static OpenAiCompatibleExplanationProvider CreateProvider(

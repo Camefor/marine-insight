@@ -13,9 +13,9 @@ namespace MarineInsight.Infrastructure.Providers.Explanation;
 /// <summary>
 /// OpenAI-compatible Chat Completions adapter. A single implementation covers
 /// OpenAI, DeepSeek, Qwen, Moonshot and Ollama by switching <c>AI:BaseUrl</c> and
-/// <c>AI:Model</c>. The model is asked for JSON via <c>response_format: json_object</c>
-/// and its output is deserialized into <see cref="ExplanationCandidate"/> for strict
-/// local validation; no vendor-specific structured-output API is assumed.
+/// <c>AI:Model</c>. The model is asked for JSON through the system prompt, and its
+/// output is deserialized into <see cref="ExplanationCandidate"/> for strict local
+/// validation; no vendor-specific structured-output API is assumed.
 /// </summary>
 public sealed class OpenAiCompatibleExplanationProvider(
     HttpClient httpClient,
@@ -64,7 +64,12 @@ public sealed class OpenAiCompatibleExplanationProvider(
             }
             if (!response.IsSuccessStatusCode)
             {
-                throw new ProviderException(Code, ProviderFailureKind.Unavailable, $"AI provider returned HTTP {(int)response.StatusCode}.", (int)response.StatusCode >= 500);
+                var detail = await ReadErrorDetailAsync(response, timeout.Token);
+                throw new ProviderException(
+                    Code,
+                    ProviderFailureKind.Unavailable,
+                    $"AI provider returned HTTP {(int)response.StatusCode}.{detail}",
+                    (int)response.StatusCode >= 500);
             }
 
             var payload = await response.Content.ReadFromJsonAsync<OpenAiChatResponse>(JsonOptions, timeout.Token)
@@ -88,7 +93,7 @@ public sealed class OpenAiCompatibleExplanationProvider(
         }
         catch (HttpRequestException exception)
         {
-            throw new ProviderException(Code, ProviderFailureKind.Unavailable, "AI provider could not be reached.", true, innerException: exception);
+            throw new ProviderException(Code, ProviderFailureKind.Unavailable, $"AI provider could not be reached: {exception.Message}", true, innerException: exception);
         }
     }
 
@@ -103,19 +108,57 @@ public sealed class OpenAiCompatibleExplanationProvider(
         return new OpenAiChatRequest(
             settings.Model,
             messages,
-            Temperature,
-            new OpenAiResponseFormat("json_object"));
+            Temperature);
+    }
+
+    private static async Task<string> ReadErrorDetailAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            var trimmed = body.Trim();
+            if (trimmed.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            return $" Details: {(trimmed.Length > 200 ? trimmed[..200] : trimmed)}";
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     private static ExplanationCandidate DeserializeCandidate(string content)
     {
-        var candidate = JsonSerializer.Deserialize<ExplanationCandidate>(content, JsonOptions);
+        var candidate = JsonSerializer.Deserialize<ExplanationCandidate>(NormalizeJsonContent(content), JsonOptions);
         if (candidate is null)
         {
             throw new ProviderContractException(Code, "AI provider returned an empty explanation.");
         }
 
         return candidate;
+    }
+
+    private static string NormalizeJsonContent(string content)
+    {
+        var trimmed = content.Trim();
+
+        // Some OpenAI-compatible models wrap the JSON in a Markdown code fence
+        // (```json ... ```) despite the prompt asking for the bare object; strip it.
+        if (trimmed.StartsWith("```", StringComparison.Ordinal))
+        {
+            var fenceEnd = trimmed.IndexOf('\n');
+            trimmed = (fenceEnd >= 0 ? trimmed[(fenceEnd + 1)..] : string.Empty).Trim();
+        }
+
+        if (trimmed.EndsWith("```", StringComparison.Ordinal))
+        {
+            trimmed = trimmed[..trimmed.LastIndexOf("```", StringComparison.Ordinal)].Trim();
+        }
+
+        return trimmed;
     }
 
     private static JsonSerializerOptions CreateJsonOptions()

@@ -5,11 +5,7 @@ namespace MarineInsight.Infrastructure.Providers.Explanation;
 internal sealed record OpenAiChatRequest(
     [property: JsonPropertyName("model")] string Model,
     [property: JsonPropertyName("messages")] IReadOnlyList<OpenAiChatMessage> Messages,
-    [property: JsonPropertyName("temperature")] double Temperature,
-    [property: JsonPropertyName("response_format")] OpenAiResponseFormat ResponseFormat);
-
-internal sealed record OpenAiResponseFormat(
-    [property: JsonPropertyName("type")] string Type);
+    [property: JsonPropertyName("temperature")] double Temperature);
 
 internal sealed record OpenAiChatMessage(
     [property: JsonPropertyName("role")] string Role,

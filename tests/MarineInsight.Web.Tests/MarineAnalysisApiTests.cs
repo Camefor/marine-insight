@@ -306,6 +306,7 @@ public sealed class MarineAnalysisApiTests
                 {
                     ["OpenTelemetry:Endpoint"] = "",
                     ["TideProviders:WorldTides:Enabled"] = "false",
+                    ["AI:Enabled"] = "false",
                     ["Database:Provider"] = "Sqlite",
                     ["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}",
                     ["Caching:Forecast:Environment"] = "api-test"

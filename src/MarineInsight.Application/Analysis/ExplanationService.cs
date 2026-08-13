@@ -80,7 +80,7 @@ public sealed partial class ExplanationService
         }
         catch (ProviderException exception)
         {
-            return Degrade(template, result.CacheIdentity.Value, exception.FailureKind.ToString(), started);
+            return Degrade(template, result.CacheIdentity.Value, $"{exception.FailureKind}: {exception.Message}", started);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
