@@ -1,4 +1,4 @@
-namespace MarineInsight.Infrastructure.Providers.WorldTides;
+﻿namespace MarineInsight.Infrastructure.Providers.WorldTides;
 
 public sealed class WorldTidesOptions
 {

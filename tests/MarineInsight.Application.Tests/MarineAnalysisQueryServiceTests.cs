@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using MarineInsight.Application.Analysis;
+using MarineInsight.Application.Errors;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Forecast.Ports;
 using MarineInsight.Domain.Forecast;
@@ -50,6 +51,56 @@ public sealed class MarineAnalysisQueryServiceTests
         Assert.Contains(":marine-score-1.0.0:", first.CacheIdentity.Value, StringComparison.Ordinal);
         Assert.StartsWith("\"", first.CacheIdentity.ETag, StringComparison.Ordinal);
         Assert.Equal(first.CacheIdentity.Value, second.CacheIdentity.Value);
+    }
+
+    [Fact]
+    public async Task DisabledTideProviderIsNotCalled()
+    {
+        var tide = new FakeTideProvider { IsEnabled = false };
+        var result = await CreateService(tide).ExecuteAsync(new MarineAnalysisQuery(Location, Range));
+
+        Assert.Equal(0, tide.CallCount);
+        Assert.Equal("disabled", result.Tide.Status);
+        Assert.Equal(2, result.Snapshot.SourceBatches.Count);
+    }
+
+    [Fact]
+    public async Task TideFailureDegradesWithoutSuppressingBaseAnalysis()
+    {
+        var tide = new FakeTideProvider
+        {
+            Failure = new ProviderException("fake-tide", ProviderFailureKind.QuotaExceeded, "No credits.", false)
+        };
+        var result = await CreateService(tide).ExecuteAsync(new MarineAnalysisQuery(Location, Range));
+
+        Assert.Equal("unavailable", result.Tide.Status);
+        Assert.Equal(MarineInsightErrorCodes.ProviderQuotaExceeded, result.Tide.ErrorCode);
+        Assert.Equal(2, result.Snapshot.SourceBatches.Count);
+        Assert.NotEmpty(result.HourlyAssessments);
+    }
+
+    [Fact]
+    public async Task LowTideCreditsRemainAvailableAsDegradedEnrichment()
+    {
+        var tide = new FakeTideProvider { CreditWarning = true };
+        var result = await CreateService(tide).ExecuteAsync(new MarineAnalysisQuery(Location, Range));
+
+        Assert.Equal("degraded", result.Tide.Status);
+        Assert.Equal(MarineInsightErrorCodes.ProviderQuotaExceeded, result.Tide.ErrorCode);
+        Assert.Equal(3, result.Snapshot.SourceBatches.Count);
+        Assert.Contains(result.Snapshot.Points, point => point.Metrics.TideHeightM.HasValue);
+    }
+
+    private static MarineAnalysisQueryService CreateService(ITideProvider tideProvider)
+    {
+        var clock = new TestTimeProvider(StartUtc);
+        return new MarineAnalysisQueryService(
+            new FakeWeatherProvider(),
+            new FakeMarineProvider(),
+            new FakeCacheKeyFactory(),
+            new ForecastBatchCacheCoordinator(new FakeForecastBatchCache(clock), clock),
+            new ForecastSnapshotAssembler(),
+            tideProviders: [tideProvider]);
     }
 
     private sealed class FakeCacheKeyFactory : IForecastCacheKeyFactory
@@ -134,6 +185,42 @@ public sealed class MarineAnalysisQueryServiceTests
                 location,
                 range,
                 ForecastMetricSet.Create(waveHeightM: 0.8))));
+        }
+    }
+
+    private sealed class FakeTideProvider : ITideProvider
+    {
+        public string ProviderCode => "fake-tide";
+
+        public bool IsEnabled { get; set; } = true;
+
+        public int CallCount { get; private set; }
+
+        public bool CreditWarning { get; set; }
+
+        public ProviderException? Failure { get; set; }
+
+        public Task<ProviderTideResult> GetTidesAsync(
+            GeoPoint location,
+            ForecastRange range,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CallCount++;
+            if (Failure is not null)
+            {
+                throw Failure;
+            }
+
+            return Task.FromResult(new ProviderTideResult(
+                CreateBatch(
+                    ForecastDataDomain.Tide,
+                    new ProviderIdentity(ProviderCode, "configured-tide"),
+                    location,
+                    range,
+                    ForecastMetricSet.Create(tideHeightM: 1.2)),
+                remainingCredits: CreditWarning ? 50 : 500,
+                creditWarning: CreditWarning));
         }
     }
 

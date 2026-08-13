@@ -125,14 +125,14 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 当前任务 ID | `MI-0027` |
-| 当前状态 | `IN_PROGRESS` |
+| 当前状态 | `BLOCKED` |
 | 当前目标 | 一次性完成阶段 3 剩余产品闭环与阶段 4 可部署基线：收藏/历史/单位设置、移动端可访问性、管理员运维视图、WorldTides 可配置降级、容器化、备份恢复和上线验证 |
-| 最后完成动作 | 已核对 RoadMap 与工作区，确认阶段 0-2 已完成，阶段 3/4 剩余能力可拆为本地产品闭环、外部潮汐降级和上线运维基线三个连续交付段 |
-| 下一步动作 | 读取相关需求、数据库、API、权限、UI、Provider、部署与测试基线，梳理现有 DbContext、Dashboard、分析编排和运维文件后开始实现 |
-| 涉及文件 | 待基线发现后细化；预计涉及 Domain/Application/Infrastructure/Web、数据库迁移、测试、Docker/运维脚本及相关设计文档 |
-| 验证结果 | 基线为 `MI-0026` Release 构建 0 警告、0 错误、全量测试 129/129 通过；本任务尚未运行新增验证 |
-| 阻塞/待确认 | WorldTides 真实额度调用依赖外部 API Key，本任务实现可配置适配器、长缓存、额度/失败降级和自动化契约测试；无密钥环境不伪造真实联调结果 |
-| 最后更新 | 2026-08-12 |
+| 最后完成动作 | 已从提交 `ef0a673` 的中断点继续：修复 SQLite `DateTimeOffset` 排序、再次查询上下文和 Dashboard SSR；补强 WorldTides 状态/额度/缓存契约；完成 Docker/Caddy/Secret、PostgreSQL 专用迁移、备份恢复/冒烟脚本和文档；桌面/移动 E2E 已稳定通过 |
+| 下一步动作 | 在具备 Docker CLI 的 Staging 执行镜像构建、Compose 启动、PostgreSQL 迁移、Caddy/WebSocket、备份恢复和冒烟测试；提供 WorldTides API Key 后执行真实额度联调，再决定是否满足阶段 4 发布准出 |
+| 涉及文件 | Application/Infrastructure/Web 用户工作区与 WorldTides、独立 PostgreSQL 迁移项目、Docker/Caddy/Secret、运维脚本、CI、Playwright 测试及数据库/API/Provider/UI/部署/测试/RoadMap 文档 |
+| 验证结果 | Release 构建 0 警告、0 错误；.NET 测试 137/137、Playwright 2/2、`dotnet format`、PowerShell AST、npm 审计和 `git diff --check` 通过；NuGet 在线审计因 TLS EOF 未完成 |
+| 阻塞/待确认 | 当前机器无 Docker CLI，不能验证真实镜像、Compose、PostgreSQL、代理和备份恢复；WorldTides 真实联调缺少 API Key。自动化契约与禁用/失败降级均已通过，不伪造外部验证结果 |
+| 最后更新 | 2026-08-13 |
 
 <!-- agent-state:end -->
 
@@ -142,12 +142,22 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0027` | P0 | `IN_PROGRESS` | 连续完成阶段 3 剩余产品闭环与阶段 4 可部署基线 | 注册用户可收藏/再次查询并查看历史与单位设置；移动端、键盘和管理员运维入口可用；WorldTides 可配置且无密钥安全降级；Docker、代理、迁移、备份恢复、安全与 E2E 验证具备可执行交付物 |
+| [ ] | `MI-0027` | P0 | `BLOCKED` | 连续完成阶段 3 剩余产品闭环与阶段 4 可部署基线 | 注册用户可收藏/再次查询并查看历史与单位设置；移动端、键盘和管理员运维入口可用；WorldTides 可配置且无密钥安全降级；Docker、代理、迁移、备份恢复、安全与 E2E 验证具备可执行交付物 |
 用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
 ### 8.2 暂停/阻塞任务恢复详情
 
-当前没有 `PAUSED` 或 `BLOCKED` 任务。
+#### `MI-0027` / `BLOCKED`
+
+| 字段 | 当前值 |
+| --- | --- |
+| 任务目标 | 完成阶段 3 产品闭环和阶段 4 可部署、可恢复、可验证基线 |
+| 最后完成动作 | 本地实现、设计文档、137 个 .NET 测试和桌面/移动 Playwright 均已完成；部署与恢复资产已生成 |
+| 下一步动作 | 在 Docker/Staging 环境依次执行 `docker compose build`、`docker compose up -d`、`scripts/smoke-test.ps1`、备份和带 `-ConfirmRestore` 的恢复演练；注入 WorldTides API Key 后核对真实 Credit 与潮汐响应 |
+| 涉及文件 | `Dockerfile`、`compose.yaml`、`deploy/`、`scripts/`、`src/MarineInsight.Migrations.PostgreSql/`、WorldTides/用户工作区/Web/测试和相关设计文档 |
+| 验证结果 | Release 构建 0 警告/0 错误，.NET 137/137，Playwright 2/2，格式/脚本语法/npm 审计/差异检查通过；Docker/PostgreSQL/代理/恢复和真实 WorldTides 尚未执行 |
+| 阻塞与解除条件 | 安装或提供可访问的 Docker 环境；为真实供应商联调提供 WorldTides API Key。NuGet 审计源需恢复稳定网络后重跑 |
+| 最后更新 | 2026-08-13 |
 
 出现暂停或阻塞任务时，每个任务保留一个独立详情块，使用以下字段：
 
@@ -203,6 +213,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-13 | `MI-0027` | 从提交 `ef0a673` 恢复并完成本地收尾：确认该提交已实现收藏/历史/设置、运维视图、WorldTides 和用户工作区迁移；随后修复 SQLite 时间排序、再次查询/单位/活动恢复、Dashboard SSR 和资源错误，补齐 WorldTides 降级契约、Docker/Caddy/Secret、PostgreSQL 专用迁移、备份恢复/冒烟脚本、CI E2E 和设计文档；因外部发布验证条件不足转为 `BLOCKED` | Release 构建 0 警告、0 错误；Domain 51、Application 29、Infrastructure 28、Web 29，合计 137/137 通过；本机 Chrome 的桌面/移动 Playwright 2/2 通过；`dotnet format`、PowerShell AST、npm audit 0 漏洞、`git diff --check` 和 BOM/CRLF 检查通过；NuGet 在线审计因 TLS EOF 未完成；Docker CLI 不可用，真实 PostgreSQL/代理/备份恢复未执行；无 WorldTides API Key，未执行付费联调 | 提供 Docker/Staging 后执行完整 Compose、PostgreSQL、代理、备份恢复和冒烟演练；提供 WorldTides Key 后执行真实 Credit/潮汐联调，再评估阶段 4 准出 |
 | 2026-08-12 | `MI-0026` | 完成 ASP.NET Core Identity 基础认证闭环；统一用户/角色存储到现有 DbContext，增加注册、登录、退出、账户页面与 Header 状态，落实 Secure/HttpOnly/SameSite Cookie、密码策略、失败锁定、防伪、IP 限流和本地重定向防护；邮箱确认在邮件链路完成前保持关闭；同步权限、数据库、API、UI、Blazor、部署、测试和 RoadMap | Release 构建 0 警告、0 错误；迁移测试 3/3、认证测试 5/5、全量测试 129/129 通过；NuGet 漏洞审计无报告；独立临时 SQLite 全量迁移与 HTTPS `/`、`/account/login`、`/account/register`、`/health/live` 检查通过；`dotnet format --verify-no-changes`、`git diff --check`、JSON 解析及 28 个改动文本文件 BOM/CRLF 检查通过；Playwright 未安装，未执行浏览器视觉/360px 自动化 | 新建 `MI-0027`：实现登录用户收藏地点与一键再次查询闭环，覆盖重复收藏和所有权隔离 |
 | 2026-08-12 | `MI-0025` | 完成 SQLite 原生依赖 High 漏洞修复；EF Core、Design 和 SQLite 从 `10.0.9` 统一升级到 `10.0.11`，由官方补丁依赖链将 SQLitePCLRaw 从 `2.1.11` 提升到 `2.1.12`；同步测试方案和 RoadMap | NuGet 全解决方案传递依赖漏洞审计无报告；Release 构建 0 警告、0 错误；SQLite 迁移/仓储定向测试 9/9、全量测试 124/124 通过；格式、差异和 4 个改动文本文件 BOM/CRLF 检查通过 | 继续阶段 3：先实现 ASP.NET Core Identity 基础认证，再实现登录用户收藏地点和一键再次查询闭环 |
 | 2026-07-31 | `MI-0024` | 完成 Leaflet/OpenStreetMap 地图选点与失败降级；Dashboard 可点击地图或输入经纬度选择自定义坐标并进入同一海况分析流程，地图脚本或瓦片失败时保留坐标输入；页面展示 OSM 署名；同步 UI、Blazor、测试方案和 RoadMap 文档 | Web 测试 23/23 通过；默认 Debug 构建 0 错误；Release 构建 0 错误；全量测试 124/124 通过；`dotnet format --verify-no-changes --no-restore` 通过；一次并行运行 Debug 构建和 Release 测试曾因共享 `obj` 目录出现 `ref` 元数据文件竞争，串行重跑通过；仍有 NU1903 SQLite 警告；按用户指令未执行截图验证 | 建议继续阶段 3：ASP.NET Core Identity、收藏地点、查询历史和用户单位设置；或移动端 360px 导航、键盘和基础可访问性 |

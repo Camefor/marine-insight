@@ -1,4 +1,4 @@
-namespace MarineInsight.Application.Operations.Ports;
+﻿namespace MarineInsight.Application.Operations.Ports;
 
 public interface IOperationalReadRepository
 {

@@ -1,4 +1,4 @@
-namespace MarineInsight.Application.Operations;
+﻿namespace MarineInsight.Application.Operations;
 
 public sealed record ProviderOperationalStatus(
     string ProviderCode,

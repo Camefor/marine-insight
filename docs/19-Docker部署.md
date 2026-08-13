@@ -103,12 +103,15 @@ docker compose ps
 
 Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和韧性策略。
 
+当前 `compose.yaml` 使用 PostgreSQL 17、一次性 `migrate`、非 root Web 和 Caddy 四服务拓扑。数据库仅加入内部 `data` 网络，Web 同时加入 `data`/`ingress`，Caddy 固定为 `172.30.0.10` 并作为唯一公开入口。连接字符串通过名为 `ConnectionStrings__MarineInsight` 的 Key-per-file Secret 注入；示例 Secret 只用于一次性本地环境。
+
 ## 10. 数据持久化与备份
 
 - PostgreSQL 使用命名卷或绑定到已验证的数据盘，禁止把数据库写入容器层。
 - 备份输出到独立于数据库卷的位置并加密，定期复制到异机/对象存储。
 - 升级 PostgreSQL 主版本前执行逻辑备份和恢复演练。
 - Redis 默认作为可丢失缓存；若开启持久化，也不能替代 PostgreSQL 备份。
+- `scripts/backup-postgres.ps1` 将自定义格式逻辑备份写入宿主 `backups/`；`scripts/restore-postgres.ps1` 只接受该目录内文件并要求显式确认。备份目录必须由部署方加密、异机复制和配置保留策略。
 
 ## 11. 资源与安全
 
@@ -147,3 +150,4 @@ Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和�
 | 1.0 | 2026-07-13 | 定义非 root 镜像、Compose 拓扑、Secret 和回滚规范 |
 | 1.1 | 2026-07-13 | 升级 .NET 10 镜像并替换数据源环境变量 |
 | 1.2 | 2026-07-15 | 补充 Web 存活/就绪探针的容器使用约定 |
+| 1.3 | 2026-08-13 | 落地 Dockerfile、Compose、Caddy、Key-per-file Secret 和备份恢复脚本 |

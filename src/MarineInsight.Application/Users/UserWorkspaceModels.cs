@@ -1,4 +1,4 @@
-using MarineInsight.Domain.Analysis;
+﻿using MarineInsight.Domain.Analysis;
 
 namespace MarineInsight.Application.Users;
 

@@ -1,4 +1,4 @@
-namespace MarineInsight.Infrastructure.Persistence.Entities;
+﻿namespace MarineInsight.Infrastructure.Persistence.Entities;
 
 public sealed class QueryHistoryEntity
 {

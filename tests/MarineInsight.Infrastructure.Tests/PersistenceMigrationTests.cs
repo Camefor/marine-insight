@@ -2,6 +2,8 @@
 using MarineInsight.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -63,6 +65,9 @@ public sealed class PersistenceMigrationTests
         var dbContext = scope.ServiceProvider.GetRequiredService<MarineInsightDbContext>();
 
         Assert.Equal("Microsoft.EntityFrameworkCore.Sqlite", dbContext.Database.ProviderName);
+        Assert.Equal(
+            "MarineInsight.Infrastructure",
+            dbContext.GetService<IMigrationsAssembly>().Assembly.GetName().Name);
         Assert.IsType<ForecastBatchRepository>(
             scope.ServiceProvider.GetRequiredService<IForecastBatchRepository>());
     }
@@ -86,6 +91,9 @@ public sealed class PersistenceMigrationTests
         var dbContext = scope.ServiceProvider.GetRequiredService<MarineInsightDbContext>();
 
         Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", dbContext.Database.ProviderName);
+        Assert.Equal(
+            "MarineInsight.Migrations.PostgreSql",
+            dbContext.GetService<IMigrationsAssembly>().Assembly.GetName().Name);
     }
 
     private static HashSet<string> ReadNames(SqliteConnection connection, string sql)

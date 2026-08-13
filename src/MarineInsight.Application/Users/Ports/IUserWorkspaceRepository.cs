@@ -1,4 +1,4 @@
-namespace MarineInsight.Application.Users.Ports;
+﻿namespace MarineInsight.Application.Users.Ports;
 
 public interface IUserWorkspaceRepository
 {

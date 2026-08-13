@@ -20,10 +20,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MarineInsight.Infrastructure\MarineInsight.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\MarineInsight.Migrations.PostgreSql\MarineInsight.Migrations.PostgreSql.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="TestData\OpenMeteo\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\WorldTides\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

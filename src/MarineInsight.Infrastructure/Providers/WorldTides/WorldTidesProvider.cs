@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using MarineInsight.Application.Errors;
@@ -22,6 +22,8 @@ public sealed class WorldTidesProvider(
 
     public string ProviderCode => Code;
 
+    public bool IsEnabled => options.Value.Enabled;
+
     public async Task<ProviderTideResult> GetTidesAsync(GeoPoint location, ForecastRange range, CancellationToken cancellationToken)
     {
         var settings = options.Value;
@@ -31,14 +33,16 @@ public sealed class WorldTidesProvider(
             throw new ProviderException(Code, ProviderFailureKind.Unavailable, "WorldTides is disabled.", false);
         }
 
-        var key = FormattableString.Invariant($"mi:tide:v1:{location.Latitude:F4}:{location.Longitude:F4}:{range.StartUtc:yyyyMMdd}:{range.EndUtc:yyyyMMdd}");
+        // The normalized batch is clipped to the exact requested range, so the cache identity
+        // must include UTC hours rather than only calendar dates.
+        var key = FormattableString.Invariant($"mi:tide:v1:{location.Latitude:F4}:{location.Longitude:F4}:{range.StartUtc:yyyyMMddHH}:{range.EndUtc:yyyyMMddHH}");
         if (cache.TryGetValue<ProviderTideResult>(key, out var cached) && cached is not null)
         {
-            return new ProviderTideResult(cached.Batch, true, cached.RemainingCredits);
+            return new ProviderTideResult(cached.Batch, true, cached.RemainingCredits, cached.CreditWarning);
         }
 
         var response = await FetchAsync(location, range, settings, cancellationToken);
-        var result = Normalize(response, location, range, timeProvider.GetUtcNow());
+        var result = Normalize(response, location, range, timeProvider.GetUtcNow(), settings.CreditWarningThreshold);
         cache.Set(key, result, settings.CacheLifetime);
         return result;
     }
@@ -93,10 +97,20 @@ public sealed class WorldTidesProvider(
         }
     }
 
-    private static ProviderTideResult Normalize(WorldTidesResponse response, GeoPoint requested, ForecastRange range, DateTimeOffset fetchedAt)
+    private static ProviderTideResult Normalize(
+        WorldTidesResponse response,
+        GeoPoint requested,
+        ForecastRange range,
+        DateTimeOffset fetchedAt,
+        int creditWarningThreshold)
     {
         if (response.Status is >= 400 || !string.IsNullOrWhiteSpace(response.Error))
         {
+            if (response.Error?.Contains("credit", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                throw new ProviderException(Code, ProviderFailureKind.QuotaExceeded, "WorldTides credits are exhausted.", false);
+            }
+
             throw new ProviderContractException(Code, "WorldTides reported an application error.");
         }
         var heights = response.Heights?.Where(item => double.IsFinite(item.HeightM))
@@ -125,7 +139,8 @@ public sealed class WorldTidesProvider(
             : null;
         var batch = new ForecastBatch(batchId, ForecastDataDomain.Tide, provider, requested, grid,
             fetchedAt, fetchedAt, range, points, DataQuality.Valid());
-        return new ProviderTideResult(batch, false, response.RemainingCredits);
+        var creditWarning = response.RemainingCredits.HasValue && response.RemainingCredits.Value <= creditWarningThreshold;
+        return new ProviderTideResult(batch, false, response.RemainingCredits, creditWarning);
     }
 
     private static TideType? FindType(DateTimeOffset time, IEnumerable<WorldTidesExtreme> extremes)

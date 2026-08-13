@@ -1,4 +1,5 @@
-﻿using System.Threading.RateLimiting;
+﻿using System.Net;
+using System.Threading.RateLimiting;
 using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
@@ -15,14 +16,20 @@ using MarineInsight.Web.Components.Features.Dashboard;
 using MarineInsight.Web.Health;
 using MarineInsight.Web.Observability;
 using MarineInsight.Web.Operations;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Container secrets use configuration-key filenames such as ConnectionStrings__MarineInsight.
+builder.Configuration.AddKeyPerFile("/run/secrets", optional: true);
 
 builder.Host.UseSerilog((context, _, loggerConfiguration) =>
 {
@@ -60,6 +67,28 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 builder.Services.AddAuthorization(options =>
     options.AddPolicy("Administrator", policy => policy.RequireRole("Administrator")));
+if (builder.Configuration["DataProtection:KeyPath"] is { Length: > 0 } keyPath)
+{
+    // Authentication cookies must survive container replacement; production mounts this path
+    // on a protected persistent volume shared by all Web replicas.
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(keyPath))
+        .SetApplicationName("MarineInsight");
+}
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+    foreach (var value in builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [])
+    {
+        if (IPAddress.TryParse(value, out var address))
+        {
+            options.KnownProxies.Add(address);
+        }
+    }
+});
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddRateLimiter(options =>
 {
@@ -98,7 +127,16 @@ builder.Services.AddRazorComponents()
 
 var app = builder.Build();
 
+if (args.Contains("--migrate", StringComparer.Ordinal))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var database = scope.ServiceProvider.GetRequiredService<MarineInsightDbContext>();
+    await database.Database.MigrateAsync();
+    return;
+}
+
 // Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);

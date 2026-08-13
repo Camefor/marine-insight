@@ -1,4 +1,4 @@
-@page "/query-history"
+﻿@page "/query-history"
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -35,7 +35,7 @@
                     <div class="workspace-actions">
                         @if (item.LocationId.HasValue)
                         {
-                            <a class="workspace-icon-button" title="按原条件再次查询" aria-label="再次查询 @item.DisplayName" href="/?locationId=@item.LocationId&hours=@item.Hours">↻</a>
+                            <a class="workspace-icon-button" title="按原条件再次查询" aria-label="再次查询 @item.DisplayName" href="@BuildQueryUrl(item)">↻</a>
                         }
                     </div>
                 </article>
@@ -53,5 +53,11 @@
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _history = await Workspace.ListHistoryAsync(UserWorkspaceEndpointExtensions.GetUserId(state.User));
         _loading = false;
+    }
+
+    private static string BuildQueryUrl(QueryHistoryItem item)
+    {
+        var activity = item.Activities.FirstOrDefault();
+        return $"/?locationId={item.LocationId}&hours={item.Hours}&from={Uri.EscapeDataString(item.ForecastFromUtc.ToString("O"))}&activity={activity}";
     }
 }

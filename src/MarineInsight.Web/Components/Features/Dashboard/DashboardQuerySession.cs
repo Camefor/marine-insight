@@ -17,6 +17,7 @@ public sealed class DashboardQuerySession : IDisposable
     private CancellationTokenSource? _activeRequest;
     private long _requestVersion;
     private UserSettings _settings = UserSettings.Default;
+    private ActivityType? _queryActivity;
 
     public DashboardQuerySession(
         MarineAnalysisQueryService analysisQueryService,
@@ -83,7 +84,25 @@ public sealed class DashboardQuerySession : IDisposable
 
     public bool CanSubmit => (SelectedLocation is not null || SelectedMapPoint is not null) && !IsLoadingAnalysis;
 
-    public void ApplySettings(UserSettings settings) => _settings = settings ?? UserSettings.Default;
+    public IReadOnlyList<ActivityType> RequestedActivities => _queryActivity.HasValue ? [_queryActivity.Value] : [];
+
+    public ActivityType? SelectedActivity => _queryActivity;
+
+    public void ApplySettings(UserSettings settings)
+    {
+        _settings = settings ?? UserSettings.Default;
+        _queryActivity ??= _settings.DefaultActivity;
+    }
+
+    public void ApplyQueryContext(DateTimeOffset? forecastFromUtc, ActivityType? activity)
+    {
+        if (forecastFromUtc.HasValue)
+        {
+            ForecastStartUtc = forecastFromUtc.Value.UtcDateTime;
+        }
+
+        _queryActivity = activity ?? _queryActivity;
+    }
 
     public async Task<bool> SelectCatalogLocationAsync(Guid locationId, CancellationToken cancellationToken = default)
     {
@@ -308,7 +327,7 @@ public sealed class DashboardQuerySession : IDisposable
                 return null;
             }
 
-            return new MarineAnalysisQuery(location.Coordinates, range, location);
+            return new MarineAnalysisQuery(location.Coordinates, range, location, RequestedActivities);
         }
 
         if (SelectedMapPoint is null)
@@ -320,7 +339,8 @@ public sealed class DashboardQuerySession : IDisposable
         // 地图选点没有地点目录元数据，保留纯坐标查询，结果中按自定义坐标展示。
         return new MarineAnalysisQuery(
             new GeoPoint(SelectedMapPoint.Latitude, SelectedMapPoint.Longitude),
-            range);
+            range,
+            activities: RequestedActivities);
     }
 
     private static DashboardLocationOption ToLocationOption(Location location) => new(

@@ -156,6 +156,8 @@ public sealed partial class RiskSummary
 
 `MI-0026` 的账户页面通过 `[ExcludeFromInteractiveRouting]` 强制静态 SSR，使 Identity Cookie 可在普通 HTTP 响应中写入或清除；应用路由使用 `AuthorizeRouteView`，Header 的 `AccountNav` 通过 `AuthorizeView` 投影匿名和登录状态。注册、登录和退出均提交带防伪令牌的普通表单，成功后整页跳转，Dashboard 的 Interactive Server 查询状态不承担认证 Cookie 写入。
 
+`MI-0027` 的 `DashboardQuerySession` 在服务端投影阶段完成单位换算，并保存当前请求活动供收藏与历史复用。Dashboard 将 `locationId`、`hours`、`from` 和 `activity` 查询参数恢复到同一状态容器；`from` 以字符串接收并按 Round-trip UTC 显式解析，避免 Blazor 不支持可空 `DateTimeOffset` 查询参数导致 SSR 500。收藏、历史、设置和管理员页均使用授权路由及 Interactive Server 交互。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |
@@ -168,3 +170,4 @@ public sealed partial class RiskSummary
 | 1.5 | 2026-07-31 | 记录 `MI-0019` DashboardQuerySession 趋势、时间带和小时详情状态投影 |
 | 1.6 | 2026-07-31 | 记录 `MI-0024` Dashboard 地图/坐标目标状态、Leaflet JS 互操作和失败降级测试 |
 | 1.7 | 2026-08-12 | 记录 `MI-0026` 静态 SSR 账户页、认证路由和账户 Header 状态边界 |
+| 1.8 | 2026-08-13 | 记录用户工作区页面、单位投影和再次查询参数恢复边界 |

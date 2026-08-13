@@ -1,0 +1,15 @@
+﻿.git
+.github
+.secrets
+.vs
+.idea
+**/bin
+**/obj
+artifacts
+backups
+playwright-report
+test-results
+tests
+*.db
+*.user
+.env

@@ -146,7 +146,7 @@ public sealed class MarineAnalysisQueryService
 
     private async Task<TideQueryStatus> LoadTideAsync(MarineAnalysisQuery query, CancellationToken cancellationToken)
     {
-        if (_tideProvider is null)
+        if (_tideProvider is null || !_tideProvider.IsEnabled)
         {
             return TideQueryStatus.Disabled;
         }
@@ -154,7 +154,12 @@ public sealed class MarineAnalysisQueryService
         try
         {
             var result = await _tideProvider.GetTidesAsync(query.Location, query.Range, cancellationToken);
-            return new TideQueryStatus("available", result.FromCache ? "hit" : "miss", result.RemainingCredits, null, result);
+            return new TideQueryStatus(
+                result.CreditWarning ? "degraded" : "available",
+                result.FromCache ? "hit" : "miss",
+                result.RemainingCredits,
+                result.CreditWarning ? MarineInsight.Application.Errors.MarineInsightErrorCodes.ProviderQuotaExceeded : null,
+                result);
         }
         catch (MarineInsight.Application.Errors.ProviderException exception)
         {

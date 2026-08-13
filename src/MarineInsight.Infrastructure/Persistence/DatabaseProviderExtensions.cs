@@ -25,7 +25,7 @@ public static class DatabaseProviderExtensions
                 sqlite => sqlite.MigrationsAssembly(migrationsAssembly)),
             DatabaseProviderKind.PostgreSql => optionsBuilder.UseNpgsql(
                 connectionString,
-                postgres => postgres.MigrationsAssembly(migrationsAssembly)),
+                postgres => postgres.MigrationsAssembly("MarineInsight.Migrations.PostgreSql")),
             _ => throw new ArgumentOutOfRangeException(nameof(provider), provider, "Unsupported database provider.")
         };
     }

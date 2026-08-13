@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using MarineInsight.Application.Users;
 using MarineInsight.Domain.Analysis;
 using Microsoft.AspNetCore.Antiforgery;

@@ -1,4 +1,4 @@
-using MarineInsight.Application.Users;
+﻿using MarineInsight.Application.Users;
 using MarineInsight.Application.Users.Ports;
 using MarineInsight.Domain.Analysis;
 using MarineInsight.Infrastructure.Persistence.Entities;
@@ -18,10 +18,14 @@ public sealed class UserWorkspaceRepository(
             .AsNoTracking()
             .Include(entity => entity.Location)
             .Where(entity => entity.UserId == userId)
+            .ToArrayAsync(cancellationToken);
+        // SQLite cannot translate DateTimeOffset ordering. The ownership predicate still runs in
+        // the database; only the already bounded per-user result is ordered on the client.
+        return entities
             .OrderBy(entity => entity.SortOrder)
             .ThenBy(entity => entity.CreatedAtUtc)
-            .ToArrayAsync(cancellationToken);
-        return entities.Select(MapFavorite).ToArray();
+            .Select(MapFavorite)
+            .ToArray();
     }
 
     public async Task<FavoriteLocation?> AddFavoriteAsync(Guid userId, SaveFavoriteCommand command, CancellationToken cancellationToken)
@@ -82,10 +86,14 @@ public sealed class UserWorkspaceRepository(
         var entities = await dbContext.QueryHistory
             .AsNoTracking()
             .Where(entity => entity.UserId == userId)
+            .ToArrayAsync(cancellationToken);
+        // Query history is retained as a bounded user dataset. Sort after materialization so the
+        // same repository works with SQLite development and PostgreSQL production providers.
+        return entities
             .OrderByDescending(entity => entity.CreatedAtUtc)
             .Take(limit)
-            .ToArrayAsync(cancellationToken);
-        return entities.Select(MapHistory).ToArray();
+            .Select(MapHistory)
+            .ToArray();
     }
 
     public async Task RecordHistoryAsync(Guid userId, RecordQueryHistoryCommand command, CancellationToken cancellationToken)

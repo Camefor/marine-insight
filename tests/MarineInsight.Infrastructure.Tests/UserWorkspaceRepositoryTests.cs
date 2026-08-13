@@ -1,5 +1,4 @@
-using MarineInsight.Application.Users;
-using MarineInsight.Application.Users.Ports;
+﻿using MarineInsight.Application.Users;
 using MarineInsight.Domain.Analysis;
 using MarineInsight.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -20,13 +19,23 @@ public sealed class UserWorkspaceRepositoryTests
         var command = new SaveFavoriteCommand(locationId, ActivityType.ShoreFishing, "常用钓点", 2);
 
         var first = await fixture.Repository.AddFavoriteAsync(firstUser, command, default);
+        var earlier = await fixture.Repository.AddFavoriteAsync(firstUser,
+            command with
+            {
+                LocationId = Guid.Parse("70cfb8c4-7af7-4c43-8f38-9a27e7cc2de7"),
+                SortOrder = 1
+            }, default);
         var duplicate = await fixture.Repository.AddFavoriteAsync(firstUser, command, default);
         var second = await fixture.Repository.AddFavoriteAsync(secondUser, command, default);
 
         Assert.NotNull(first);
+        Assert.NotNull(earlier);
         Assert.Null(duplicate);
         Assert.NotNull(second);
-        Assert.Single(await fixture.Repository.ListFavoritesAsync(firstUser, default));
+        var firstUserFavorites = await fixture.Repository.ListFavoritesAsync(firstUser, default);
+        Assert.Equal(2, firstUserFavorites.Count);
+        Assert.Equal(earlier!.Id, firstUserFavorites[0].Id);
+        Assert.Equal(first.Id, firstUserFavorites[1].Id);
         Assert.Single(await fixture.Repository.ListFavoritesAsync(secondUser, default));
         Assert.False(await fixture.Repository.DeleteFavoriteAsync(secondUser, first!.Id, default));
         Assert.True(await fixture.Repository.DeleteFavoriteAsync(firstUser, first.Id, default));
@@ -39,12 +48,17 @@ public sealed class UserWorkspaceRepositoryTests
         var firstUser = await fixture.CreateUserAsync("history@example.com");
         var secondUser = await fixture.CreateUserAsync("other@example.com");
         await fixture.Repository.RecordHistoryAsync(firstUser, new RecordQueryHistoryCommand(
-            null, "自定义坐标", 30.1, 122.2, DateTimeOffset.Parse("2026-08-12T00:00:00Z"), 24,
+            null, "自定义坐标", 30.1, 122.2, new DateTimeOffset(2026, 8, 12, 0, 0, 0, TimeSpan.Zero), 24,
             [ActivityType.Boat], Guid.NewGuid(), "good", 82), default);
+        await fixture.Repository.RecordHistoryAsync(firstUser, new RecordQueryHistoryCommand(
+            null, "较新记录", 30.2, 122.3, new DateTimeOffset(2026, 8, 13, 0, 0, 0, TimeSpan.Zero), 72,
+            [ActivityType.Landing], Guid.NewGuid(), "caution", 68), default);
         await fixture.Repository.SaveSettingsAsync(firstUser,
             new UserSettings("knot", "foot", "fahrenheit", ActivityType.Boat, "Asia/Shanghai"), default);
 
-        Assert.Single(await fixture.Repository.ListHistoryAsync(firstUser, 50, default));
+        var history = await fixture.Repository.ListHistoryAsync(firstUser, 1, default);
+        Assert.Single(history);
+        Assert.Equal("较新记录", history[0].DisplayName);
         Assert.Empty(await fixture.Repository.ListHistoryAsync(secondUser, 50, default));
         Assert.Equal("knot", (await fixture.Repository.GetSettingsAsync(firstUser, default)).WindSpeedUnit);
         Assert.Equal(UserSettings.Default, await fixture.Repository.GetSettingsAsync(secondUser, default));
@@ -63,7 +77,7 @@ public sealed class UserWorkspaceRepositoryTests
 
         public MarineInsightDbContext DbContext { get; }
 
-        public IUserWorkspaceRepository Repository { get; }
+        public UserWorkspaceRepository Repository { get; }
 
         public static async Task<WorkspaceFixture> CreateAsync()
         {

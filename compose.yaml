@@ -1,0 +1,114 @@
+name: marine-insight
+
+services:
+    postgres:
+        image: postgres:17-bookworm
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: marine_insight
+            POSTGRES_USER: marine_insight
+            POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+        secrets:
+            - postgres_password
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+            - ./backups:/backups
+        networks:
+            - data
+        healthcheck:
+            test:
+                ["CMD-SHELL", "pg_isready -U marine_insight -d marine_insight"]
+            interval: 5s
+            timeout: 5s
+            retries: 12
+
+    migrate:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: ["--migrate"]
+        environment: &web-environment
+            ASPNETCORE_ENVIRONMENT: Production
+            DataProtection__KeyPath: /var/lib/marine-insight/keys
+            Database__Provider: PostgreSql
+            ReverseProxy__KnownProxies__0: 172.30.0.10
+        secrets: &web-secrets
+            - ConnectionStrings__MarineInsight
+        depends_on:
+            postgres:
+                condition: service_healthy
+        networks:
+            - data
+        restart: "no"
+
+    web:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        environment: *web-environment
+        secrets: *web-secrets
+        depends_on:
+            migrate:
+                condition: service_completed_successfully
+        networks:
+            - ingress
+            - data
+        volumes:
+            - data-protection:/var/lib/marine-insight/keys
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "curl",
+                    "--fail",
+                    "--silent",
+                    "--show-error",
+                    "http://127.0.0.1:8080/health/live",
+                ]
+            interval: 15s
+            timeout: 5s
+            retries: 6
+            start_period: 20s
+
+    reverse-proxy:
+        image: caddy:2.10-alpine
+        restart: unless-stopped
+        environment:
+            MARINE_INSIGHT_SITE_ADDRESS: ${MARINE_INSIGHT_SITE_ADDRESS:-http://localhost}
+        ports:
+            - "80:80"
+            - "443:443"
+            - "443:443/udp"
+        volumes:
+            - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+            - caddy-data:/data
+            - caddy-config:/config
+        depends_on:
+            web:
+                condition: service_healthy
+        networks:
+            ingress:
+                ipv4_address: 172.30.0.10
+
+secrets:
+    postgres_password:
+        file: ${MARINE_INSIGHT_POSTGRES_PASSWORD_FILE:-./deploy/secrets/postgres_password.example}
+    ConnectionStrings__MarineInsight:
+        file: ${MARINE_INSIGHT_DB_CONNECTION_SECRET_FILE:-./deploy/secrets/ConnectionStrings__MarineInsight.example}
+
+volumes:
+    postgres-data:
+    caddy-data:
+    caddy-config:
+    data-protection:
+
+networks:
+    ingress:
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.30.0.0/24
+    data:
+        driver: bridge
+        internal: true

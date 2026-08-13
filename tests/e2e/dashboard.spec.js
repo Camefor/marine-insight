@@ -1,0 +1,51 @@
+﻿const { test, expect } = require('@playwright/test');
+
+test('dashboard and account shell remain usable without layout overflow', async ({ page }) => {
+  const consoleErrors = [];
+  const httpErrors = [];
+  page.on('console', message => {
+    if (message.type() === 'error') consoleErrors.push(`${message.text()} (${message.location().url || 'inline'})`);
+  });
+  page.on('response', response => {
+    if (response.status() >= 400) httpErrors.push(`${response.status()} ${response.url()}`);
+  });
+
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: '海况 Dashboard' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '查询海况' })).toBeVisible();
+  await expect(page.getByText('地图选点', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('纬度')).toBeVisible();
+  await expect(page.getByLabel('经度')).toBeVisible();
+
+  const queryBand = page.locator('section[aria-labelledby="query-title"]');
+  const initialState = page.getByRole('heading', { name: '等待查询' }).locator('..');
+  await expect(queryBand).toBeVisible();
+  await expect(initialState).toBeVisible();
+  // Leaflet can finish sizing between separate DOM reads, so sample both regions in one browser frame.
+  const layout = await page.evaluate(() => {
+    const query = document.querySelector('section[aria-labelledby="query-title"]');
+    const result = Array.from(document.querySelectorAll('section'))
+      .find(section => section.querySelector('h2')?.textContent?.trim() === '等待查询');
+    if (!query || !result) throw new Error('Dashboard layout regions are missing.');
+
+    const queryBox = query.getBoundingClientRect();
+    const resultBox = result.getBoundingClientRect();
+    return {
+      viewportWidth: document.documentElement.clientWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      regionsOverlap:
+        queryBox.bottom > resultBox.top &&
+        queryBox.top < resultBox.bottom &&
+        queryBox.right > resultBox.left &&
+        queryBox.left < resultBox.right
+    };
+  });
+  expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth + 1);
+  expect(layout.regionsOverlap).toBeFalsy();
+
+  await page.goto('/account/login');
+  await expect(page.getByRole('heading', { name: '登录' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBeTruthy();
+  expect(consoleErrors).toEqual([]);
+  expect(httpErrors).toEqual([]);
+});

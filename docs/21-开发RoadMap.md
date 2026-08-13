@@ -87,9 +87,10 @@
 
 - 已完成 `MI-0024`：Leaflet/OpenStreetMap 全宽选点与地图失败降级；Dashboard 支持点击地图或输入坐标进入同一分析流程，保留 OSM 署名，不实现离线瓦片或瓦片代理。
 - 已完成 `MI-0026`：ASP.NET Core Identity 基础注册、登录、退出、Cookie 安全配置、失败锁定、账户限流和迁移；收藏地点、查询历史、用户单位设置、邮箱确认/密码重置/MFA 仍待后续。
-- 移动端导航、360px 布局、键盘和基础可访问性。
-- 管理员 Provider 状态、算法版本列表和审计查询。
-- 接入 WorldTides 潮汐、Credit 余额告警、长 TTL 缓存和无潮汐降级。
+- `MI-0027` 已实现收藏地点、查询历史、单位/默认活动设置和再次查询上下文恢复；邮箱确认/密码重置/MFA 仍待后续。
+- `MI-0027` 已完成移动端响应式样式和基础键盘/ARIA 控件；1440x900 与 360x800 Playwright 用例已使用本机 Chrome 执行 2/2 通过。
+- `MI-0027` 已实现管理员 Provider 状态、当前算法版本和审计只读查询；Provider 启停和算法发布仍不在本次范围。
+- `MI-0027` 已接入 WorldTides 潮汐、Credit 余额状态、长 TTL 缓存和无潮汐降级；真实付费联调依赖外部 Key。
 
 ### P1 可选增量
 
@@ -106,10 +107,10 @@
 
 ## 7. 阶段 4：第 6 周
 
-- 完成多阶段非 root Dockerfile、Compose、Secret 和反向代理配置。
-- 完成 PostgreSQL 迁移 SQL、备份、恢复和回滚演练。
+- `MI-0027` 已完成多阶段非 root Dockerfile、Compose、Key-per-file Secret 和 Caddy 反向代理配置；真实容器构建待有 Docker CLI 的环境验证。
+- `MI-0027` 已完成 PostgreSQL 独立迁移集、幂等 SQL、备份/恢复脚本；真实 PostgreSQL 迁移和恢复演练待 Staging 验证。
 - 接入日志、指标、Trace、Provider 配额和关键告警。
-- 执行性能、故障注入、安全、Playwright 和视觉回归测试。
+- `MI-0027` 已增加 WorldTides 故障降级、安全代理/Secret 基线和 Playwright 桌面/360px 用例，浏览器回归 2/2 通过；性能、真实故障注入和容器化视觉回归仍待 Staging 执行。
 - 已完成 `MI-0025`：升级 EF Core SQLite 补丁线并消除 `SQLitePCLRaw.lib.e_sqlite3 2.1.11` High 漏洞；继续修复其余 S1/S2 缺陷，完成操作手册、免责声明和数据署名。
 - 发布 `v1.0.0`，观察 5xx、延迟、Stale、数据质量和 Unknown 比例。
 

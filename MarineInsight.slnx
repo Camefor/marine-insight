@@ -3,6 +3,7 @@
     <Project Path="src/MarineInsight.Application/MarineInsight.Application.csproj" />
     <Project Path="src/MarineInsight.Domain/MarineInsight.Domain.csproj" />
     <Project Path="src/MarineInsight.Infrastructure/MarineInsight.Infrastructure.csproj" />
+    <Project Path="src/MarineInsight.Migrations.PostgreSql/MarineInsight.Migrations.PostgreSql.csproj" />
     <Project Path="src/MarineInsight.Web/MarineInsight.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">

@@ -10,6 +10,8 @@ public interface ITideProvider
 {
     string ProviderCode { get; }
 
+    bool IsEnabled { get; }
+
     Task<ProviderTideResult> GetTidesAsync(
         GeoPoint location,
         ForecastRange range,

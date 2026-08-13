@@ -1,5 +1,6 @@
 ﻿@page "/"
 @rendermode InteractiveServer
+@using System.Globalization
 @inject DashboardQuerySession Session
 @inject IJSRuntime Js
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -525,6 +526,14 @@
     [SupplyParameterFromQuery(Name = "hours")]
     public int? QueryHours { get; set; }
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "from")]
+    public string? QueryFromUtc { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "activity")]
+    public string? QueryActivity { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -538,6 +547,8 @@
         {
             Session.Hours = QueryHours.Value;
         }
+
+        Session.ApplyQueryContext(ParseQueryFromUtc(QueryFromUtc), ParseQueryActivity(QueryActivity));
 
         if (LocationId.HasValue)
         {
@@ -559,7 +570,7 @@
                 result.Longitude,
                 result.FromUtc,
                 result.Hours,
-                [],
+                Session.RequestedActivities,
                 result.SnapshotId,
                 result.Overall?.RiskLevel ?? "unknown",
                 double.TryParse(result.Overall?.Score, out var score) ? score : null));
@@ -575,7 +586,11 @@
 
         try
         {
-            await Workspace.AddFavoriteAsync(_userId.Value, new SaveFavoriteCommand(Session.SelectedLocation.Id, null, null, 0));
+            await Workspace.AddFavoriteAsync(_userId.Value, new SaveFavoriteCommand(
+                Session.SelectedLocation.Id,
+                Session.SelectedActivity,
+                null,
+                0));
             _workspaceStatus = "已收藏。";
         }
         catch (FavoriteAlreadyExistsException)
@@ -583,6 +598,14 @@
             _workspaceStatus = "该地点已经在收藏中。";
         }
     }
+
+    private static ActivityType? ParseQueryActivity(string? value) =>
+        Enum.TryParse<ActivityType>(value, true, out var activity) ? activity : null;
+
+    private static DateTimeOffset? ParseQueryFromUtc(string? value) =>
+        DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed)
+            ? parsed.ToUniversalTime()
+            : null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

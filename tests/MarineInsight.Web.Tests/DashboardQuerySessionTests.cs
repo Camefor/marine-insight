@@ -1,4 +1,6 @@
 ﻿using System.Net;
+using MarineInsight.Application.Users;
+using MarineInsight.Domain.Analysis;
 using MarineInsight.Web.Components.Features.Dashboard;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -89,6 +91,30 @@ public sealed class DashboardQuerySessionTests
 
         Assert.Null(session.Result);
         Assert.Contains("天气数据源暂时不可用", session.AnalysisError, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task UserSettingsAndRepeatQueryContextAffectProjectionAndRequestedActivity()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        await factory.MigrateDatabaseAsync();
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        var repeatedFrom = new DateTimeOffset(2026, 7, 16, 3, 0, 0, TimeSpan.Zero);
+        session.ApplySettings(new UserSettings("knot", "foot", "fahrenheit", ActivityType.Boat, "Asia/Shanghai"));
+        session.ApplyQueryContext(repeatedFrom, ActivityType.Landing);
+        session.Hours = 24;
+
+        Assert.True(await session.SelectCatalogLocationAsync(Guid.Parse("8a477d67-73fa-4f43-b954-cd29d238a89d")));
+        await session.SubmitAnalysisAsync();
+
+        Assert.Equal(repeatedFrom.UtcDateTime, session.ForecastStartUtc);
+        Assert.Equal([ActivityType.Landing], session.RequestedActivities);
+        Assert.Contains(session.Result!.MetricCards, metric => metric.Label == "风速" && metric.Unit == "kn");
+        Assert.Contains(session.Result.MetricCards, metric => metric.Label == "有效波高" && metric.Unit == "ft");
+        Assert.Single(session.Result.ActivityScores);
+        Assert.Equal("landing", session.Result.ActivityScores[0].Type);
     }
 
     [Fact]
