@@ -1,6 +1,7 @@
 ﻿.git
 .github
 .secrets
+deploy/secrets
 .vs
 .idea
 **/bin

@@ -215,6 +215,7 @@ public sealed class AuthenticationTests
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["OpenTelemetry:Endpoint"] = "",
+                    ["TideProviders:WorldTides:Enabled"] = "false",
                     ["Database:Provider"] = "Sqlite",
                     ["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}",
                     ["Identity:RequireConfirmedEmail"] = "false"

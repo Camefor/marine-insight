@@ -196,7 +196,8 @@ public sealed class HealthAndObservabilityTests
             {
                 var values = new Dictionary<string, string?>
                 {
-                    ["OpenTelemetry:Endpoint"] = ""
+                    ["OpenTelemetry:Endpoint"] = "",
+                    ["TideProviders:WorldTides:Enabled"] = "false"
                 };
 
                 values["Database:Provider"] = "Sqlite";

@@ -6,6 +6,7 @@ using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Forecast.Ports;
 using MarineInsight.Domain.Forecast;
 using MarineInsight.Infrastructure.Persistence;
+using MarineInsight.Infrastructure.Providers.WorldTides;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,16 @@ namespace MarineInsight.Web.Tests;
 public sealed class MarineAnalysisApiTests
 {
     private static readonly string[] UnsupportedActivities = ["diving"];
+
+    [Fact]
+    public void TestHostDisablesWorldTidesEvenWhenUserSecretsEnableIt()
+    {
+        using var factory = new ApiTestApplicationFactory();
+        using var scope = factory.Services.CreateScope();
+        var options = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<WorldTidesOptions>>();
+
+        Assert.False(options.Value.Enabled);
+    }
 
     [Fact]
     public async Task CoordinateQueryReturnsMetricsQualitySourcesAndCacheStatuses()
@@ -268,6 +279,7 @@ public sealed class MarineAnalysisApiTests
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["OpenTelemetry:Endpoint"] = "",
+                    ["TideProviders:WorldTides:Enabled"] = "false",
                     ["Database:Provider"] = "Sqlite",
                     ["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}",
                     ["Caching:Forecast:Environment"] = "api-test"

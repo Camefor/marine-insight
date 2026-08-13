@@ -25,6 +25,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <UserSecretsId>marine-insight-web-local</UserSecretsId>
   </PropertyGroup>
 
 </Project>

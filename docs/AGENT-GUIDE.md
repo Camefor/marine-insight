@@ -127,11 +127,11 @@
 | 当前任务 ID | `MI-0027` |
 | 当前状态 | `BLOCKED` |
 | 当前目标 | 一次性完成阶段 3 剩余产品闭环与阶段 4 可部署基线：收藏/历史/单位设置、移动端可访问性、管理员运维视图、WorldTides 可配置降级、容器化、备份恢复和上线验证 |
-| 最后完成动作 | 已从提交 `ef0a673` 的中断点继续：修复 SQLite `DateTimeOffset` 排序、再次查询上下文和 Dashboard SSR；补强 WorldTides 状态/额度/缓存契约；完成 Docker/Caddy/Secret、PostgreSQL 专用迁移、备份恢复/冒烟脚本和文档；桌面/移动 E2E 已稳定通过 |
-| 下一步动作 | 在具备 Docker CLI 的 Staging 执行镜像构建、Compose 启动、PostgreSQL 迁移、Caddy/WebSocket、备份恢复和冒烟测试；提供 WorldTides API Key 后执行真实额度联调，再决定是否满足阶段 4 发布准出 |
+| 最后完成动作 | WorldTides Key 已写入当前用户的 .NET User Secrets 并启用；新增安全提示式配置/删除脚本、Git 和 Docker 构建上下文排除、可选 Compose 外部 Secret 覆盖及轮换规范；WebApplicationFactory 和 Playwright 均强制关闭真实 Provider，防止自动化测试消耗 Credit |
+| 下一步动作 | 人工本地联调时直接运行 Web 并提交一次受控海况查询，核对 WorldTides 状态、潮位和 Credit；轮换使用 `scripts/configure-worldtides-secret.ps1`，删除使用 `-Disable`；Docker/Staging 使用 `compose.worldtides.yaml` 和仓库外 Secret 文件 |
 | 涉及文件 | Application/Infrastructure/Web 用户工作区与 WorldTides、独立 PostgreSQL 迁移项目、Docker/Caddy/Secret、运维脚本、CI、Playwright 测试及数据库/API/Provider/UI/部署/测试/RoadMap 文档 |
-| 验证结果 | Release 构建 0 警告、0 错误；.NET 测试 137/137、Playwright 2/2、`dotnet format`、PowerShell AST、npm 审计和 `git diff --check` 通过；NuGet 在线审计因 TLS EOF 未完成 |
-| 阻塞/待确认 | 当前机器无 Docker CLI，不能验证真实镜像、Compose、PostgreSQL、代理和备份恢复；WorldTides 真实联调缺少 API Key。自动化契约与禁用/失败降级均已通过，不伪造外部验证结果 |
+| 验证结果 | Release 构建 0 警告、0 错误；.NET 测试基线 138 个，其中 Web 30/30、WorldTides 契约 2/2 通过；User Secrets 的启用状态和非空 Key 已验证，仓库/差异明文扫描通过；`dotnet format`、PowerShell AST 和 `git diff --check` 通过 |
+| 阻塞/待确认 | 当前机器仍无 Docker CLI，不能验证 Docker Secret 注入及真实 Compose/PostgreSQL/代理/备份恢复；真实 WorldTides 请求会消耗 Credit，本次未自动调用；后台 Web 启动探针被环境策略阻止 |
 | 最后更新 | 2026-08-13 |
 
 <!-- agent-state:end -->
@@ -142,7 +142,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0027` | P0 | `BLOCKED` | 连续完成阶段 3 剩余产品闭环与阶段 4 可部署基线 | 注册用户可收藏/再次查询并查看历史与单位设置；移动端、键盘和管理员运维入口可用；WorldTides 可配置且无密钥安全降级；Docker、代理、迁移、备份恢复、安全与 E2E 验证具备可执行交付物 |
+| [ ] | `MI-0027` | P0 | `BLOCKED` | 连续完成阶段 3 剩余产品闭环与阶段 4 可部署基线 | 注册用户可收藏/再次查询并查看历史与单位设置；移动端、键盘和管理员运维入口可用；WorldTides 可配置且凭据安全维护；Docker、代理、迁移、备份恢复、安全与 E2E 验证具备可执行交付物 |
 用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
 ### 8.2 暂停/阻塞任务恢复详情
@@ -152,11 +152,11 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 任务目标 | 完成阶段 3 产品闭环和阶段 4 可部署、可恢复、可验证基线 |
-| 最后完成动作 | 本地实现、设计文档、137 个 .NET 测试和桌面/移动 Playwright 均已完成；部署与恢复资产已生成 |
-| 下一步动作 | 在 Docker/Staging 环境依次执行 `docker compose build`、`docker compose up -d`、`scripts/smoke-test.ps1`、备份和带 `-ConfirmRestore` 的恢复演练；注入 WorldTides API Key 后核对真实 Credit 与潮汐响应 |
+| 最后完成动作 | 本地实现、设计文档、138 个 .NET 测试和桌面/移动 Playwright 均已完成；Playwright Chromium 与 WorldTides User Secrets 已就绪；自动化测试显式隔离真实付费 Provider；部署与恢复资产已生成 |
+| 下一步动作 | 可直接执行 `npm run test:e2e`；人工受控执行一次真实 WorldTides 查询；在 Docker/Staging 使用 `compose.worldtides.yaml` 和仓库外 Secret，继续容器、PostgreSQL、代理、冒烟及备份恢复演练 |
 | 涉及文件 | `Dockerfile`、`compose.yaml`、`deploy/`、`scripts/`、`src/MarineInsight.Migrations.PostgreSql/`、WorldTides/用户工作区/Web/测试和相关设计文档 |
-| 验证结果 | Release 构建 0 警告/0 错误，.NET 137/137，Playwright 2/2，格式/脚本语法/npm 审计/差异检查通过；Docker/PostgreSQL/代理/恢复和真实 WorldTides 尚未执行 |
-| 阻塞与解除条件 | 安装或提供可访问的 Docker 环境；为真实供应商联调提供 WorldTides API Key。NuGet 审计源需恢复稳定网络后重跑 |
+| 验证结果 | Release 构建 0 警告/0 错误；.NET 基线 138，Web 30/30、WorldTides 契约 2/2 通过；User Secrets 和仓库隔离验证通过；Chromium `151.0.7922.34` 已通过 Playwright API 启动验证；Docker/PostgreSQL/代理/恢复和真实 WorldTides 请求尚未执行 |
+| 阻塞与解除条件 | 浏览器和 WorldTides 本地凭据环境已就绪；剩余解除条件为可访问的 Docker/Staging 环境，并在明确接受 Credit 消耗后执行一次真实 WorldTides 联调。NuGet 审计源需恢复稳定网络后重跑 |
 | 最后更新 | 2026-08-13 |
 
 出现暂停或阻塞任务时，每个任务保留一个独立详情块，使用以下字段：
@@ -213,6 +213,8 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-13 | `MI-0027` | 完成 WorldTides 密钥维护设计和本机配置：真实 Key 仅存入当前用户的 .NET User Secrets；增加安全提示式配置/删除脚本、可选 Compose 外部 Secret、Git/Docker 排除规则、CI/E2E 付费调用隔离和轮换/泄露处置文档；未把明文写入仓库或输出 | User Secrets 中 `Enabled=true` 且 Key 非空；仓库跟踪内容和当前差异无明文 Key；本地/部署 Secret 路径均被 Git 忽略；Release 构建 0 警告/0 错误，Web 30/30、WorldTides 契约 2/2、格式和 PowerShell AST 通过；后台启动探针被策略阻止，未发出真实 WorldTides 请求 | 明确接受一次 Credit 消耗后做真实潮汐/Credit 联调；Docker 可用后用 `compose.worldtides.yaml` 验证 Key-per-file 注入；由于 Key 曾出现在对话中，若对话可能共享或长期保留，应在供应商控制台轮换 |
+| 2026-08-13 | `MI-0027` | 代理网络调整后重新安装 Playwright 管理的 Chromium，浏览器测试环境阻塞已解除；未修改业务代码 | `npx playwright install chromium` 成功安装 Chromium、Headless Shell、FFmpeg 和 Winldd；Playwright `1.62.1` 默认浏览器路径存在，并通过 API 成功启动 Chromium `151.0.7922.34` 后正常关闭 | 下次直接执行 `npm run test:e2e`，无需设置 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`；任务仍等待 Docker/Staging 和 WorldTides API Key 完成外部发布验证 |
 | 2026-08-13 | `MI-0027` | 从提交 `ef0a673` 恢复并完成本地收尾：确认该提交已实现收藏/历史/设置、运维视图、WorldTides 和用户工作区迁移；随后修复 SQLite 时间排序、再次查询/单位/活动恢复、Dashboard SSR 和资源错误，补齐 WorldTides 降级契约、Docker/Caddy/Secret、PostgreSQL 专用迁移、备份恢复/冒烟脚本、CI E2E 和设计文档；因外部发布验证条件不足转为 `BLOCKED` | Release 构建 0 警告、0 错误；Domain 51、Application 29、Infrastructure 28、Web 29，合计 137/137 通过；本机 Chrome 的桌面/移动 Playwright 2/2 通过；`dotnet format`、PowerShell AST、npm audit 0 漏洞、`git diff --check` 和 BOM/CRLF 检查通过；NuGet 在线审计因 TLS EOF 未完成；Docker CLI 不可用，真实 PostgreSQL/代理/备份恢复未执行；无 WorldTides API Key，未执行付费联调 | 提供 Docker/Staging 后执行完整 Compose、PostgreSQL、代理、备份恢复和冒烟演练；提供 WorldTides Key 后执行真实 Credit/潮汐联调，再评估阶段 4 准出 |
 | 2026-08-12 | `MI-0026` | 完成 ASP.NET Core Identity 基础认证闭环；统一用户/角色存储到现有 DbContext，增加注册、登录、退出、账户页面与 Header 状态，落实 Secure/HttpOnly/SameSite Cookie、密码策略、失败锁定、防伪、IP 限流和本地重定向防护；邮箱确认在邮件链路完成前保持关闭；同步权限、数据库、API、UI、Blazor、部署、测试和 RoadMap | Release 构建 0 警告、0 错误；迁移测试 3/3、认证测试 5/5、全量测试 129/129 通过；NuGet 漏洞审计无报告；独立临时 SQLite 全量迁移与 HTTPS `/`、`/account/login`、`/account/register`、`/health/live` 检查通过；`dotnet format --verify-no-changes`、`git diff --check`、JSON 解析及 28 个改动文本文件 BOM/CRLF 检查通过；Playwright 未安装，未执行浏览器视觉/360px 自动化 | 新建 `MI-0027`：实现登录用户收藏地点与一键再次查询闭环，覆盖重复收藏和所有权隔离 |
 | 2026-08-12 | `MI-0025` | 完成 SQLite 原生依赖 High 漏洞修复；EF Core、Design 和 SQLite 从 `10.0.9` 统一升级到 `10.0.11`，由官方补丁依赖链将 SQLitePCLRaw 从 `2.1.11` 提升到 `2.1.12`；同步测试方案和 RoadMap | NuGet 全解决方案传递依赖漏洞审计无报告；Release 构建 0 警告、0 错误；SQLite 迁移/仓储定向测试 9/9、全量测试 124/124 通过；格式、差异和 4 个改动文本文件 BOM/CRLF 检查通过 | 继续阶段 3：先实现 ASP.NET Core Identity 基础认证，再实现登录用户收藏地点和一键再次查询闭环 |

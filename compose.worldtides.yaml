@@ -1,0 +1,10 @@
+services:
+    web:
+        environment:
+            TideProviders__WorldTides__Enabled: "true"
+        secrets:
+            - TideProviders__WorldTides__ApiKey
+
+secrets:
+    TideProviders__WorldTides__ApiKey:
+        file: ${MARINE_INSIGHT_WORLDTIDES_SECRET_FILE:-./.secrets/worldtides_api_key}

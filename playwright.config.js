@@ -18,6 +18,7 @@ module.exports = defineConfig({
         env: {
             ASPNETCORE_URLS: "http://127.0.0.1:5180",
             ASPNETCORE_ENVIRONMENT: "Development",
+            TideProviders__WorldTides__Enabled: "false",
         },
     },
     use: {

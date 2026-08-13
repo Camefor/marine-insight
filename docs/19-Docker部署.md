@@ -82,6 +82,15 @@
 
 非敏感默认值可放 Compose 配置；Secret 使用 Docker Secret、宿主机受限文件或外部 Secret 管理器，不提交 `.env` 生产文件。
 
+WorldTides 默认不进入基础 Compose。启用时使用可选覆盖文件，并从仓库外注入密钥：
+
+```powershell
+$env:MARINE_INSIGHT_WORLDTIDES_SECRET_FILE = 'D:\secure\marine-insight\worldtides_api_key'
+docker compose -f compose.yaml -f compose.worldtides.yaml up -d --build
+```
+
+开发机也可将纯 Key 写入被忽略的 `.secrets/worldtides_api_key` 后省略环境变量。`compose.worldtides.yaml` 只给 Web 挂载名为 `TideProviders__WorldTides__ApiKey` 的 Key-per-file Secret，并显式设置 `TideProviders__WorldTides__Enabled=true`；密钥不会进入镜像层或普通环境变量列表。
+
 ## 8. 构建与启动
 
 ```powershell
@@ -151,3 +160,4 @@ Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和�
 | 1.1 | 2026-07-13 | 升级 .NET 10 镜像并替换数据源环境变量 |
 | 1.2 | 2026-07-15 | 补充 Web 存活/就绪探针的容器使用约定 |
 | 1.3 | 2026-08-13 | 落地 Dockerfile、Compose、Caddy、Key-per-file Secret 和备份恢复脚本 |
+| 1.4 | 2026-08-13 | 增加 WorldTides 可选 Compose 覆盖和仓库外 Secret 注入流程 |
