@@ -173,3 +173,4 @@ public sealed partial class RiskSummary
 | 1.8 | 2026-08-13 | 记录用户工作区页面、单位投影和再次查询参数恢复边界 |
 | 1.9 | 2026-08-14 | 记录 `MI-0030` 地图 JS 互操作改用天地图 WMTS 双层瓦片，Key 经配置注入 |
 | 2.0 | 2026-08-14 | 记录 `MI-0033` DashboardQuerySession 按浏览器时区持有显示时区、`ForecastStartUtc` 重命名为 `ForecastStartLocal` 并新增 `browser-timezone.js` 懒加载检测，`OnAfterRenderAsync` 首帧校正 |
+| 2.1 | 2026-08-14 | 记录 `MI-0034` Dashboard 页面移动端响应式 CSS：逐小时表格次要列标记 `hide-sm`、摘要「时间」项 `summary-span`，`@media (max-width:599px)` 内新增表格收窄、状态带堆叠与触控增强规则 |

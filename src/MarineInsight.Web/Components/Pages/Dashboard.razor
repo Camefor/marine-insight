@@ -211,7 +211,7 @@
                     <dt>完整度</dt>
                     <dd>@result.Completeness.ToString("P0")</dd>
                 </div>
-                <div>
+                <div class="summary-span">
                     <dt>时间</dt>
                     <dd>@Session.FormatDisplay(result.FromUtc) - @Session.FormatDisplay(result.ToUtc)</dd>
                 </div>
@@ -509,13 +509,13 @@
                         <tr>
                             <th>时间</th>
                             <th>风速 m/s</th>
-                            <th>阵风 m/s</th>
+                            <th class="hide-sm">阵风 m/s</th>
                             <th>浪高 m</th>
-                            <th>涌浪 m</th>
-                            <th>能见度 km</th>
+                            <th class="hide-sm">涌浪 m</th>
+                            <th class="hide-sm">能见度 km</th>
                             <th>综合分</th>
                             <th>等级</th>
-                            <th>质量</th>
+                            <th class="hide-sm">质量</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -528,13 +528,13 @@
                                     </button>
                                 </td>
                                 <td>@row.WindSpeedMs</td>
-                                <td>@row.WindGustMs</td>
+                                <td class="hide-sm">@row.WindGustMs</td>
                                 <td>@row.WaveHeightM</td>
-                                <td>@row.SwellHeightM</td>
-                                <td>@row.VisibilityKm</td>
+                                <td class="hide-sm">@row.SwellHeightM</td>
+                                <td class="hide-sm">@row.VisibilityKm</td>
                                 <td>@row.Score</td>
                                 <td>@row.RiskLevel</td>
-                                <td>@row.QualityStatus</td>
+                                <td class="hide-sm">@row.QualityStatus</td>
                             </tr>
                         }
                     </tbody>

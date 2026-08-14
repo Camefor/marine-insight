@@ -590,6 +590,7 @@ dd {
 }
 
 .trend-points {
+    -webkit-overflow-scrolling: touch;
     display: grid;
     gap: 8px;
     grid-auto-flow: column;
@@ -810,6 +811,7 @@ dd {
 }
 
 .hourly-table-wrap {
+    -webkit-overflow-scrolling: touch;
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -973,5 +975,58 @@ th {
 
     .metric-item strong {
         font-size: 1.25rem;
+    }
+
+    .query-band,
+    .source-section,
+    .activity-section,
+    .recommendation-section,
+    .risk-section,
+    .trend-section,
+    .metric-section,
+    .hourly-section,
+    .explanation-section {
+        padding: 14px;
+    }
+
+    .trend-panel {
+        padding: 10px;
+    }
+
+    .trend-tab,
+    .segment {
+        min-height: 44px;
+    }
+
+    .trend-point {
+        min-width: 72px;
+    }
+
+    .status-band {
+        align-items: stretch;
+        display: grid;
+        gap: 10px;
+        justify-content: initial;
+    }
+
+    .status-band .secondary-button {
+        justify-self: start;
+    }
+
+    .hide-sm {
+        display: none;
+    }
+
+    table {
+        min-width: 0;
+    }
+
+    th,
+    td {
+        padding: 8px 10px;
+    }
+
+    .summary-span {
+        grid-column: 1 / -1;
     }
 }
