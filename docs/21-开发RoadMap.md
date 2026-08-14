@@ -192,3 +192,4 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 2.9 | 2026-08-13 | Dashboard 补充 Open-Meteo（CC BY 4.0）与 WorldTides 数据署名页脚，安全免责声明已就位，满足上线数据署名合规要求 |
 | 3.0 | 2026-08-14 | 完成地图服务商替换（MI-0030）：天地图瓦片 + Leaflet 自托管，东极岛坐标更新为庙子湖岛 30.200/122.680 并新增岱山岛 30.288/122.165 预置地点 |
 | 3.1 | 2026-08-14 | 生产绑定域名 `marine.loyalme.life` 并启用 Caddy 自动 HTTPS（Let's Encrypt，90 天自动续期）：站点由 `http://49.232.106.166` 迁移为 `https://marine.loyalme.life`，`MARINE_INSIGHT_SITE_ADDRESS` 改域名、`ACME_EMAIL` 经 `.env` 注入、`compose.yaml` 的 `reverse-proxy` 传递该变量；v1.0 域名与 TLS 就绪，进入持续开发阶段 |
+| 3.2 | 2026-08-14 | 完成 Dashboard 客户端时区识别与动态显示（MI-0033）：新增 `ClientTimeZone` 静态工具与 `browser-timezone.js`，`DashboardQuerySession` 按浏览器时区持有显示时区并把查询输入本地时间转零偏移 UTC，页面 13 处时间显示统一本地化并标注「显示时区」，失败降级 `Asia/Shanghai`（北京时间 UTC+8），内部数据层保持 UTC 不变 |

@@ -127,8 +127,8 @@
 
             <div class="range-controls">
                 <label class="field">
-                    <span>起报时间 UTC</span>
-                    <input type="datetime-local" @bind="Session.ForecastStartUtc" />
+                    <span>起报时间（@Session.DisplayTimeZoneLabel）</span>
+                    <input type="datetime-local" @bind="Session.ForecastStartLocal" />
                 </label>
 
                 <fieldset class="segmented-group">
@@ -172,7 +172,7 @@
         <section class="summary-band" aria-labelledby="summary-title">
             <div>
                 <h2 id="summary-title">@result.DisplayName</h2>
-                <p>@result.Latitude.ToString("0.###"), @result.Longitude.ToString("0.###") · @(result.TimeZone ?? "UTC")</p>
+                <p>@result.Latitude.ToString("0.###"), @result.Longitude.ToString("0.###") · 显示时区 @Session.DisplayTimeZoneLabel</p>
                 <AuthorizeView>
                     <Authorized>
                         @if (Session.SelectedLocation is not null)
@@ -213,7 +213,7 @@
                 </div>
                 <div>
                     <dt>时间</dt>
-                    <dd>@result.FromUtc.ToString("MM-dd HH:mm") - @result.ToUtc.ToString("MM-dd HH:mm") UTC</dd>
+                    <dd>@Session.FormatDisplay(result.FromUtc) - @Session.FormatDisplay(result.ToUtc)</dd>
                 </div>
             </dl>
         </section>
@@ -320,9 +320,9 @@
                                         role="listitem"
                                         class="trend-point risk-@point.RiskLevel @(Session.SelectedHourlyDetail?.ForecastTimeUtc == point.ForecastTimeUtc ? "selected" : null) @(point.IsRecommended ? "recommended" : null)"
                                         style="@($"--primary:{point.PrimaryPercent}%;--secondary:{point.SecondaryPercent}%;")"
-                                        title="@($"{point.TimeLabel} {selectedTrend.PrimaryLabel} {point.PrimaryValue} {selectedTrend.SecondaryLabel} {point.SecondaryValue}")"
+                                        title="@($"{Session.FormatDisplay(point.ForecastTimeUtc)} {selectedTrend.PrimaryLabel} {point.PrimaryValue} {selectedTrend.SecondaryLabel} {point.SecondaryValue}")"
                                         @onclick="() => Session.SelectHour(point.ForecastTimeUtc)">
-                                    <span class="trend-time">@point.ForecastTimeUtc.ToString("HH:mm")</span>
+                                    <span class="trend-time">@Session.FormatDisplayTime(point.ForecastTimeUtc)</span>
                                     <span class="trend-bars" aria-hidden="true">
                                         <span class="trend-bar primary"></span>
                                         <span class="trend-bar secondary"></span>
@@ -350,7 +350,7 @@
                                 {
                                     <span class="timeline-window"
                                           style="@($"left:{window.StartPercent}%;width:{window.WidthPercent}%;")"
-                                          title="@($"{window.Label} {window.StartUtc:MM-dd HH:mm} - {window.EndUtc:MM-dd HH:mm} UTC")">
+                                          title="@($"{window.Label} {Session.FormatDisplay(window.StartUtc)} - {Session.FormatDisplay(window.EndUtc)}")">
                                         @window.Label
                                     </span>
                                 }
@@ -363,7 +363,7 @@
                         <aside class="hour-detail-panel" aria-labelledby="hour-detail-title">
                             <div class="hour-detail-header">
                                 <div>
-                                    <h3 id="hour-detail-title">@selectedDetail.ForecastTimeUtc.ToString("MM-dd HH:mm") UTC</h3>
+                                    <h3 id="hour-detail-title">@Session.FormatDisplay(selectedDetail.ForecastTimeUtc)</h3>
                                     <p>@selectedDetail.Score · @selectedDetail.RiskLevelText · @selectedDetail.QualityStatus / @selectedDetail.Freshness</p>
                                 </div>
                             </div>
@@ -415,7 +415,7 @@
                         <article class="recommendation-item">
                             <div>
                                 <span>@window.Label</span>
-                                <strong>@window.StartUtc.ToString("MM-dd HH:mm") - @window.EndUtc.ToString("HH:mm") UTC</strong>
+                                <strong>@Session.FormatDisplay(window.StartUtc) - @Session.FormatDisplayTime(window.EndUtc)</strong>
                             </div>
                             <dl>
                                 <div>
@@ -432,12 +432,12 @@
                                 </div>
                                 <div>
                                     <dt>返航</dt>
-                                    <dd>@(window.ReturnBeforeUtc?.ToString("MM-dd HH:mm") ?? "暂无")</dd>
+                                    <dd>@(window.ReturnBeforeUtc is null ? "暂无" : Session.FormatDisplay(window.ReturnBeforeUtc.Value))</dd>
                                 </div>
                             </dl>
                             @if (window.RiskRisesAtUtc is not null)
                             {
-                                <p>风险约 @window.RiskRisesAtUtc.Value.ToString("MM-dd HH:mm") UTC 上升：@(window.RiskReason ?? "需要提前结束活动。")</p>
+                                <p>风险约 @Session.FormatDisplay(window.RiskRisesAtUtc.Value) 上升：@(window.RiskReason ?? "需要提前结束活动。")</p>
                             }
                         </article>
                     }
@@ -466,11 +466,11 @@
                         <dl>
                             <div>
                                 <dt>发布</dt>
-                                <dd>@source.IssuedAtUtc.ToString("MM-dd HH:mm") UTC</dd>
+                                <dd>@Session.FormatDisplay(source.IssuedAtUtc)</dd>
                             </div>
                             <div>
                                 <dt>抓取</dt>
-                                <dd>@source.FetchedAtUtc.ToString("MM-dd HH:mm") UTC</dd>
+                                <dd>@Session.FormatDisplay(source.FetchedAtUtc)</dd>
                             </div>
                             <div>
                                 <dt>缓存</dt>
@@ -507,7 +507,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>UTC 时间</th>
+                            <th>时间</th>
                             <th>风速 m/s</th>
                             <th>阵风 m/s</th>
                             <th>浪高 m</th>
@@ -524,7 +524,7 @@
                             <tr class="@(Session.SelectedHourlyDetail?.ForecastTimeUtc == row.ForecastTimeUtc ? "selected-row" : null)">
                                 <td>
                                     <button type="button" class="hour-link" @onclick="() => Session.SelectHour(row.ForecastTimeUtc)">
-                                        @row.ForecastTimeUtc.ToString("MM-dd HH:mm")
+                                        @Session.FormatDisplay(row.ForecastTimeUtc)
                                     </button>
                                 </td>
                                 <td>@row.WindSpeedMs</td>
@@ -650,9 +650,35 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            await DetectClientTimeZoneAsync();
+        }
+
         if ((firstRender || Session.IsMapPickerOpen) && Session.IsMapPickerOpen)
         {
             await EnsureMapAsync();
+        }
+    }
+
+    private async Task DetectClientTimeZoneAsync()
+    {
+        try
+        {
+            var module = await Js.InvokeAsync<IJSObjectReference>("import", "./js/browser-timezone.js");
+            var id = await module.InvokeAsync<string>("detect");
+            await module.DisposeAsync();
+
+            if (Session.SetClientTimeZone(string.IsNullOrWhiteSpace(id) ? null : id))
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (JSException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
         }
     }
 

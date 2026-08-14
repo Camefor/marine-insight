@@ -37,7 +37,7 @@ public sealed class DashboardQuerySessionTests
         using var scope = factory.Services.CreateScope();
         var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
         session.SearchText = "东极岛";
-        session.ForecastStartUtc = new DateTime(2026, 7, 16, 0, 0, 0);
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 0, 0, 0);
         session.Hours = 24;
 
         await session.SearchLocationsAsync();
@@ -84,7 +84,7 @@ public sealed class DashboardQuerySessionTests
         using var scope = factory.Services.CreateScope();
         var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
         session.SearchText = "东极岛";
-        session.ForecastStartUtc = new DateTime(2026, 7, 16, 0, 0, 0);
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 0, 0, 0);
 
         await session.SearchLocationsAsync();
         session.SelectLocation(session.LocationResults.Single().Id);
@@ -110,7 +110,7 @@ public sealed class DashboardQuerySessionTests
         Assert.True(await session.SelectCatalogLocationAsync(Guid.Parse("8a477d67-73fa-4f43-b954-cd29d238a89d")));
         await session.SubmitAnalysisAsync();
 
-        Assert.Equal(repeatedFrom.UtcDateTime, session.ForecastStartUtc);
+        Assert.Equal(new DateTime(2026, 7, 16, 11, 0, 0), session.ForecastStartLocal);
         Assert.Equal([ActivityType.Landing], session.RequestedActivities);
         Assert.Contains(session.Result!.MetricCards, metric => metric.Label == "风速" && metric.Unit == "kn");
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "有效波高" && metric.Unit == "ft");
@@ -125,7 +125,7 @@ public sealed class DashboardQuerySessionTests
 
         using var scope = factory.Services.CreateScope();
         var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
-        session.ForecastStartUtc = new DateTime(2026, 7, 16, 0, 0, 0);
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 0, 0, 0);
         session.Hours = 24;
 
         Assert.True(session.SelectMapPoint(30.194, 122.687));
@@ -134,7 +134,6 @@ public sealed class DashboardQuerySessionTests
         Assert.Null(session.AnalysisError);
         Assert.NotNull(session.Result);
         Assert.Equal("自定义坐标", session.Result.DisplayName);
-        Assert.Null(session.Result.TimeZone);
         Assert.Equal(30.194, session.Result.Latitude, 3);
         Assert.Equal(122.687, session.Result.Longitude, 3);
         Assert.Equal(2, session.Result.Sources.Count);
@@ -173,5 +172,23 @@ public sealed class DashboardQuerySessionTests
         Assert.NotNull(session.SelectedMapPoint);
         Assert.Equal(30.194123, session.SelectedMapPoint.Latitude, 6);
         Assert.Equal(122.687988, session.SelectedMapPoint.Longitude, 6);
+    }
+
+    [Fact]
+    public void ClientTimeZoneDefaultsToBeijingAndSwitchesOnDetection()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+
+        Assert.Equal("北京时间（UTC+8）", session.DisplayTimeZoneLabel);
+
+        Assert.True(session.SetClientTimeZone("America/New_York"));
+        Assert.StartsWith("纽约时间", session.DisplayTimeZoneLabel);
+
+        Assert.True(session.SetClientTimeZone(null));
+        Assert.Equal("北京时间（UTC+8）", session.DisplayTimeZoneLabel);
+
+        Assert.False(session.SetClientTimeZone("Asia/Shanghai"));
     }
 }

@@ -22,6 +22,9 @@ public sealed class DashboardQuerySession : IDisposable
     private long _requestVersion;
     private UserSettings _settings = UserSettings.Default;
     private ActivityType? _queryActivity;
+    private TimeZoneInfo _displayZone = ClientTimeZone.FallbackZone;
+    private DateTime _forecastStartLocal;
+    private bool _forecastStartTouched;
 
     public DashboardQuerySession(
         MarineAnalysisQueryService analysisQueryService,
@@ -38,14 +41,47 @@ public sealed class DashboardQuerySession : IDisposable
         _explanationService = explanationService;
         _locationQueryService = locationQueryService;
         _analysisReportService = analysisReportService;
-        ForecastStartUtc = RoundToNextUtcHour(DateTimeOffset.UtcNow).UtcDateTime;
+        _forecastStartLocal = ClientTimeZone.NextLocalHour(_displayZone);
     }
 
     public string SearchText { get; set; } = "东极岛";
 
     public int Hours { get; set; } = 24;
 
-    public DateTime ForecastStartUtc { get; set; }
+    public DateTime ForecastStartLocal
+    {
+        get => _forecastStartLocal;
+        set
+        {
+            _forecastStartLocal = value;
+            _forecastStartTouched = true;
+        }
+    }
+
+    public TimeZoneInfo DisplayTimeZone => _displayZone;
+
+    public string DisplayTimeZoneLabel => ClientTimeZone.BuildDisplayLabel(_displayZone);
+
+    public string FormatDisplay(DateTimeOffset utc) => ClientTimeZone.FormatLocal(utc, _displayZone);
+
+    public string FormatDisplayTime(DateTimeOffset utc) => ClientTimeZone.FormatLocalTime(utc, _displayZone);
+
+    public bool SetClientTimeZone(string? ianaId)
+    {
+        var zone = ClientTimeZone.Resolve(ianaId);
+        if (string.Equals(zone.Id, _displayZone.Id, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        _displayZone = zone;
+        if (!_forecastStartTouched)
+        {
+            _forecastStartLocal = ClientTimeZone.NextLocalHour(zone);
+        }
+
+        return true;
+    }
 
     public bool IsMapPickerOpen { get; private set; } = true;
 
@@ -108,7 +144,9 @@ public sealed class DashboardQuerySession : IDisposable
     {
         if (forecastFromUtc.HasValue)
         {
-            ForecastStartUtc = forecastFromUtc.Value.UtcDateTime;
+            var local = ClientTimeZone.ToLocal(forecastFromUtc.Value, _displayZone);
+            _forecastStartLocal = local.DateTime;
+            _forecastStartTouched = true;
         }
 
         _queryActivity = activity ?? _queryActivity;
@@ -327,11 +365,8 @@ public sealed class DashboardQuerySession : IDisposable
 
     public void Dispose() => CancelActiveRequest();
 
-    private DateTimeOffset GetForecastStartOffset()
-    {
-        var startUtc = DateTime.SpecifyKind(ForecastStartUtc, DateTimeKind.Utc);
-        return new DateTimeOffset(startUtc, TimeSpan.Zero);
-    }
+    private DateTimeOffset GetForecastStartOffset() =>
+        ClientTimeZone.ToUtc(ForecastStartLocal, _displayZone);
 
     private async Task<MarineAnalysisQuery?> CreateAnalysisQueryAsync(CancellationToken cancellationToken)
     {
@@ -462,7 +497,6 @@ public sealed class DashboardQuerySession : IDisposable
             result.Query.LocationMetadata?.DisplayName ?? "自定义坐标",
             result.Query.Location.Latitude,
             result.Query.Location.Longitude,
-            result.Query.LocationMetadata?.TimeZoneId,
             result.Snapshot.Range.StartUtc,
             result.Snapshot.Range.EndUtc,
             result.Snapshot.Range.Hours,
@@ -681,7 +715,6 @@ public sealed class DashboardQuerySession : IDisposable
         SnapshotQuality quality,
         IReadOnlyList<DashboardTimelineWindow> timelineWindows) => new(
         forecastTimeUtc,
-        forecastTimeUtc.ToString("MM-dd HH:mm", CultureInfo.InvariantCulture),
         primaryValue,
         secondaryValue,
         riskLevel,
@@ -832,18 +865,6 @@ public sealed class DashboardQuerySession : IDisposable
             : char.ToLowerInvariant(name[0]) + name[1..];
     }
 
-    private static DateTimeOffset RoundToNextUtcHour(DateTimeOffset now)
-    {
-        var utc = now.ToUniversalTime();
-        return new DateTimeOffset(
-            utc.Year,
-            utc.Month,
-            utc.Day,
-            utc.Hour,
-            0,
-            0,
-            TimeSpan.Zero).AddHours(1);
-    }
 }
 
 internal sealed record FormattedMeasurement(string Value, bool HasValue, string Unit);
@@ -866,7 +887,6 @@ public sealed record DashboardAnalysisResult(
     string DisplayName,
     double Latitude,
     double Longitude,
-    string? TimeZone,
     DateTimeOffset FromUtc,
     DateTimeOffset ToUtc,
     int Hours,
@@ -929,7 +949,6 @@ public sealed record DashboardTrendTab(
 
 public sealed record DashboardTrendPoint(
     DateTimeOffset ForecastTimeUtc,
-    string TimeLabel,
     string PrimaryValue,
     string SecondaryValue,
     string RiskLevel,
