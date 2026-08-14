@@ -55,9 +55,12 @@ public static class AccountEndpointExtensions
         var result = await userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {
+            // 用户名与邮箱相同，重复注册命中 DuplicateUserName/DuplicateEmail 时单独提示已注册。
             var error = result.Errors.Any(item => item.Code.StartsWith("Password", StringComparison.Ordinal))
                 ? "password"
-                : "unavailable";
+                : result.Errors.Any(item => item.Code is "DuplicateUserName" or "DuplicateEmail")
+                    ? "email-exists"
+                    : "unavailable";
             return Results.LocalRedirect($"/account/register?error={error}");
         }
 

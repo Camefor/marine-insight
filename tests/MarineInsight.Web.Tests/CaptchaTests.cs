@@ -100,6 +100,43 @@ public sealed class CaptchaTests
     }
 
     [Fact]
+    public async Task DuplicateEmailRedirectsToEmailExistsError()
+    {
+        using var factory = new CaptchaApplicationFactory();
+        await factory.MigrateDatabaseAsync();
+        using var client = factory.CreateHttpsClient();
+
+        var first = factory.GenerateCaptcha();
+        var firstToken = await GetAntiforgeryTokenAsync(client, "/account/register");
+        using var create = await client.PostAsync(
+            "/account/register",
+            Form(
+                ("Email", "dup@example.com"),
+                ("Password", "Marine!Pass1"),
+                ("ConfirmPassword", "Marine!Pass1"),
+                ("CaptchaId", first.Id),
+                ("CaptchaCode", first.Code),
+                ("__RequestVerificationToken", firstToken)));
+        Assert.Equal(HttpStatusCode.Redirect, create.StatusCode);
+        Assert.Equal("/", create.Headers.Location?.OriginalString);
+
+        var second = factory.GenerateCaptcha();
+        var secondToken = await GetAntiforgeryTokenAsync(client, "/account/register");
+        using var duplicate = await client.PostAsync(
+            "/account/register",
+            Form(
+                ("Email", "dup@example.com"),
+                ("Password", "Marine!Pass1"),
+                ("ConfirmPassword", "Marine!Pass1"),
+                ("CaptchaId", second.Id),
+                ("CaptchaCode", second.Code),
+                ("__RequestVerificationToken", secondToken)));
+
+        Assert.Equal(HttpStatusCode.Redirect, duplicate.StatusCode);
+        Assert.Equal("/account/register?error=email-exists", duplicate.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
     public async Task CaptchaIsSingleUse()
     {
         using var factory = new CaptchaApplicationFactory();

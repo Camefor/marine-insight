@@ -448,7 +448,8 @@
     margin: 22px 0 0;
 }
 
-.account-switch a {
+.account-switch a,
+.account-alert a {
     color: #1f6b5d;
     font-weight: 700;
 }
