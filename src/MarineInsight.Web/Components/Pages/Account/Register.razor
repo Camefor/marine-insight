@@ -1,5 +1,7 @@
 ﻿@page "/account/register"
 @attribute [ExcludeFromInteractiveRouting]
+@using MarineInsight.Web.Authentication
+@inject CaptchaService Captcha
 <PageTitle>注册 - Marine Insight</PageTitle>
 
 <main class="account-page">
@@ -10,6 +12,14 @@
         @if (ErrorCode == "password")
         {
             <p class="account-alert" role="alert">密码需至少 10 位，并包含大小写字母、数字和符号。</p>
+        }
+        else if (ErrorCode == "confirm")
+        {
+            <p class="account-alert" role="alert">两次输入的密码不一致。</p>
+        }
+        else if (ErrorCode == "captcha")
+        {
+            <p class="account-alert" role="alert">验证码不正确或已过期，请重试。</p>
         }
         else if (!string.IsNullOrWhiteSpace(ErrorCode))
         {
@@ -27,6 +37,22 @@
                 <span>密码</span>
                 <input name="Password" type="password" autocomplete="new-password" required minlength="10" maxlength="128" />
             </label>
+            <label>
+                <span>确认密码</span>
+                <input name="ConfirmPassword" type="password" autocomplete="new-password" required minlength="10" maxlength="128" />
+            </label>
+            @if (Captcha.Enabled)
+            {
+                <input type="hidden" name="CaptchaId" value="@(_challenge?.Id)" />
+                <label class="account-captcha-field">
+                    <span>验证码</span>
+                    <div class="account-captcha">
+                        <span class="account-captcha-svg">@((MarkupString)(_challenge?.Svg ?? string.Empty))</span>
+                        <input class="account-captcha-input" name="CaptchaCode" type="text" autocomplete="off" required maxlength="4" placeholder="4 位验证码" />
+                        <a class="account-captcha-refresh" href="/account/register">换一张</a>
+                    </div>
+                </label>
+            }
             <button class="account-submit" type="submit">注册</button>
         </form>
 
@@ -35,6 +61,8 @@
 </main>
 
 @code {
+    private CaptchaChallenge? _challenge;
+
     [SupplyParameterFromQuery(Name = "error")]
     [Parameter]
     public string? ErrorCode { get; set; }
@@ -42,4 +70,12 @@
     [SupplyParameterFromQuery(Name = "returnUrl")]
     [Parameter]
     public string? ReturnUrl { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Captcha.Enabled)
+        {
+            _challenge = Captcha.Generate();
+        }
+    }
 }

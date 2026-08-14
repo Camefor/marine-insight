@@ -117,6 +117,81 @@ public sealed class UserWorkspaceRepository(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<bool> DeleteHistoryAsync(Guid userId, Guid historyId, CancellationToken cancellationToken)
+    {
+        var affected = await dbContext.QueryHistory
+            .Where(entity => entity.Id == historyId && entity.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+        return affected == 1;
+    }
+
+    public Task<int> ClearHistoryAsync(Guid userId, CancellationToken cancellationToken) =>
+        dbContext.QueryHistory
+            .Where(entity => entity.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<UserLocation>> ListUserLocationsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var entities = await dbContext.UserLocations
+            .AsNoTracking()
+            .Where(entity => entity.UserId == userId)
+            .ToArrayAsync(cancellationToken);
+        return entities
+            .OrderBy(entity => entity.SortOrder)
+            .ThenBy(entity => entity.CreatedAtUtc)
+            .Select(MapUserLocation)
+            .ToArray();
+    }
+
+    public async Task<UserLocation> AddUserLocationAsync(Guid userId, SaveUserLocationCommand command, CancellationToken cancellationToken)
+    {
+        var now = timeProvider.GetUtcNow();
+        var entity = new UserLocationEntity
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Name = command.Name,
+            Latitude = command.Latitude,
+            Longitude = command.Longitude,
+            DefaultActivity = command.DefaultActivity?.ToString(),
+            Note = command.Note,
+            SortOrder = command.SortOrder,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
+        };
+        dbContext.UserLocations.Add(entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return MapUserLocation(entity);
+    }
+
+    public async Task<UserLocation?> UpdateUserLocationAsync(Guid userId, Guid userLocationId, SaveUserLocationCommand command, CancellationToken cancellationToken)
+    {
+        var entity = await dbContext.UserLocations
+            .SingleOrDefaultAsync(item => item.Id == userLocationId && item.UserId == userId, cancellationToken);
+        if (entity is null)
+        {
+            return null;
+        }
+
+        entity.Name = command.Name;
+        entity.Latitude = command.Latitude;
+        entity.Longitude = command.Longitude;
+        entity.DefaultActivity = command.DefaultActivity?.ToString();
+        entity.Note = command.Note;
+        entity.SortOrder = command.SortOrder;
+        entity.UpdatedAtUtc = timeProvider.GetUtcNow();
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return MapUserLocation(entity);
+    }
+
+    public async Task<bool> DeleteUserLocationAsync(Guid userId, Guid userLocationId, CancellationToken cancellationToken)
+    {
+        var affected = await dbContext.UserLocations
+            .Where(entity => entity.Id == userLocationId && entity.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+        return affected == 1;
+    }
+
     public async Task<UserSettings> GetSettingsAsync(Guid userId, CancellationToken cancellationToken)
     {
         var entity = await dbContext.UserSettings
@@ -171,6 +246,16 @@ public sealed class UserWorkspaceRepository(
         entity.AnalysisId,
         entity.RiskLevel,
         entity.Score,
+        entity.CreatedAtUtc);
+
+    private static UserLocation MapUserLocation(UserLocationEntity entity) => new(
+        entity.Id,
+        entity.Name,
+        entity.Latitude,
+        entity.Longitude,
+        ParseActivity(entity.DefaultActivity),
+        entity.Note,
+        entity.SortOrder,
         entity.CreatedAtUtc);
 
     private static UserSettings MapSettings(UserSettingEntity entity) => new(

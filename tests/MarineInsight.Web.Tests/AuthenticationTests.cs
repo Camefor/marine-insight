@@ -51,6 +51,7 @@ public sealed class AuthenticationTests
             Form(
                 ("Email", "skipper@example.com"),
                 ("Password", "Marine!Pass1"),
+                ("ConfirmPassword", "Marine!Pass1"),
                 ("ReturnUrl", "https://attacker.example/redirect"),
                 ("__RequestVerificationToken", token)));
 
@@ -180,9 +181,15 @@ public sealed class AuthenticationTests
 
     private sealed class AuthenticationApplicationFactory : WebApplicationFactory<Program>
     {
+        private readonly bool _enableCaptcha;
         private readonly string _databasePath = Path.Combine(
             Path.GetTempPath(),
             $"marine-insight-auth-{Guid.NewGuid():N}.db");
+
+        public AuthenticationApplicationFactory(bool enableCaptcha = false)
+        {
+            _enableCaptcha = enableCaptcha;
+        }
 
         public HttpClient CreateHttpsClient() => CreateClient(new WebApplicationFactoryClientOptions
         {
@@ -218,7 +225,8 @@ public sealed class AuthenticationTests
                     ["TideProviders:WorldTides:Enabled"] = "false",
                     ["Database:Provider"] = "Sqlite",
                     ["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}",
-                    ["Identity:RequireConfirmedEmail"] = "false"
+                    ["Identity:RequireConfirmedEmail"] = "false",
+                    ["Captcha:Enabled"] = _enableCaptcha ? "true" : "false"
                 });
             });
             builder.ConfigureServices(services =>

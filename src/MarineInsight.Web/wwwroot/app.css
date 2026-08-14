@@ -196,6 +196,21 @@
     color: #9a3329;
 }
 
+.workspace-danger {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #9a3329;
+    border-radius: 4px;
+    color: #9a3329;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-weight: 700;
+    justify-content: center;
+    min-height: 42px;
+    padding: 8px 14px;
+}
+
 .workspace-empty,
 .workspace-status {
     padding: 28px 0;
@@ -224,6 +239,18 @@
 
 .workspace-form .workspace-primary {
     justify-self: start;
+}
+
+.workspace-form h2 {
+    font-size: 1.1rem;
+    letter-spacing: 0;
+    margin: 0;
+}
+
+.workspace-form-actions {
+    align-items: center;
+    display: flex;
+    gap: 12px;
 }
 
 .workspace-success,
@@ -424,6 +451,42 @@
 .account-switch a {
     color: #1f6b5d;
     font-weight: 700;
+}
+
+.account-captcha {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+}
+
+.account-captcha-svg {
+    border: 1px solid #aebdb9;
+    border-radius: 4px;
+    display: inline-flex;
+    height: 44px;
+    overflow: hidden;
+}
+
+.account-captcha-svg svg {
+    display: block;
+}
+
+.account-captcha-input {
+    border: 1px solid #aebdb9;
+    border-radius: 4px;
+    flex: 1;
+    font: inherit;
+    min-height: 44px;
+    min-width: 0;
+    padding: 9px 11px;
+}
+
+.account-captcha-refresh {
+    color: #1f6b5d;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
 }
 
 @media (max-width: 599px) {

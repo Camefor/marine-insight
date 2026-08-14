@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Forecast;
@@ -102,9 +103,64 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
+
+    options.AddPolicy("location", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
+    // 分析按认证态分桶：登录用户 30/min，匿名按 IP 10/min。
+    options.AddPolicy("analysis", context =>
+    {
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var partitionKey = userId is null
+            ? $"ip:{context.Connection.RemoteIpAddress}"
+            : $"user:{userId}";
+        var permitLimit = userId is null ? 10 : 30;
+        return RateLimitPartition.GetTokenBucketLimiter(
+            partitionKey,
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = permitLimit,
+                TokensPerPeriod = permitLimit,
+                ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+
+    options.AddPolicy("authenticated", context =>
+        RateLimitPartition.GetTokenBucketLimiter(
+            context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous",
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 30,
+                TokensPerPeriod = 30,
+                ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("admin", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 builder.Services.AddMarineInsightCaching(builder.Configuration);
+builder.Services.Configure<CaptchaOptions>(builder.Configuration.GetSection("Captcha"));
+builder.Services.AddSingleton<CaptchaService>();
 builder.Services.AddOpenMeteoForecastProviders(builder.Configuration);
 builder.Services.AddWorldTidesProvider(builder.Configuration);
 builder.Services.AddExplanationProvider(builder.Configuration);
@@ -168,9 +224,9 @@ app.UseWhen(
     context => !context.Request.Path.StartsWithSegments("/health"),
     branch => branch.UseHttpsRedirection());
 
-app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.UseAntiforgery();
 
 app.MapStaticAssets();

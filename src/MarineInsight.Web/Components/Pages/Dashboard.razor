@@ -575,6 +575,14 @@
     [SupplyParameterFromQuery(Name = "activity")]
     public string? QueryActivity { get; set; }
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "lat")]
+    public double? QueryLatitude { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "lon")]
+    public double? QueryLongitude { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -594,6 +602,10 @@
         if (LocationId.HasValue)
         {
             await Session.SelectCatalogLocationAsync(LocationId.Value);
+        }
+        else if (QueryLatitude.HasValue && QueryLongitude.HasValue)
+        {
+            Session.SelectMapPoint(QueryLatitude.Value, QueryLongitude.Value);
         }
     }
 

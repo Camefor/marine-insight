@@ -2,6 +2,7 @@
 using MarineInsight.Application.Users;
 using MarineInsight.Domain.Analysis;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MarineInsight.Web.Api;
 
@@ -9,7 +10,7 @@ public static class UserWorkspaceEndpointExtensions
 {
     public static IEndpointRouteBuilder MapUserWorkspaceEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/v1").RequireAuthorization();
+        var group = endpoints.MapGroup("/api/v1").RequireAuthorization().RequireRateLimiting("authenticated");
 
         group.MapGet("/favorites", async (ClaimsPrincipal user, UserWorkspaceService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListFavoritesAsync(GetUserId(user), cancellationToken)));
@@ -18,6 +19,13 @@ public static class UserWorkspaceEndpointExtensions
         group.MapDelete("/favorites/{favoriteId:guid}", DeleteFavoriteAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
         group.MapGet("/query-history", async (ClaimsPrincipal user, UserWorkspaceService service, int? limit, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListHistoryAsync(GetUserId(user), limit ?? 50, cancellationToken)));
+        group.MapDelete("/query-history/{historyId:guid}", DeleteHistoryAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
+        group.MapDelete("/query-history", ClearHistoryAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
+        group.MapGet("/user-locations", async (ClaimsPrincipal user, UserWorkspaceService service, CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListUserLocationsAsync(GetUserId(user), cancellationToken)));
+        group.MapPost("/user-locations", AddUserLocationAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
+        group.MapPut("/user-locations/{userLocationId:guid}", UpdateUserLocationAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
+        group.MapDelete("/user-locations/{userLocationId:guid}", DeleteUserLocationAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
         group.MapGet("/user-settings", async (ClaimsPrincipal user, UserWorkspaceService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.GetSettingsAsync(GetUserId(user), cancellationToken)));
         group.MapPut("/user-settings", SaveSettingsAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
@@ -76,6 +84,64 @@ public static class UserWorkspaceEndpointExtensions
         CancellationToken cancellationToken) =>
         await service.DeleteFavoriteAsync(GetUserId(user), favoriteId, cancellationToken) ? Results.NoContent() : Results.NotFound();
 
+    private static async Task<IResult> DeleteHistoryAsync(
+        ClaimsPrincipal user,
+        Guid historyId,
+        UserWorkspaceService service,
+        CancellationToken cancellationToken) =>
+        await service.DeleteHistoryAsync(GetUserId(user), historyId, cancellationToken) ? Results.NoContent() : Results.NotFound();
+
+    private static async Task<IResult> ClearHistoryAsync(
+        ClaimsPrincipal user,
+        UserWorkspaceService service,
+        CancellationToken cancellationToken)
+    {
+        var deleted = await service.ClearHistoryAsync(GetUserId(user), cancellationToken);
+        return Results.Ok(new { Deleted = deleted });
+    }
+
+    private static async Task<IResult> AddUserLocationAsync(
+        ClaimsPrincipal user,
+        UserLocationRequest request,
+        UserWorkspaceService service,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var location = await service.AddUserLocationAsync(GetUserId(user), ToCommand(request), cancellationToken);
+            return Results.Created($"/api/v1/user-locations/{location.Id}", location);
+        }
+        catch (ArgumentException exception)
+        {
+            return Validation(exception.Message);
+        }
+    }
+
+    private static async Task<IResult> UpdateUserLocationAsync(
+        ClaimsPrincipal user,
+        Guid userLocationId,
+        UserLocationRequest request,
+        UserWorkspaceService service,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var location = await service.UpdateUserLocationAsync(GetUserId(user), userLocationId, ToCommand(request), cancellationToken);
+            return location is null ? Results.NotFound() : Results.Ok(location);
+        }
+        catch (ArgumentException exception)
+        {
+            return Validation(exception.Message);
+        }
+    }
+
+    private static async Task<IResult> DeleteUserLocationAsync(
+        ClaimsPrincipal user,
+        Guid userLocationId,
+        UserWorkspaceService service,
+        CancellationToken cancellationToken) =>
+        await service.DeleteUserLocationAsync(GetUserId(user), userLocationId, cancellationToken) ? Results.NoContent() : Results.NotFound();
+
     private static async Task<IResult> SaveSettingsAsync(
         ClaimsPrincipal user,
         UserSettingsRequest request,
@@ -113,6 +179,9 @@ public static class UserWorkspaceEndpointExtensions
     private static SaveFavoriteCommand ToCommand(FavoriteRequest request) =>
         new(request.LocationId, ParseActivity(request.DefaultActivity), request.Note, request.SortOrder);
 
+    private static SaveUserLocationCommand ToCommand(UserLocationRequest request) =>
+        new(request.Name, request.Latitude, request.Longitude, ParseActivity(request.DefaultActivity), request.Note, request.SortOrder);
+
     private static ActivityType? ParseActivity(string? value) => string.IsNullOrWhiteSpace(value)
         ? null
         : Enum.TryParse<ActivityType>(value, true, out var activity)
@@ -127,6 +196,14 @@ public static class UserWorkspaceEndpointExtensions
 }
 
 public sealed record FavoriteRequest(Guid LocationId, string? DefaultActivity, string? Note, int SortOrder);
+
+public sealed record UserLocationRequest(
+    string Name,
+    double Latitude,
+    double Longitude,
+    string? DefaultActivity,
+    string? Note,
+    int SortOrder);
 
 public sealed record UserSettingsRequest(
     string WindSpeedUnit,

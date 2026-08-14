@@ -153,7 +153,8 @@ public sealed class AnalysisReportApiTests
                     ["TideProviders:WorldTides:Enabled"] = "false",
                     ["Database:Provider"] = "Sqlite",
                     ["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}",
-                    ["Identity:RequireConfirmedEmail"] = "false"
+                    ["Identity:RequireConfirmedEmail"] = "false",
+                    ["Captcha:Enabled"] = "false"
                 });
             });
             builder.ConfigureServices(services =>

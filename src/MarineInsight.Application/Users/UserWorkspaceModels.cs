@@ -27,6 +27,16 @@ public sealed record QueryHistoryItem(
     double? Score,
     DateTimeOffset CreatedAtUtc);
 
+public sealed record UserLocation(
+    Guid Id,
+    string Name,
+    double Latitude,
+    double Longitude,
+    ActivityType? DefaultActivity,
+    string? Note,
+    int SortOrder,
+    DateTimeOffset CreatedAtUtc);
+
 public sealed record UserSettings(
     string WindSpeedUnit,
     string WaveHeightUnit,
@@ -39,6 +49,14 @@ public sealed record UserSettings(
 
 public sealed record SaveFavoriteCommand(
     Guid LocationId,
+    ActivityType? DefaultActivity,
+    string? Note,
+    int SortOrder);
+
+public sealed record SaveUserLocationCommand(
+    string Name,
+    double Latitude,
+    double Longitude,
     ActivityType? DefaultActivity,
     string? Note,
     int SortOrder);

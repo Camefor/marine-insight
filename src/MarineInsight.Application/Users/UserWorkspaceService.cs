@@ -47,6 +47,30 @@ public sealed class UserWorkspaceService
     public Task RecordHistoryAsync(Guid userId, RecordQueryHistoryCommand command, CancellationToken cancellationToken = default) =>
         _repository.RecordHistoryAsync(RequireUser(userId), command, cancellationToken);
 
+    public Task<bool> DeleteHistoryAsync(Guid userId, Guid historyId, CancellationToken cancellationToken = default) =>
+        _repository.DeleteHistoryAsync(RequireUser(userId), historyId, cancellationToken);
+
+    public Task<int> ClearHistoryAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        _repository.ClearHistoryAsync(RequireUser(userId), cancellationToken);
+
+    public Task<IReadOnlyList<UserLocation>> ListUserLocationsAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        _repository.ListUserLocationsAsync(RequireUser(userId), cancellationToken);
+
+    public Task<UserLocation> AddUserLocationAsync(Guid userId, SaveUserLocationCommand command, CancellationToken cancellationToken = default)
+    {
+        ValidateUserLocation(command);
+        return _repository.AddUserLocationAsync(RequireUser(userId), Normalize(command), cancellationToken);
+    }
+
+    public async Task<UserLocation?> UpdateUserLocationAsync(Guid userId, Guid userLocationId, SaveUserLocationCommand command, CancellationToken cancellationToken = default)
+    {
+        ValidateUserLocation(command);
+        return await _repository.UpdateUserLocationAsync(RequireUser(userId), userLocationId, Normalize(command), cancellationToken);
+    }
+
+    public Task<bool> DeleteUserLocationAsync(Guid userId, Guid userLocationId, CancellationToken cancellationToken = default) =>
+        _repository.DeleteUserLocationAsync(RequireUser(userId), userLocationId, cancellationToken);
+
     public Task<UserSettings> GetSettingsAsync(Guid userId, CancellationToken cancellationToken = default) =>
         _repository.GetSettingsAsync(RequireUser(userId), cancellationToken);
 
@@ -98,6 +122,45 @@ public sealed class UserWorkspaceService
     }
 
     private static SaveFavoriteCommand Normalize(SaveFavoriteCommand command) => command with { Note = NormalizeText(command.Note) };
+
+    private static void ValidateUserLocation(SaveUserLocationCommand command)
+    {
+        if (string.IsNullOrWhiteSpace(command.Name))
+        {
+            throw new ArgumentException("A location name is required.", nameof(command));
+        }
+
+        if (command.Name.Trim().Length > 200)
+        {
+            throw new ArgumentException("Location name must not exceed 200 characters.", nameof(command));
+        }
+
+        if (!double.IsFinite(command.Latitude) || command.Latitude is < -90 or > 90)
+        {
+            throw new ArgumentOutOfRangeException(nameof(command), "Latitude must be between -90 and 90.");
+        }
+
+        if (!double.IsFinite(command.Longitude) || command.Longitude is < -180 or > 180)
+        {
+            throw new ArgumentOutOfRangeException(nameof(command), "Longitude must be between -180 and 180.");
+        }
+
+        if (command.Note?.Length > 500)
+        {
+            throw new ArgumentException("Location note must not exceed 500 characters.", nameof(command));
+        }
+
+        if (command.SortOrder is < 0 or > 10_000)
+        {
+            throw new ArgumentOutOfRangeException(nameof(command), "Sort order must be between 0 and 10000.");
+        }
+    }
+
+    private static SaveUserLocationCommand Normalize(SaveUserLocationCommand command) => command with
+    {
+        Name = command.Name.Trim(),
+        Note = NormalizeText(command.Note)
+    };
 
     private static string? NormalizeText(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

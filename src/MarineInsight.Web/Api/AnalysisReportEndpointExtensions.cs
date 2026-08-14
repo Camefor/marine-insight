@@ -4,6 +4,7 @@ using MarineInsight.Application.Errors;
 using MarineInsight.Domain.Analysis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 
 namespace MarineInsight.Web.Api;
@@ -19,7 +20,8 @@ public static class AnalysisReportEndpointExtensions
             .RequireAuthorization()
             .MapGet("/marine-analyses/{id:guid}", HandleGetAsync)
             .Produces<MarineAnalysisReportResponse>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireRateLimiting("authenticated");
 
         return endpoints;
     }

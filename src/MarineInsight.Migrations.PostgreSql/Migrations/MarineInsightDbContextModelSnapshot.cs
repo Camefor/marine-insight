@@ -750,6 +750,50 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                     b.ToTable("query_history", (string)null);
                 });
 
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.UserLocationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DefaultActivity")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "SortOrder");
+
+                    b.ToTable("user_locations", (string)null);
+                });
+
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.UserSettingEntity", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -1063,6 +1107,15 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 });
 
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.QueryHistoryEntity", b =>
+                {
+                    b.HasOne("MarineInsight.Infrastructure.Persistence.MarineInsightUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.UserLocationEntity", b =>
                 {
                     b.HasOne("MarineInsight.Infrastructure.Persistence.MarineInsightUser", null)
                         .WithMany()

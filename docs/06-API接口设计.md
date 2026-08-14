@@ -40,6 +40,12 @@
 | 收藏 | PUT | `/favorites/{id}` | 修改默认活动/备注/排序 | 登录 |
 | 收藏 | DELETE | `/favorites/{id}` | 删除收藏 | 登录 |
 | 历史 | GET | `/query-history` | 查询历史 | 登录 |
+| 历史 | DELETE | `/query-history/{id}` | 删除单条查询历史 | 登录 |
+| 历史 | DELETE | `/query-history` | 清空查询历史 | 登录 |
+| 地点 | GET | `/user-locations` | 我的地点列表 | 登录 |
+| 地点 | POST | `/user-locations` | 新增自定义预设地点 | 登录 |
+| 地点 | PUT | `/user-locations/{id}` | 修改自定义预设地点 | 登录 |
+| 地点 | DELETE | `/user-locations/{id}` | 删除自定义预设地点 | 登录 |
 | 设置 | GET/PUT | `/user-settings` | 用户单位和偏好 | 登录 |
 | 管理 | GET | `/admin/providers` | Provider 状态与配额摘要 | 管理员 |
 | 管理 | POST | `/admin/algorithms/{id}/publish` | 发布算法版本 | 管理员 |
@@ -357,6 +363,8 @@
 
 `MI-0026` 的 Blazor 账户表单使用静态 SSR POST：`POST /account/register`、`POST /account/login` 和 `POST /account/logout`。三者必须携带防伪令牌；账户组按来源 IP 每分钟最多 10 次。成功注册/登录只允许重定向到本站绝对路径，退出要求已认证；认证失败返回通用页面状态，不通过响应区分“邮箱不存在”和“密码错误”。这些端点服务浏览器 Cookie 会话，不作为外部 JSON API 契约。
 
+`MI-0036` 已落地全接口限流与验证码：注册/登录表单需通过自研 SVG 验证码（服务端一次性 SHA-256、3 分钟过期），验证码失败返回 `?error=captcha` 且不触发锁定计数；`AddRateLimiter` 提供 `account`（10/min/IP）、`location`（60/min/IP）、`analysis`（匿名 10/IP、登录 30/用户，令牌桶）、`authenticated`（30/min/用户，工作区与分析报告）、`admin`（5/min/用户）五策略，`UseRateLimiter` 移到授权之后以便按 `context.User` 分桶；新增 `GET/POST /api/v1/user-locations`、`PUT/DELETE /api/v1/user-locations/{id}` 与 `DELETE /api/v1/query-history[/{id}]`（写操作均带防伪头 `RequestVerificationToken`）。
+
 服务端根据 Provider 配额动态收紧回源，不影响缓存命中读取。
 
 `MI-0027` 已实现登录用户的收藏、查询历史和单位设置端点，以及管理员只读运行状态端点。分析响应新增 `tide` 状态：`disabled` 表示未启用，`available` 表示潮汐可用，`degraded` 表示仍返回潮汐但 Credit 已低于告警阈值，`unavailable` 表示本次潮汐失败；可选潮汐失败不改变基础天气/海况分析的成功状态。
@@ -382,3 +390,4 @@
 | 1.7 | 2026-08-13 | 记录用户工作区、管理员运行状态和可降级 WorldTides 状态契约 |
 | 1.8 | 2026-08-13 | 增加 `MI-0029` `GET /api/v1/marine-analyses/{id}` 持久化分析报告读取端点与 `ANALYSIS_NOT_FOUND` 错误码 |
 | 1.8 | 2026-08-13 | 增加分析响应 `explanation` 字段与 AI/模板降级标记（MI-0028） |
+| 1.9 | 2026-08-14 | 增加 `MI-0036` 用户地点 CRUD 与查询历史删除/清空端点，落地全接口限流策略与注册/登录验证码 |

@@ -1,5 +1,7 @@
 ﻿@page "/account/login"
 @attribute [ExcludeFromInteractiveRouting]
+@using MarineInsight.Web.Authentication
+@inject CaptchaService Captcha
 <PageTitle>登录 - Marine Insight</PageTitle>
 
 <main class="account-page">
@@ -10,6 +12,10 @@
         @if (ErrorCode == "locked")
         {
             <p class="account-alert" role="alert">登录尝试过多，请在 15 分钟后重试。</p>
+        }
+        else if (ErrorCode == "captcha")
+        {
+            <p class="account-alert" role="alert">验证码不正确或已过期，请重试。</p>
         }
         else if (!string.IsNullOrWhiteSpace(ErrorCode))
         {
@@ -35,6 +41,18 @@
                 <input name="RememberMe" type="checkbox" value="true" />
                 <span>保持登录</span>
             </label>
+            @if (Captcha.Enabled)
+            {
+                <input type="hidden" name="CaptchaId" value="@(_challenge?.Id)" />
+                <label class="account-captcha-field">
+                    <span>验证码</span>
+                    <div class="account-captcha">
+                        <span class="account-captcha-svg">@((MarkupString)(_challenge?.Svg ?? string.Empty))</span>
+                        <input class="account-captcha-input" name="CaptchaCode" type="text" autocomplete="off" required maxlength="4" placeholder="4 位验证码" />
+                        <a class="account-captcha-refresh" href="/account/login">换一张</a>
+                    </div>
+                </label>
+            }
             <button class="account-submit" type="submit">登录</button>
         </form>
 
@@ -43,6 +61,8 @@
 </main>
 
 @code {
+    private CaptchaChallenge? _challenge;
+
     [SupplyParameterFromQuery(Name = "error")]
     [Parameter]
     public string? ErrorCode { get; set; }
@@ -54,4 +74,12 @@
     [SupplyParameterFromQuery(Name = "returnUrl")]
     [Parameter]
     public string? ReturnUrl { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Captcha.Enabled)
+        {
+            _challenge = Captcha.Generate();
+        }
+    }
 }

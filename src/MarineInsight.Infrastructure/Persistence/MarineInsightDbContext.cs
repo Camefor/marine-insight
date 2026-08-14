@@ -18,6 +18,8 @@ public sealed class MarineInsightDbContext(DbContextOptions<MarineInsightDbConte
 
     public DbSet<FavoriteLocationEntity> FavoriteLocations => Set<FavoriteLocationEntity>();
 
+    public DbSet<UserLocationEntity> UserLocations => Set<UserLocationEntity>();
+
     public DbSet<QueryHistoryEntity> QueryHistory => Set<QueryHistoryEntity>();
 
     public DbSet<UserSettingEntity> UserSettings => Set<UserSettingEntity>();

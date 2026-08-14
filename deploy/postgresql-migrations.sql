@@ -563,3 +563,41 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260814091318_AddUserLocations') THEN
+    CREATE TABLE user_locations (
+        "Id" uuid NOT NULL,
+        "UserId" uuid NOT NULL,
+        "Name" character varying(200) NOT NULL,
+        "Latitude" double precision NOT NULL,
+        "Longitude" double precision NOT NULL,
+        "DefaultActivity" character varying(40),
+        "Note" character varying(500),
+        "SortOrder" integer NOT NULL,
+        "CreatedAtUtc" timestamp with time zone NOT NULL,
+        "UpdatedAtUtc" timestamp with time zone NOT NULL,
+        CONSTRAINT "PK_user_locations" PRIMARY KEY ("Id"),
+        CONSTRAINT "FK_user_locations_users_UserId" FOREIGN KEY ("UserId") REFERENCES users ("Id") ON DELETE CASCADE
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260814091318_AddUserLocations') THEN
+    CREATE INDEX "IX_user_locations_UserId_SortOrder" ON user_locations ("UserId", "SortOrder");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260814091318_AddUserLocations') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260814091318_AddUserLocations', '10.0.11');
+    END IF;
+END $EF$;
+COMMIT;
+

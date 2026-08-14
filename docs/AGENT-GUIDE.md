@@ -124,13 +124,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0035` |
+| 当前任务 ID | `MI-0036` |
 | 当前状态 | `DONE` |
-| 当前目标 | 更新 GitHub README、新增系统功能介绍页（/about）并增加主导航栏，随后部署上线 |
-| 最后完成动作 | 重写根 `README.md`；新增静态 SSR 介绍页 `About.razor`（功能/场景/可信理由/免责声明）与 scoped 样式；`MainLayout` 增加「海况查询/功能介绍」主导航并适配移动端；新增 `AboutPageTests` 冒烟测试 |
-| 下一步动作 | 提交到 git 并部署上线；随后等待用户浏览器人工确认介绍页与导航 |
-| 涉及文件 | `README.md`、`src/MarineInsight.Web/Components/Pages/About.razor`、`About.razor.css`、`src/MarineInsight.Web/Components/Layout/MainLayout.razor`、`src/MarineInsight.Web/wwwroot/app.css`、`tests/MarineInsight.Web.Tests/AboutPageTests.cs`、`docs/15-UI设计.md`、`docs/16-Blazor组件设计.md`、`docs/21-开发RoadMap.md`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | Release 构建 0 警告、0 错误；全量测试 183/183 通过（Domain 51、Application 51、Infrastructure 37、Web 44）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 |
+| 当前目标 | 完善用户模块：注册/登录加固 + 图形验证码 + 查询历史维护 + 自定义预设地点（我的地点）+ API 全量限流，随后部署上线 |
+| 最后完成动作 | 新增自研 SVG 验证码 `CaptchaService`（一次性 SHA-256、3 分钟过期）并接入注册/登录；注册增加确认密码与邮箱格式校验；新增 `user_locations` 表/实体/配置/双迁移与「我的地点」页面 CRUD；查询历史支持删除单条/清空；`AddRateLimiter` 扩为 location/analysis/authenticated/admin 五策略并把 `UseRateLimiter` 移到授权之后；新增 `CaptchaTests`、`UserWorkspaceApiTests` 并更新认证测试工厂 |
+| 下一步动作 | 提交 git 并部署上线；随后公网冒烟 `/`、`/account/register`、`/account/login`、`/health/live` 并人工验证码注册/登录 |
+| 涉及文件 | `src/MarineInsight.Web/Authentication/CaptchaService.cs`、`AccountEndpointExtensions.cs`、`Program.cs`、`appsettings.json`、`Components/Pages/Account/Login.razor`、`Register.razor`、`Components/Pages/UserLocations.razor`、`QueryHistory.razor`、`Dashboard.razor`、`Layout/AccountNav.razor`、`Api/UserWorkspaceEndpointExtensions.cs`、`Api/*EndpointExtensions.cs`、`Application/Users/*`、`Infrastructure/Persistence/UserLocationEntity.cs`、`UserLocationConfiguration.cs`、`UserWorkspaceRepository.cs`、双迁移 + `deploy/postgresql-migrations.sql`、`tests/MarineInsight.Web.Tests/CaptchaTests.cs`、`UserWorkspaceApiTests.cs`、`AuthenticationTests.cs`、`AnalysisReportApiTests.cs`、`docs/*` |
+| 验证结果 | Release 构建 0 警告、0 错误；全量测试 190/190 通过（Domain 51、Application 51、Infrastructure 37、Web 51）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-08-14 |
 
@@ -209,6 +209,7 @@
 | [x] | `MI-0033` | 2026-08-14 | Dashboard 客户端时区识别与动态显示 | 新增纯函数静态工具 `ClientTimeZone`（IANA 解析、友好中文名、`Asia/Shanghai` 降级、本地/UTC 转换与格式化）；`DashboardQuerySession` 按浏览器时区持有显示时区并重命名 `ForecastStartUtc`→`ForecastStartLocal`（带 touched 标志），查询输入本地时间经 `ToUtc` 转零偏移 UTC；新增 `browser-timezone.js` 用 `Intl` 懒加载检测，`OnAfterRenderAsync` 首帧校正；`Dashboard.razor` 13 处时间显示统一本地化并标注「显示时区」；内部数据层保持 UTC 不变；同步 UI/Blazor/测试/RoadMap 文档 |
 | [x] | `MI-0034` | 2026-08-14 | Dashboard 移动端响应式优化 | 手机端（≤599px）逐小时表格隐藏阵风/涌浪/能见度/质量 4 列并放开表格最小宽、压缩单元格内边距，摘要「时间」项跨满一行；`.status-band` 纵向堆叠；趋势条/表格补 `-webkit-overflow-scrolling:touch`；`.trend-tab`/`.segment` 触控目标提至 44px，趋势点收窄；桌面端 9 列与布局不变；同步 UI/Blazor/RoadMap 文档 |
 | [x] | `MI-0035` | 2026-08-14 | 更新 README、新增功能介绍页与主导航栏 | 重写根 `README.md`（定位/功能/技术栈/快速开始/架构/文档导航/免责声明）；新增静态 SSR 介绍页 `About.razor` 与 scoped 样式（核心功能、适用场景、可信理由、免责声明）；`MainLayout` 增加「海况查询/功能介绍」主导航并适配移动端换行；新增 `AboutPageTests` 冒烟断言；同步 UI/Blazor/RoadMap/AGENT-GUIDE 文档 |
+| [x] | `MI-0036` | 2026-08-14 | 完善用户模块：注册/登录加固 + 验证码 + 查询历史维护 + 自定义预设地点 + 全接口限流 | 新增自研 SVG 验证码 `CaptchaService`（`IMemoryCache` 存 SHA-256、一次性消费、3 分钟过期、无第三方图像库）并接入注册/登录；注册增加确认密码与邮箱格式校验；新增 `user_locations` 表/实体/配置/SQLite+PostgreSQL 双迁移与「我的地点」页面（`/my-locations`）CRUD + 再次查询深链；查询历史支持删除单条/清空（`DELETE /api/v1/query-history[/{id}]`）；`AddRateLimiter` 扩为 account/location/analysis/authenticated/admin 五策略，`UseRateLimiter` 移到授权之后按 `context.User` 分桶；新增 `CaptchaTests`/`UserWorkspaceApiTests` 并更新认证测试工厂；同步 05/06/12/15/16/21/AGENT-GUIDE 文档 |
 
 ### 9.2 取消任务
 
@@ -220,6 +221,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-14 | `MI-0036` | 完善用户模块：新增自研 SVG 验证码 `CaptchaService`（`IMemoryCache` 存 SHA-256 哈希、一次性消费、3 分钟过期、去易混淆字符，无 `System.Drawing`/`SkiaSharp` 依赖）并接入注册/登录两个表单；注册表单增加确认密码与邮箱格式校验（`?error=confirm`/`?error=captcha`）；新增 `user_locations` 表/实体/配置/SQLite+PostgreSQL 双迁移 + 幂等 SQL，落地「我的地点」页面（`/my-locations`）增删改查与再次查询深链（`/?lat=&lon=&activity=`）；查询历史新增删除单条/清空（`DELETE /api/v1/query-history[/{id}]`）；`AddRateLimiter` 扩为 account/location/analysis/authenticated/admin 五策略，`UseRateLimiter` 移到 `UseAuthorization` 之后按 `context.User`（`ClaimTypes.NameIdentifier`）分桶，各 API 组打标限流 | Release 构建 0 警告、0 错误；全量测试 190/190 通过（Domain 51、Application 51、Infrastructure 37、Web 51，新增 CaptchaTests 4 例、UserWorkspaceApiTests 3 例）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 | 提交 git 并部署上线；随后公网冒烟 `/`、`/account/register`、`/account/login`、`/health/live` 均 200 并人工验证码注册/登录、`/my-locations` 增删改、`/query-history` 删除/清空 |
 | 2026-08-14 | `MI-0035` | 更新根 `README.md`（定位、功能特性、技术栈、快速开始、架构概览、文档导航、免责声明）；新增静态 SSR 介绍页 `About.razor`（`/about`）与 scoped 样式，含 Hero/核心功能/适用场景/可信理由/免责声明；`MainLayout` 增加「海况查询/功能介绍」主导航（复用 `.account-link` 样式）并适配移动端换行；新增 `AboutPageTests` 冒烟测试 | Release 构建 0 警告、0 错误；全量测试 183/183 通过（Domain 51、Application 51、Infrastructure 37、Web 44）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 | 提交到 git（不推送，由用户经 GitHub Desktop 手动推送）并部署上线；随后用户浏览器人工确认介绍页展示与导航跳转 |
 | 2026-08-14 | `MI-0034` | 完成 Dashboard 移动端响应式优化：逐小时表格手机端（≤599px）隐藏阵风/涌浪/能见度/质量 4 列并放开 `min-width`、压缩单元格内边距，摘要「时间」项跨满一行；`.status-band` 由 flex 改为纵向 grid 堆叠；`.hourly-table-wrap`/`.trend-points` 补触摸惯性，`.trend-tab`/`.segment` 触控目标提至 44px、趋势点收窄至 72px；桌面端 9 列与布局保持不变 | Release 构建 0 警告、0 错误；全量测试 182/182 通过（Domain 51、Application 51、Infrastructure 37、Web 43）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一；未执行真实手机浏览器视觉验证 | 用户经手机浏览器或 DevTools 移动视口人工确认表格 5 列免横滚、状态带堆叠、趋势条可平滑横滑；随后提交到 git（不推送，由用户经 GitHub Desktop 手动推送） |
 | 2026-08-14 | `MI-0033` | 完成 Dashboard 客户端时区识别与动态显示：新增 `ClientTimeZone` 静态工具（IANA 解析、友好中文名、`Asia/Shanghai` 降级、本地/UTC 双向转换与格式化）；`DashboardQuerySession` 按电路持有显示时区、重命名 `ForecastStartUtc`→`ForecastStartLocal`（带 touched 标志）并把查询输入本地时间经 `ToUtc` 转零偏移 UTC；新增 `browser-timezone.js` 用 `Intl` 懒加载检测，`OnAfterRenderAsync` 首帧校正；`Dashboard.razor` 13 处时间显示统一本地化并标注「显示时区」；移除冗余 `DashboardAnalysisResult.TimeZone` 与 `DashboardTrendPoint.TimeLabel` 字段；内部数据层保持 UTC 不变 | Release 构建 0 警告、0 错误；全量测试 182/182 通过（Domain 51、Application 51、Infrastructure 37、Web 43）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 | 本地 `dotnet run` 或浏览器 DevTools 模拟非 UTC+8 时区后人工确认时间与「显示时区」标签联动切换、断网/JS 失败降级「北京时间（UTC+8）」；随后提交到 git（不推送，由用户经 GitHub Desktop 手动推送） |

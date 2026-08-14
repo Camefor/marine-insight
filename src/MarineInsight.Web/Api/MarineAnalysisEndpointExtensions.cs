@@ -7,6 +7,7 @@ using MarineInsight.Domain.Analysis;
 using MarineInsight.Domain.Forecast;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 
 namespace MarineInsight.Web.Api;
@@ -26,7 +27,8 @@ public static class MarineAnalysisEndpointExtensions
             .Produces(StatusCodes.Status304NotModified)
             .ProducesValidationProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status429TooManyRequests)
-            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
+            .RequireRateLimiting("analysis");
 
         return endpoints;
     }

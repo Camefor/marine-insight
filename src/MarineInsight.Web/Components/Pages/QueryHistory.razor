@@ -3,12 +3,17 @@
 @rendermode InteractiveServer
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserWorkspaceService Workspace
+@inject IJSRuntime Js
 
 <PageTitle>查询历史 - Marine Insight</PageTitle>
 
 <main class="workspace-page">
     <header class="workspace-heading">
         <div><p class="workspace-eyebrow">个人工作区</p><h1>查询历史</h1></div>
+        @if (!_loading && _history.Count > 0)
+        {
+            <button class="workspace-danger" type="button" @onclick="ClearAsync">清空全部</button>
+        }
     </header>
     @if (_loading)
     {
@@ -37,6 +42,7 @@
                         {
                             <a class="workspace-icon-button" title="按原条件再次查询" aria-label="再次查询 @item.DisplayName" href="@BuildQueryUrl(item)">↻</a>
                         }
+                        <button class="workspace-icon-button danger" type="button" title="删除记录" aria-label="删除记录 @item.DisplayName" @onclick="() => DeleteAsync(item.Id)">×</button>
                     </div>
                 </article>
             }
@@ -45,14 +51,49 @@
 </main>
 
 @code {
+    private Guid _userId;
     private bool _loading = true;
     private IReadOnlyList<QueryHistoryItem> _history = [];
 
     protected override async Task OnInitializedAsync()
     {
-        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        _history = await Workspace.ListHistoryAsync(UserWorkspaceEndpointExtensions.GetUserId(state.User));
+        _userId = await GetUserIdAsync();
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        _history = await Workspace.ListHistoryAsync(_userId);
         _loading = false;
+    }
+
+    private async Task<Guid> GetUserIdAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return UserWorkspaceEndpointExtensions.GetUserId(state.User);
+    }
+
+    private async Task DeleteAsync(Guid historyId)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", "确定删除这条查询记录吗？"))
+        {
+            return;
+        }
+
+        await Workspace.DeleteHistoryAsync(_userId, historyId);
+        await ReloadAsync();
+    }
+
+    private async Task ClearAsync()
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", "确定清空全部查询历史吗？此操作不可撤销。"))
+        {
+            return;
+        }
+
+        await Workspace.ClearHistoryAsync(_userId);
+        await ReloadAsync();
     }
 
     private static string BuildQueryUrl(QueryHistoryItem item)

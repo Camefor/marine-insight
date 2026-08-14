@@ -1,4 +1,5 @@
-﻿using MarineInsight.Infrastructure.Persistence;
+﻿using System.Net.Mail;
+using MarineInsight.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,13 +23,27 @@ public static class AccountEndpointExtensions
 
     private static async Task<IResult> RegisterAsync(
         [FromForm] RegisterRequest request,
+        CaptchaService captcha,
         UserManager<MarineInsightUser> userManager,
         SignInManager<MarineInsightUser> signInManager)
     {
+        // 验证码在进入 Identity 逻辑前校验，失败不触发密码锁定计数。
+        if (captcha.Enabled && !captcha.Validate(request.CaptchaId, request.CaptchaCode))
+        {
+            return Results.LocalRedirect("/account/register?error=captcha");
+        }
+
         var email = request.Email?.Trim();
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(request.Password))
+        if (string.IsNullOrWhiteSpace(email)
+            || !MailAddress.TryCreate(email, out _)
+            || string.IsNullOrWhiteSpace(request.Password))
         {
             return Results.LocalRedirect("/account/register?error=invalid");
+        }
+
+        if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+        {
+            return Results.LocalRedirect("/account/register?error=confirm");
         }
 
         var user = new MarineInsightUser
@@ -57,10 +72,19 @@ public static class AccountEndpointExtensions
 
     private static async Task<IResult> LoginAsync(
         [FromForm] LoginRequest request,
+        CaptchaService captcha,
         SignInManager<MarineInsightUser> signInManager)
     {
+        // 验证码在密码校验前消费，错误验证码不触发锁定计数。
+        if (captcha.Enabled && !captcha.Validate(request.CaptchaId, request.CaptchaCode))
+        {
+            return Results.LocalRedirect("/account/login?error=captcha");
+        }
+
         var email = request.Email?.Trim();
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(request.Password))
+        if (string.IsNullOrWhiteSpace(email)
+            || !MailAddress.TryCreate(email, out _)
+            || string.IsNullOrWhiteSpace(request.Password))
         {
             return Results.LocalRedirect("/account/login?error=invalid");
         }
@@ -111,6 +135,12 @@ public static class AccountEndpointExtensions
 
         public string? Password { get; init; }
 
+        public string? ConfirmPassword { get; init; }
+
+        public string? CaptchaId { get; init; }
+
+        public string? CaptchaCode { get; init; }
+
         public string? ReturnUrl { get; init; }
     }
 
@@ -121,6 +151,10 @@ public static class AccountEndpointExtensions
         public string? Password { get; init; }
 
         public bool RememberMe { get; init; }
+
+        public string? CaptchaId { get; init; }
+
+        public string? CaptchaCode { get; init; }
 
         public string? ReturnUrl { get; init; }
     }

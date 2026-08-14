@@ -1,0 +1,253 @@
+﻿@page "/my-locations"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@using System.Globalization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserWorkspaceService Workspace
+@inject IJSRuntime Js
+
+<PageTitle>我的地点 - Marine Insight</PageTitle>
+
+<main class="workspace-page">
+    <header class="workspace-heading">
+        <div>
+            <p class="workspace-eyebrow">个人工作区</p>
+            <h1>我的地点</h1>
+        </div>
+        <a class="workspace-primary" href="/">查询新地点</a>
+    </header>
+
+    <section class="workspace-form" aria-labelledby="location-form-title">
+        <h2 id="location-form-title">@(_editingId.HasValue ? "编辑地点" : "新增地点")</h2>
+        <label>
+            <span>名称</span>
+            <input type="text" @bind="_name" maxlength="200" required placeholder="例如：嵊泗枸杞岛" />
+        </label>
+        <label>
+            <span>纬度</span>
+            <input type="number" step="0.000001" min="-90" max="90" @bind="_latitude" required />
+        </label>
+        <label>
+            <span>经度</span>
+            <input type="number" step="0.000001" min="-180" max="180" @bind="_longitude" required />
+        </label>
+        <label>
+            <span>默认活动</span>
+            <select @bind="_defaultActivity">
+                <option value="">全部活动</option>
+                <option value="ShoreFishing">海钓</option>
+                <option value="Boat">乘船</option>
+                <option value="Landing">登岛</option>
+                <option value="Camping">露营</option>
+                <option value="Photography">摄影</option>
+            </select>
+        </label>
+        <label>
+            <span>备注</span>
+            <input type="text" @bind="_note" maxlength="500" placeholder="可选" />
+        </label>
+        <label>
+            <span>排序</span>
+            <input type="number" @bind="_sortOrder" min="0" max="10000" step="1" />
+        </label>
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <p class="account-alert" role="alert">@_formError</p>
+        }
+        <div class="workspace-form-actions">
+            <button class="workspace-primary" type="submit">保存</button>
+            @if (_editingId.HasValue)
+            {
+                <button class="workspace-danger" type="button" @onclick="CancelEdit">取消</button>
+            }
+        </div>
+    </section>
+
+    @if (_loading)
+    {
+        <p class="workspace-status" role="status">正在加载地点…</p>
+    }
+    else if (_locations.Count == 0)
+    {
+        <section class="workspace-empty">
+            <h2>还没有自定义地点</h2>
+            <p>保存常用坐标后，可一键再次查询该位置的海况。</p>
+        </section>
+    }
+    else
+    {
+        <div class="workspace-list">
+            @foreach (var location in _locations)
+            {
+                <article class="workspace-row" @key="location.Id">
+                    <div class="workspace-row-main">
+                        <h2>@location.Name</h2>
+                        <p>@location.Latitude.ToString("0.###", CultureInfo.InvariantCulture), @location.Longitude.ToString("0.###", CultureInfo.InvariantCulture)</p>
+                        @if (!string.IsNullOrWhiteSpace(location.Note))
+                        {
+                            <p>@location.Note</p>
+                        }
+                    </div>
+                    <dl class="workspace-meta">
+                        <div><dt>默认活动</dt><dd>@ActivityText(location.DefaultActivity)</dd></div>
+                        <div><dt>排序</dt><dd>@location.SortOrder</dd></div>
+                    </dl>
+                    <div class="workspace-actions">
+                        <a class="workspace-icon-button" title="再次查询" aria-label="再次查询 @location.Name" href="@BuildQueryUrl(location)">↻</a>
+                        <button class="workspace-icon-button" type="button" title="编辑" aria-label="编辑 @location.Name" @onclick="() => BeginEdit(location)">✎</button>
+                        <button class="workspace-icon-button danger" type="button" title="删除" aria-label="删除 @location.Name" @onclick="() => DeleteAsync(location.Id)">×</button>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</main>
+
+@code {
+    private Guid _userId;
+    private bool _loading = true;
+    private IReadOnlyList<UserLocation> _locations = [];
+    private Guid? _editingId;
+    private string _name = string.Empty;
+    private double _latitude;
+    private double _longitude;
+    private string _defaultActivity = string.Empty;
+    private string _note = string.Empty;
+    private int _sortOrder;
+    private string? _formError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _userId = await GetUserIdAsync();
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        _locations = await Workspace.ListUserLocationsAsync(_userId);
+        _loading = false;
+    }
+
+    private async Task<Guid> GetUserIdAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return UserWorkspaceEndpointExtensions.GetUserId(state.User);
+    }
+
+    private async Task SaveAsync()
+    {
+        _formError = null;
+
+        if (string.IsNullOrWhiteSpace(_name))
+        {
+            _formError = "请填写地点名称。";
+            return;
+        }
+
+        if (_latitude is < -90 or > 90)
+        {
+            _formError = "纬度必须在 -90 到 90 之间。";
+            return;
+        }
+
+        if (_longitude is < -180 or > 180)
+        {
+            _formError = "经度必须在 -180 到 180 之间。";
+            return;
+        }
+
+        var command = new SaveUserLocationCommand(
+            _name,
+            _latitude,
+            _longitude,
+            ParseActivity(_defaultActivity),
+            string.IsNullOrWhiteSpace(_note) ? null : _note,
+            _sortOrder);
+
+        try
+        {
+            if (_editingId.HasValue)
+            {
+                await Workspace.UpdateUserLocationAsync(_userId, _editingId.Value, command);
+            }
+            else
+            {
+                await Workspace.AddUserLocationAsync(_userId, command);
+            }
+
+            ResetForm();
+            await ReloadAsync();
+        }
+        catch (ArgumentException exception)
+        {
+            _formError = exception.Message;
+        }
+    }
+
+    private void BeginEdit(UserLocation location)
+    {
+        _editingId = location.Id;
+        _name = location.Name;
+        _latitude = location.Latitude;
+        _longitude = location.Longitude;
+        _defaultActivity = location.DefaultActivity?.ToString() ?? string.Empty;
+        _note = location.Note ?? string.Empty;
+        _sortOrder = location.SortOrder;
+        _formError = null;
+    }
+
+    private void CancelEdit() => ResetForm();
+
+    private async Task DeleteAsync(Guid locationId)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", "确定删除这个地点吗？"))
+        {
+            return;
+        }
+
+        await Workspace.DeleteUserLocationAsync(_userId, locationId);
+        if (_editingId == locationId)
+        {
+            ResetForm();
+        }
+
+        await ReloadAsync();
+    }
+
+    private void ResetForm()
+    {
+        _editingId = null;
+        _name = string.Empty;
+        _latitude = 0;
+        _longitude = 0;
+        _defaultActivity = string.Empty;
+        _note = string.Empty;
+        _sortOrder = 0;
+        _formError = null;
+    }
+
+    private static ActivityType? ParseActivity(string? value) => string.IsNullOrWhiteSpace(value)
+        ? null
+        : Enum.TryParse<ActivityType>(value, true, out var activity) ? activity : null;
+
+    private static string ActivityText(ActivityType? activity) => activity switch
+    {
+        ActivityType.ShoreFishing => "海钓",
+        ActivityType.Boat => "乘船",
+        ActivityType.Landing => "登岛",
+        ActivityType.Camping => "露营",
+        ActivityType.Photography => "摄影",
+        _ => "全部活动"
+    };
+
+    private static string BuildQueryUrl(UserLocation location)
+    {
+        var latitude = location.Latitude.ToString(CultureInfo.InvariantCulture);
+        var longitude = location.Longitude.ToString(CultureInfo.InvariantCulture);
+        var activity = location.DefaultActivity?.ToString();
+        return string.IsNullOrWhiteSpace(activity)
+            ? $"/?lat={latitude}&lon={longitude}"
+            : $"/?lat={latitude}&lon={longitude}&activity={activity}";
+    }
+}

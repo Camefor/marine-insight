@@ -5,6 +5,7 @@ using MarineInsight.Domain.Forecast;
 using MarineInsight.Domain.Location;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 
 namespace MarineInsight.Web.Api;
@@ -16,7 +17,7 @@ public static class LocationEndpointExtensions
     {
         ArgumentNullException.ThrowIfNull(endpoints);
 
-        var group = endpoints.MapGroup("/api/v1").AllowAnonymous();
+        var group = endpoints.MapGroup("/api/v1").AllowAnonymous().RequireRateLimiting("location");
         group.MapGet("/locations/search", HandleSearchAsync)
             .WithName("SearchLocations")
             .Produces<IReadOnlyList<LocationResponse>>(StatusCodes.Status200OK)

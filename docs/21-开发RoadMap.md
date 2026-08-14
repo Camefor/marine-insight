@@ -195,3 +195,4 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 3.2 | 2026-08-14 | 完成 Dashboard 客户端时区识别与动态显示（MI-0033）：新增 `ClientTimeZone` 静态工具与 `browser-timezone.js`，`DashboardQuerySession` 按浏览器时区持有显示时区并把查询输入本地时间转零偏移 UTC，页面 13 处时间显示统一本地化并标注「显示时区」，失败降级 `Asia/Shanghai`（北京时间 UTC+8），内部数据层保持 UTC 不变 |
 | 3.3 | 2026-08-14 | 完成 Dashboard 移动端响应式优化（MI-0034）：手机端（≤599px）逐小时表格隐藏阵风/涌浪/能见度/质量次要列并放开最小宽、状态带纵向堆叠、触摸惯性与 44px 触控目标增强，桌面端布局不变 |
 | 3.4 | 2026-08-14 | 更新 GitHub README 与新增功能介绍页（MI-0035）：根 `README.md` 完整重写（定位/功能/技术栈/快速开始/架构/文档导航/免责声明）；新增静态 SSR 介绍页 `/about`（核心功能、适用场景、可信理由、免责声明）与 scoped 样式；`MainLayout` 增加「海况查询/功能介绍」主导航并适配移动端 |
+| 3.5 | 2026-08-14 | 完善用户模块（MI-0036）：注册/登录接入自研 SVG 验证码并增加确认密码与邮箱格式校验；新增 `user_locations` 表与「我的地点」页面 CRUD + 再次查询深链；查询历史支持删除单条/清空；`AddRateLimiter` 扩为 account/location/analysis/authenticated/admin 五策略并按认证态分桶，各 API 组全量限流 |
