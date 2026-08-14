@@ -38,7 +38,7 @@
 | --- | --- | --- | --- |
 | `web` | Blazor、API、认证 | `postgres`，可选 `redis` | 不使用本地业务卷 |
 | `worker` | 预热、清理、通知 | `postgres`、`redis` | 无 |
-| `postgres` | 主数据库 | 无 | 命名卷 `postgres-data` |
+| `postgres` | 主数据库 | 无 | 命名卷 `postgres-data`（挂载 `/var/lib/postgresql`） |
 | `redis` | 共享缓存/锁 | 无 | 可不持久化；按策略配置 |
 | `reverse-proxy` | TLS、压缩、访问入口 | `web` | 证书/配置 |
 | `otel-collector` | 观测转发（可选） | 无 | 配置卷 |
@@ -112,7 +112,7 @@ docker compose ps
 
 Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和韧性策略。
 
-当前 `compose.yaml` 使用 PostgreSQL 17、一次性 `migrate`、非 root Web 和 Caddy 四服务拓扑。数据库仅加入内部 `data` 网络，Web 同时加入 `data`/`ingress`，Caddy 固定为 `172.30.0.10` 并作为唯一公开入口。连接字符串通过名为 `ConnectionStrings__MarineInsight` 的 Key-per-file Secret 注入；示例 Secret 只用于一次性本地环境。
+当前 `compose.yaml` 使用 PostgreSQL（`postgres:latest`，部署时指向 18.4）、一次性 `migrate`、非 root Web 和 Caddy 四服务拓扑。数据库仅加入内部 `data` 网络，Web 同时加入 `data`/`ingress`，Caddy 固定为 `172.30.0.10` 并作为唯一公开入口。连接字符串通过名为 `ConnectionStrings__MarineInsight` 的 Key-per-file Secret 注入；示例 Secret 只用于一次性本地环境。
 
 ## 10. 数据持久化与备份
 
@@ -161,3 +161,4 @@ Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和�
 | 1.2 | 2026-07-15 | 补充 Web 存活/就绪探针的容器使用约定 |
 | 1.3 | 2026-08-13 | 落地 Dockerfile、Compose、Caddy、Key-per-file Secret 和备份恢复脚本 |
 | 1.4 | 2026-08-13 | 增加 WorldTides 可选 Compose 覆盖和仓库外 Secret 注入流程 |
+| 1.5 | 2026-08-14 | PostgreSQL 18+ 镜像数据目录改为按主版本分目录，命名卷挂载点由 `/var/lib/postgresql/data` 调整为 `/var/lib/postgresql` |
