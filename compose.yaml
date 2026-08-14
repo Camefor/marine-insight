@@ -76,6 +76,7 @@ services:
         restart: unless-stopped
         environment:
             MARINE_INSIGHT_SITE_ADDRESS: ${MARINE_INSIGHT_SITE_ADDRESS:-http://localhost}
+            ACME_EMAIL: ${ACME_EMAIL:-}
         ports:
             - "80:80"
             - "443:443"

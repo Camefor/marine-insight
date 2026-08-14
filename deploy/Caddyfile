@@ -1,4 +1,8 @@
-﻿{$MARINE_INSIGHT_SITE_ADDRESS:http://localhost} {
+﻿{
+    email {$ACME_EMAIL}
+}
+
+{$MARINE_INSIGHT_SITE_ADDRESS:http://localhost} {
     encode zstd gzip
 
     header {
