@@ -23,8 +23,9 @@ public sealed class CaptchaService(
     IOptions<CaptchaOptions> options,
     IMemoryCache cache)
 {
-    // 去掉易混淆的 0/O/1/I/L，降低人工识别门槛。
-    private const string CharacterSet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    // 去掉易混淆字符（0/O、1/I/L 及 2/Z、5/S、8/B、6/G、9/Q），仅保留大写字母与 3/4/7，
+    // 避免用户把数字误认成字母或反之。
+    private const string CharacterSet = "ACDEFHJKMNPRTUVWXY347";
 
     private static readonly string[] Colors =
     [
@@ -68,7 +69,8 @@ public sealed class CaptchaService(
         cache.Remove(key);
 
         var stored = Convert.FromHexString(storedHash);
-        var submitted = Convert.FromHexString(Hash(code));
+        // 字符集仅含大写，输入统一去空格并转大写，避免大小写或输入法空格导致误判。
+        var submitted = Convert.FromHexString(Hash(code.Trim().ToUpperInvariant()));
         return CryptographicOperations.FixedTimeEquals(stored, submitted);
     }
 

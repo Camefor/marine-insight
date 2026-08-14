@@ -48,7 +48,7 @@
                     <span>验证码</span>
                     <div class="account-captcha">
                         <span class="account-captcha-svg">@((MarkupString)(_challenge?.Svg ?? string.Empty))</span>
-                        <input class="account-captcha-input" name="CaptchaCode" type="text" autocomplete="off" required maxlength="4" placeholder="4 位验证码" />
+                        <input class="account-captcha-input" name="CaptchaCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required maxlength="4" placeholder="4 位验证码" />
                         <a class="account-captcha-refresh" href="/account/register">换一张</a>
                     </div>
                 </label>

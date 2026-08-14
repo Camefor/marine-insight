@@ -76,6 +76,30 @@ public sealed class CaptchaTests
     }
 
     [Fact]
+    public async Task CaptchaCodeIsCaseInsensitive()
+    {
+        using var factory = new CaptchaApplicationFactory();
+        await factory.MigrateDatabaseAsync();
+        using var client = factory.CreateHttpsClient();
+
+        var challenge = factory.GenerateCaptcha();
+        var token = await GetAntiforgeryTokenAsync(client, "/account/register");
+
+        using var response = await client.PostAsync(
+            "/account/register",
+            Form(
+                ("Email", "captcha-lower@example.com"),
+                ("Password", "Marine!Pass1"),
+                ("ConfirmPassword", "Marine!Pass1"),
+                ("CaptchaId", challenge.Id),
+                ("CaptchaCode", challenge.Code.ToLowerInvariant()),
+                ("__RequestVerificationToken", token)));
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
     public async Task CaptchaIsSingleUse()
     {
         using var factory = new CaptchaApplicationFactory();
