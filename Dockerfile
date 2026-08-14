@@ -13,7 +13,6 @@ RUN dotnet restore src/MarineInsight.Web/MarineInsight.Web.csproj
 COPY src ./src
 RUN dotnet publish src/MarineInsight.Web/MarineInsight.Web.csproj \
     --configuration Release \
-    --no-restore \
     --output /app/publish \
     /p:UseAppHost=false
 

@@ -24,7 +24,7 @@
 
 ## 4. Dockerfile 约定
 
-- 使用多阶段构建和 `dotnet publish --no-restore`。
+- 使用多阶段构建；发布阶段不指定 `--no-restore`，让 `dotnet publish` 在完整源码就位后隐式还原，确保框架静态资源（`_framework/blazor.web.js` 等）被正确解析。
 - 运行阶段不包含 SDK、源码、测试资产和本地 Secret。
 - 设置 `ASPNETCORE_HTTP_PORTS=8080`，由反向代理提供 HTTPS。
 - 使用非 root 用户，只授予应用目录必要权限。
@@ -162,3 +162,4 @@ Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和�
 | 1.3 | 2026-08-13 | 落地 Dockerfile、Compose、Caddy、Key-per-file Secret 和备份恢复脚本 |
 | 1.4 | 2026-08-13 | 增加 WorldTides 可选 Compose 覆盖和仓库外 Secret 注入流程 |
 | 1.5 | 2026-08-14 | PostgreSQL 18+ 镜像数据目录改为按主版本分目录，命名卷挂载点由 `/var/lib/postgresql/data` 调整为 `/var/lib/postgresql` |
+| 1.6 | 2026-08-14 | 修复 Docker 镜像缺失 `_framework` 框架静态资源：发布阶段移除 `--no-restore`，避免「先仅 csproj 还原再复制源码」导致 Blazor 交互脚本未被解析 |
