@@ -124,14 +124,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0031` |
+| 当前任务 ID | `MI-0032` |
 | 当前状态 | `DONE` |
-| 当前目标 | 修正天地图 Key 泄露：`Map:Tianditu:Key` 移出 `appsettings.json`，改走 User Secrets（本地）与 Docker key-per-file Secret（生产），并重申密钥规范 |
-| 最后完成动作 | `MI-0030` 天地图替换与预置地点更新、`MI-0031` Key 移出源码均已闭环；`compose.tianditu.yaml` 与 `scripts/configure-tianditu-secret.ps1` 已就绪；生产服务器已写入 `/etc/marine-insight/secrets/tianditu_key` 并重建验证，`appsettings.json` 不再含 Key |
-| 下一步动作 | 用户浏览器人工确认天地图瓦片/注记加载；后续任何 Key 统一走 Secret，不得进入源码；AI/WorldTides 真实 Key 联调仍由用户自验 |
-| 涉及文件 | `appsettings.json`、`compose.tianditu.yaml`、`scripts/configure-tianditu-secret.ps1`、`.secrets/README.md`、`deploy/secrets/README.md`、`docs/17-开发规范.md`、`docs/22-腾讯云生产部署手册.md`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | 重建后 `appsettings.json` 不再含 Key；天地图瓦片带浏览器 UA 请求返回 200 PNG（Key 有效）；本地 User Secrets + 生产 key-per-file Secret 双路径就绪 |
-| 阻塞/待确认 | AI/WorldTides 真实 Key 联调仍待用户自验；浏览器端地图瓦片最终视觉效果由用户人工确认 |
+| 当前目标 | 生产域名绑定与 HTTPS 上线：站点从 `http://49.232.106.166` 迁移到 `https://marine.loyalme.life` |
+| 最后完成动作 | 域名 `marine.loyalme.life` A 记录解析、Caddy 自动 HTTPS（Let's Encrypt）签发并启用 HTTP→HTTPS 重定向；`ACME_EMAIL` 经 `.env` 注入；AI 智能解读生产启用（`compose.ai.yaml` + key-per-file Secret）；均验证通过 |
+| 下一步动作 | 进入持续开发阶段：等待用户提出优化体验/功能增强需求，逐条登记台账并详细分析设计 |
+| 涉及文件 | `deploy/Caddyfile`、`compose.yaml`、`compose.ai.yaml`、服务器 `.env`、`docs/21-开发RoadMap.md`、`docs/22-腾讯云生产部署手册.md`、`docs/AGENT-GUIDE.md` |
+| 验证结果 | `https://marine.loyalme.life` 返回 200；`http://` 返回 308 重定向；证书 CN=marine.loyalme.life（Let's Encrypt，90 天自动续期）；AI 智能解读 SiliconFlow API 200、容器 healthy |
+| 阻塞/待确认 | 无 |
 | 最后更新 | 2026-08-14 |
 
 <!-- agent-state:end -->
@@ -217,6 +217,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-14 | `MI-0032` | 完成生产域名绑定与 HTTPS 上线：`marine.loyalme.life` A 记录解析至服务器，Caddy 自动 HTTPS（Let's Encrypt）签发并启用 HTTP→HTTPS 重定向；`MARINE_INSIGHT_SITE_ADDRESS` 改域名、`ACME_EMAIL` 经 `.env` 注入、`compose.yaml` 的 `reverse-proxy` 增加 `ACME_EMAIL` 传递；同时生产启用 AI 智能解读（`compose.ai.yaml` + key-per-file Secret）；同步 `docs/21`/`docs/22` 变更记录与记忆 | `https://marine.loyalme.life` 返回 200，`http://` 返回 308 重定向，证书 CN=marine.loyalme.life（Let's Encrypt，90 天）；Caddy 日志 `certificate obtained successfully`；AI 智能解读 SiliconFlow API 200、容器 healthy | 进入持续开发阶段：用户将不断提出优化体验/功能增强需求，逐条登记台账并详细分析设计 |
 | 2026-08-14 | `MI-0031` | 修正天地图 Key 泄露：将 `Map:Tianditu:Key` 移出 `appsettings.json`，新增 `compose.tianditu.yaml`（key-per-file Secret `Map__Tianditu__Key`）与 `scripts/configure-tianditu-secret.ps1`（User Secrets），同步 `.secrets`/`deploy/secrets` README 与 `docs/17`/`docs/22` 规范；生产服务器写入 `/etc/marine-insight/secrets/tianditu_key` 并重建验证 | 重建后 `appsettings.json` 不再含 Key；天地图瓦片带浏览器 UA 请求返回 200 PNG（Key 有效）；本地 User Secrets + 生产 key-per-file Secret 双路径就绪 | 用户浏览器人工确认地图瓦片/注记加载；后续所有 Key 统一走 Secret，不进入源码 |
 | 2026-08-14 | `MI-0030` | 完成地图服务商替换与预置地点更新：Dashboard 地图选点由 OpenStreetMap 切换为天地图 WMTS（CGCS2000≈WGS-84 免纠偏，底图 vec_w + 注记 cva_w），Leaflet 1.9.4 自托管移除 unpkg 依赖，Key 经 `Map:Tianditu:Key` 配置注入；东极岛预置坐标更新为庙子湖岛 30.200/122.680，新增岱山岛 30.288/122.165；同步 PRD/SRS/SAD/05/15/16/20/21 文档与 `RootDashboardRendersQueryShell` 地图署名断言 | Release 构建 0 警告、0 错误；全量测试 175/175 通过（Domain 51、Application 51、Infrastructure 37、Web 36）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一，静态资源 manifest 确认 leaflet.js/css 与图片已指纹化 | 生产服务器应用 `UpdatePresetLocations` 迁移后人工验证天地图瓦片加载、注记可见、坐标回填与 Key 正确；若标记图标未渲染则显式设置 `L.Icon.Default.imagePath` |
 | 2026-08-13 | `MI-0027` | 补齐上线数据署名合规：Dashboard 页脚新增 Open-Meteo（CC BY 4.0）与 WorldTides 数据署名，安全免责声明（「结果仅供辅助决策，请以官方预警和现场管理为准」）此前已存在；`RootDashboardRendersQueryShell` 增加 `Open-Meteo.com` 署名断言；同步 RoadMap 阶段 4 交付项与变更记录 2.9 | Release 构建 0 警告、0 错误；全量测试 175/175 通过（Domain 51、Application 51、Infrastructure 37、Web 36）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 | 操作手册与剩余 S1/S2 缺陷复查待上线前收尾；真实 Docker/PostgreSQL/WorldTides/AI 外部验证仍待用户自验 |

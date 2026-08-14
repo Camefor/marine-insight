@@ -191,3 +191,4 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 2.8 | 2026-08-13 | 完成分析结果持久化（MI-0029）：登录用户查询落库 `analysis_results`/`analysis_risks`/`analysis_source_batches` 摘要，新增 `GET /api/v1/marine-analyses/{id}` 属主读取端点 |
 | 2.9 | 2026-08-13 | Dashboard 补充 Open-Meteo（CC BY 4.0）与 WorldTides 数据署名页脚，安全免责声明已就位，满足上线数据署名合规要求 |
 | 3.0 | 2026-08-14 | 完成地图服务商替换（MI-0030）：天地图瓦片 + Leaflet 自托管，东极岛坐标更新为庙子湖岛 30.200/122.680 并新增岱山岛 30.288/122.165 预置地点 |
+| 3.1 | 2026-08-14 | 生产绑定域名 `marine.loyalme.life` 并启用 Caddy 自动 HTTPS（Let's Encrypt，90 天自动续期）：站点由 `http://49.232.106.166` 迁移为 `https://marine.loyalme.life`，`MARINE_INSIGHT_SITE_ADDRESS` 改域名、`ACME_EMAIL` 经 `.env` 注入、`compose.yaml` 的 `reverse-proxy` 传递该变量；v1.0 域名与 TLS 就绪，进入持续开发阶段 |
