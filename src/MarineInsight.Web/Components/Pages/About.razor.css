@@ -1,0 +1,152 @@
+﻿.about-page {
+    background: #f4f7f6;
+    color: #173a35;
+    min-height: 100vh;
+    padding: 48px 24px 64px;
+}
+
+.about-hero {
+    margin: 0 auto 40px;
+    max-width: 760px;
+    text-align: center;
+}
+
+.about-eyebrow {
+    color: #52736d;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin: 0 0 10px;
+    text-transform: uppercase;
+}
+
+.about-hero h1 {
+    font-size: 2.25rem;
+    letter-spacing: 0;
+    margin: 0 0 16px;
+}
+
+.about-lead {
+    color: #53635f;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin: 0 auto 24px;
+    max-width: 560px;
+}
+
+.about-cta {
+    background: #1f6b5d;
+    border: 1px solid #1f6b5d;
+    border-radius: 6px;
+    color: #ffffff;
+    display: inline-flex;
+    font-weight: 700;
+    min-height: 48px;
+    padding: 12px 28px;
+    text-decoration: none;
+}
+
+.about-cta:hover,
+.about-cta:focus-visible {
+    background: #174f45;
+}
+
+.about-section {
+    margin: 0 auto 36px;
+    max-width: 1000px;
+}
+
+.about-section h2 {
+    font-size: 1.35rem;
+    letter-spacing: 0;
+    margin: 0 0 16px;
+}
+
+.about-feature-grid,
+.about-scenario-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.about-card {
+    background: #ffffff;
+    border: 1px solid #d9e1df;
+    border-radius: 8px;
+    padding: 18px;
+}
+
+.about-card h3 {
+    font-size: 1rem;
+    letter-spacing: 0;
+    margin: 0 0 8px;
+}
+
+.about-card p {
+    color: #53635f;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.about-trust-list {
+    display: grid;
+    gap: 12px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.about-trust-list li {
+    background: #ffffff;
+    border: 1px solid #d9e1df;
+    border-left: 4px solid #1f6b5d;
+    border-radius: 6px;
+    line-height: 1.6;
+    padding: 14px 16px;
+}
+
+.about-trust-list strong {
+    color: #173a35;
+}
+
+.about-disclaimer {
+    background: #fff4d6;
+    border: 1px solid #e7c56f;
+    border-radius: 8px;
+    color: #8a5a00;
+    margin: 0 auto;
+    max-width: 1000px;
+    padding: 16px 18px;
+}
+
+.about-disclaimer strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.about-disclaimer p {
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 959px) {
+    .about-feature-grid,
+    .about-scenario-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 599px) {
+    .about-page {
+        padding: 32px 16px 48px;
+    }
+
+    .about-hero h1 {
+        font-size: 1.75rem;
+    }
+
+    .about-feature-grid,
+    .about-scenario-grid {
+        grid-template-columns: 1fr;
+    }
+}

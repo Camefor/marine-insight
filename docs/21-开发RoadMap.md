@@ -194,3 +194,4 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 3.1 | 2026-08-14 | 生产绑定域名 `marine.loyalme.life` 并启用 Caddy 自动 HTTPS（Let's Encrypt，90 天自动续期）：站点由 `http://49.232.106.166` 迁移为 `https://marine.loyalme.life`，`MARINE_INSIGHT_SITE_ADDRESS` 改域名、`ACME_EMAIL` 经 `.env` 注入、`compose.yaml` 的 `reverse-proxy` 传递该变量；v1.0 域名与 TLS 就绪，进入持续开发阶段 |
 | 3.2 | 2026-08-14 | 完成 Dashboard 客户端时区识别与动态显示（MI-0033）：新增 `ClientTimeZone` 静态工具与 `browser-timezone.js`，`DashboardQuerySession` 按浏览器时区持有显示时区并把查询输入本地时间转零偏移 UTC，页面 13 处时间显示统一本地化并标注「显示时区」，失败降级 `Asia/Shanghai`（北京时间 UTC+8），内部数据层保持 UTC 不变 |
 | 3.3 | 2026-08-14 | 完成 Dashboard 移动端响应式优化（MI-0034）：手机端（≤599px）逐小时表格隐藏阵风/涌浪/能见度/质量次要列并放开最小宽、状态带纵向堆叠、触摸惯性与 44px 触控目标增强，桌面端布局不变 |
+| 3.4 | 2026-08-14 | 更新 GitHub README 与新增功能介绍页（MI-0035）：根 `README.md` 完整重写（定位/功能/技术栈/快速开始/架构/文档导航/免责声明）；新增静态 SSR 介绍页 `/about`（核心功能、适用场景、可信理由、免责声明）与 scoped 样式；`MainLayout` 增加「海况查询/功能介绍」主导航并适配移动端 |

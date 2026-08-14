@@ -1,0 +1,90 @@
+﻿@page "/about"
+
+<PageTitle>功能介绍 - Marine Insight</PageTitle>
+
+<main class="about-page">
+    <header class="about-hero">
+        <p class="about-eyebrow">Marine Insight</p>
+        <h1>海岛海况智能决策平台</h1>
+        <p class="about-lead">
+            聚合标准化海洋气象数据，把风、阵风、浪、涌浪、雷暴、能见度等专业指标，
+            转化为可解释的风险等级、活动评分和建议时间窗。
+        </p>
+        <a class="about-cta" href="/">开始查询</a>
+    </header>
+
+    <section class="about-section" aria-labelledby="features-title">
+        <h2 id="features-title">核心功能</h2>
+        <div class="about-feature-grid">
+            <article class="about-card">
+                <h3>地点搜索与地图选点</h3>
+                <p>按名称搜索预置海岛与码头，或在地图上点击选点、手动输入经纬度。</p>
+            </article>
+            <article class="about-card">
+                <h3>逐小时预报</h3>
+                <p>支持 24、72、168 小时逐小时海况查询，覆盖风、浪、涌浪、能见度等指标。</p>
+            </article>
+            <article class="about-card">
+                <h3>海况风险分析</h3>
+                <p>确定性规则引擎综合多项指标，给出风险等级与风险贡献，不依赖 AI 猜测。</p>
+            </article>
+            <article class="about-card">
+                <h3>活动评分</h3>
+                <p>针对海钓、乘船、登岛、露营、摄影五类活动分别评分，适合你当前想做的事。</p>
+            </article>
+            <article class="about-card">
+                <h3>推荐时间窗与返航提醒</h3>
+                <p>给出适宜出行的连续时间窗，并标识风险上升点与保守返航截止。</p>
+            </article>
+            <article class="about-card">
+                <h3>趋势图与小时详情</h3>
+                <p>分数、风、浪三组趋势一目了然，点击任意小时查看完整指标、风险与来源。</p>
+            </article>
+            <article class="about-card">
+                <h3>AI 智能解读</h3>
+                <p>生成受规则约束的自然语言解读，外部 AI 不可用时自动降级为规则模板。</p>
+            </article>
+            <article class="about-card">
+                <h3>数据来源追溯</h3>
+                <p>每项结论都可追溯到原始指标、数据来源、抓取时间与算法版本。</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="about-section" aria-labelledby="scenarios-title">
+        <h2 id="scenarios-title">适用场景</h2>
+        <div class="about-scenario-grid">
+            <article class="about-card">
+                <h3>海钓</h3>
+                <p>判断钓点风浪是否可接受，何时风险上升，选择出返航时间。</p>
+            </article>
+            <article class="about-card">
+                <h3>登岛 / 乘船</h3>
+                <p>关注阵风、浪高、涌浪与能见度，评估码头靠泊和航程舒适度。</p>
+            </article>
+            <article class="about-card">
+                <h3>露营</h3>
+                <p>综合阵风、雷雨、温湿度判断帐篷与夜间条件。</p>
+            </article>
+            <article class="about-card">
+                <h3>摄影</h3>
+                <p>结合云量、能见度与降雨，选择日出日落与海面通透的窗口。</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="about-section" aria-labelledby="trust-title">
+        <h2 id="trust-title">为什么可信</h2>
+        <ul class="about-trust-list">
+            <li><strong>确定性规则引擎出结论</strong>——安全结论由规则计算，AI 只负责解释、不参与评分。</li>
+            <li><strong>全链路 UTC 统一</strong>——数据内部统一时间基准，展示层按你的浏览器时区自动转换。</li>
+            <li><strong>结论可追溯</strong>——每项结果都标注数据来源、抓取时间与算法版本。</li>
+            <li><strong>故障自动降级</strong>——外部数据源或 AI 不可用时，自动使用缓存或规则化降级结果。</li>
+        </ul>
+    </section>
+
+    <section class="about-disclaimer" role="note">
+        <strong>免责声明</strong>
+        <p>本系统提供辅助决策，不替代官方气象、海事、港口或船方安全决定。任何高风险提示、官方预警或现场管控均优先于系统评分。</p>
+    </section>
+</main>

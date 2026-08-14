@@ -54,6 +54,18 @@
     text-decoration: none;
 }
 
+.app-header-brand {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+}
+
+.main-nav {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+}
+
 .account-links {
     align-items: center;
     display: flex;
@@ -429,6 +441,10 @@
         gap: 4px;
         padding-bottom: 6px;
         padding-top: 6px;
+    }
+
+    .app-header-brand {
+        flex-wrap: wrap;
     }
 
     .account-links,

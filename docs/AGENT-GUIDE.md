@@ -124,13 +124,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0034` |
+| 当前任务 ID | `MI-0035` |
 | 当前状态 | `DONE` |
-| 当前目标 | Dashboard 移动端响应式优化：逐小时表格手机端隐藏次要列、状态带堆叠、触控目标与触摸惯性增强，桌面端布局不变 |
-| 最后完成动作 | 逐小时表格手机端（≤599px）隐藏阵风/涌浪/能见度/质量 4 列、压缩单元格内边距并放开表格最小宽，摘要「时间」项跨满一行；状态带改为纵向堆叠，趋势条/表格加触摸惯性，触控目标提至 44px |
-| 下一步动作 | 等待用户手机浏览器（或 DevTools 移动视口）人工验证；随后提交到 git（不推送，由用户经 GitHub Desktop 手动推送） |
-| 涉及文件 | `src/MarineInsight.Web/Components/Pages/Dashboard.razor`、`Dashboard.razor.css`、`docs/15-UI设计.md`、`docs/16-Blazor组件设计.md`、`docs/21-开发RoadMap.md`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | Release 构建 0 警告、0 错误；全量测试 182/182 通过（Domain 51、Application 51、Infrastructure 37、Web 43）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 |
+| 当前目标 | 更新 GitHub README、新增系统功能介绍页（/about）并增加主导航栏，随后部署上线 |
+| 最后完成动作 | 重写根 `README.md`；新增静态 SSR 介绍页 `About.razor`（功能/场景/可信理由/免责声明）与 scoped 样式；`MainLayout` 增加「海况查询/功能介绍」主导航并适配移动端；新增 `AboutPageTests` 冒烟测试 |
+| 下一步动作 | 提交到 git 并部署上线；随后等待用户浏览器人工确认介绍页与导航 |
+| 涉及文件 | `README.md`、`src/MarineInsight.Web/Components/Pages/About.razor`、`About.razor.css`、`src/MarineInsight.Web/Components/Layout/MainLayout.razor`、`src/MarineInsight.Web/wwwroot/app.css`、`tests/MarineInsight.Web.Tests/AboutPageTests.cs`、`docs/15-UI设计.md`、`docs/16-Blazor组件设计.md`、`docs/21-开发RoadMap.md`、`docs/AGENT-GUIDE.md` |
+| 验证结果 | Release 构建 0 警告、0 错误；全量测试 183/183 通过（Domain 51、Application 51、Infrastructure 37、Web 44）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-08-14 |
 
@@ -208,6 +208,7 @@
 | [x] | `MI-0031` | 2026-08-14 | 天地图 Key 移出 `appsettings.json` 并重申密钥规范 | 将 `Map:Tianditu:Key` 从 `appsettings.json` 移除，新增 `compose.tianditu.yaml`（Docker key-per-file Secret `Map__Tianditu__Key`）与 `scripts/configure-tianditu-secret.ps1`（本地 User Secrets），同步 `.secrets`/`deploy/secrets` README；在 `docs/17-开发规范.md` 第 12 节重申「任何 API Key / 浏览器端 Key 一律不写入源码」并登记变更记录；生产服务器写入 `/etc/marine-insight/secrets/tianditu_key` 并重建后地图瓦片仍正常 |
 | [x] | `MI-0033` | 2026-08-14 | Dashboard 客户端时区识别与动态显示 | 新增纯函数静态工具 `ClientTimeZone`（IANA 解析、友好中文名、`Asia/Shanghai` 降级、本地/UTC 转换与格式化）；`DashboardQuerySession` 按浏览器时区持有显示时区并重命名 `ForecastStartUtc`→`ForecastStartLocal`（带 touched 标志），查询输入本地时间经 `ToUtc` 转零偏移 UTC；新增 `browser-timezone.js` 用 `Intl` 懒加载检测，`OnAfterRenderAsync` 首帧校正；`Dashboard.razor` 13 处时间显示统一本地化并标注「显示时区」；内部数据层保持 UTC 不变；同步 UI/Blazor/测试/RoadMap 文档 |
 | [x] | `MI-0034` | 2026-08-14 | Dashboard 移动端响应式优化 | 手机端（≤599px）逐小时表格隐藏阵风/涌浪/能见度/质量 4 列并放开表格最小宽、压缩单元格内边距，摘要「时间」项跨满一行；`.status-band` 纵向堆叠；趋势条/表格补 `-webkit-overflow-scrolling:touch`；`.trend-tab`/`.segment` 触控目标提至 44px，趋势点收窄；桌面端 9 列与布局不变；同步 UI/Blazor/RoadMap 文档 |
+| [x] | `MI-0035` | 2026-08-14 | 更新 README、新增功能介绍页与主导航栏 | 重写根 `README.md`（定位/功能/技术栈/快速开始/架构/文档导航/免责声明）；新增静态 SSR 介绍页 `About.razor` 与 scoped 样式（核心功能、适用场景、可信理由、免责声明）；`MainLayout` 增加「海况查询/功能介绍」主导航并适配移动端换行；新增 `AboutPageTests` 冒烟断言；同步 UI/Blazor/RoadMap/AGENT-GUIDE 文档 |
 
 ### 9.2 取消任务
 
@@ -219,6 +220,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-14 | `MI-0035` | 更新根 `README.md`（定位、功能特性、技术栈、快速开始、架构概览、文档导航、免责声明）；新增静态 SSR 介绍页 `About.razor`（`/about`）与 scoped 样式，含 Hero/核心功能/适用场景/可信理由/免责声明；`MainLayout` 增加「海况查询/功能介绍」主导航（复用 `.account-link` 样式）并适配移动端换行；新增 `AboutPageTests` 冒烟测试 | Release 构建 0 警告、0 错误；全量测试 183/183 通过（Domain 51、Application 51、Infrastructure 37、Web 44）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 | 提交到 git（不推送，由用户经 GitHub Desktop 手动推送）并部署上线；随后用户浏览器人工确认介绍页展示与导航跳转 |
 | 2026-08-14 | `MI-0034` | 完成 Dashboard 移动端响应式优化：逐小时表格手机端（≤599px）隐藏阵风/涌浪/能见度/质量 4 列并放开 `min-width`、压缩单元格内边距，摘要「时间」项跨满一行；`.status-band` 由 flex 改为纵向 grid 堆叠；`.hourly-table-wrap`/`.trend-points` 补触摸惯性，`.trend-tab`/`.segment` 触控目标提至 44px、趋势点收窄至 72px；桌面端 9 列与布局保持不变 | Release 构建 0 警告、0 错误；全量测试 182/182 通过（Domain 51、Application 51、Infrastructure 37、Web 43）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一；未执行真实手机浏览器视觉验证 | 用户经手机浏览器或 DevTools 移动视口人工确认表格 5 列免横滚、状态带堆叠、趋势条可平滑横滑；随后提交到 git（不推送，由用户经 GitHub Desktop 手动推送） |
 | 2026-08-14 | `MI-0033` | 完成 Dashboard 客户端时区识别与动态显示：新增 `ClientTimeZone` 静态工具（IANA 解析、友好中文名、`Asia/Shanghai` 降级、本地/UTC 双向转换与格式化）；`DashboardQuerySession` 按电路持有显示时区、重命名 `ForecastStartUtc`→`ForecastStartLocal`（带 touched 标志）并把查询输入本地时间经 `ToUtc` 转零偏移 UTC；新增 `browser-timezone.js` 用 `Intl` 懒加载检测，`OnAfterRenderAsync` 首帧校正；`Dashboard.razor` 13 处时间显示统一本地化并标注「显示时区」；移除冗余 `DashboardAnalysisResult.TimeZone` 与 `DashboardTrendPoint.TimeLabel` 字段；内部数据层保持 UTC 不变 | Release 构建 0 警告、0 错误；全量测试 182/182 通过（Domain 51、Application 51、Infrastructure 37、Web 43）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 | 本地 `dotnet run` 或浏览器 DevTools 模拟非 UTC+8 时区后人工确认时间与「显示时区」标签联动切换、断网/JS 失败降级「北京时间（UTC+8）」；随后提交到 git（不推送，由用户经 GitHub Desktop 手动推送） |
 | 2026-08-14 | `MI-0032` | 完成生产域名绑定与 HTTPS 上线：`marine.loyalme.life` A 记录解析至服务器，Caddy 自动 HTTPS（Let's Encrypt）签发并启用 HTTP→HTTPS 重定向；`MARINE_INSIGHT_SITE_ADDRESS` 改域名、`ACME_EMAIL` 经 `.env` 注入、`compose.yaml` 的 `reverse-proxy` 增加 `ACME_EMAIL` 传递；同时生产启用 AI 智能解读（`compose.ai.yaml` + key-per-file Secret）；同步 `docs/21`/`docs/22` 变更记录与记忆 | `https://marine.loyalme.life` 返回 200，`http://` 返回 308 重定向，证书 CN=marine.loyalme.life（Let's Encrypt，90 天）；Caddy 日志 `certificate obtained successfully`；AI 智能解读 SiliconFlow API 200、容器 healthy | 进入持续开发阶段：用户将不断提出优化体验/功能增强需求，逐条登记台账并详细分析设计 |

@@ -1,7 +1,13 @@
 ﻿@inherits LayoutComponentBase
 
 <header class="app-header">
-    <a class="app-brand" href="/">Marine Insight</a>
+    <div class="app-header-brand">
+        <a class="app-brand" href="/">Marine Insight</a>
+        <nav class="main-nav" aria-label="主导航">
+            <a class="account-link" href="/">海况查询</a>
+            <a class="account-link" href="/about">功能介绍</a>
+        </nav>
+    </div>
     <AccountNav />
 </header>
 
