@@ -127,10 +127,10 @@
 | 当前任务 ID | `MI-0027` |
 | 当前状态 | `BLOCKED` |
 | 当前目标 | 一次性完成阶段 3 剩余产品闭环与阶段 4 可部署基线：收藏/历史/单位设置、移动端可访问性、管理员运维视图、WorldTides 可配置降级、容器化、备份恢复和上线验证 |
-| 最后完成动作 | `MI-0028` AI 解读引擎已闭环：OpenAI 兼容适配器、事实/安全校验、24 小时缓存和规则模板降级已落地，API/Dashboard 均投影 `explanation`；WorldTides Key 已写入当前用户的 .NET User Secrets 并启用，WebApplicationFactory 和 Playwright 均强制关闭真实 Provider 与 AI，防止自动化测试消耗付费额度 |
+| 最后完成动作 | `MI-0028` AI 解读引擎与 `MI-0029` 分析结果持久化已闭环；Dashboard 页脚已补充 Open-Meteo（CC BY 4.0）与 WorldTides 数据署名，安全免责声明已就位，上线数据署名合规缺口已消除；WorldTides Key 已写入当前用户的 .NET User Secrets 并启用，WebApplicationFactory 和 Playwright 均强制关闭真实 Provider 与 AI，防止自动化测试消耗付费额度 |
 | 下一步动作 | AI 真实联调由用户自验：`scripts/configure-ai-secret.ps1` 配置 `AI:ApiKey`+`Enabled=true` 后查询应返回 `source=ai`，断网/超时应自动降级 `degraded=true`；MI-0027 仍待人工受控 WorldTides 查询与 Docker/Staging 外部验证 |
 | 涉及文件 | Application/Infrastructure/Web 的 AI 解读与用户工作区、WorldTides、独立 PostgreSQL 迁移项目、Docker/Caddy/Secret、运维脚本、CI、Playwright 测试及数据库/API/Provider/UI/部署/测试/RoadMap 文档 |
-| 验证结果 | Release 构建 0 警告、0 错误；.NET 测试基线 161 个（Domain 51、Application 47、Infrastructure 32、Web 31）全量通过；AI 适配器错误映射、事实校验和降级路径已覆盖；测试宿主显式关闭 AI 与 WorldTides，无真实付费调用 |
+| 验证结果 | Release 构建 0 警告、0 错误；.NET 测试基线 175 个（Domain 51、Application 51、Infrastructure 37、Web 36）全量通过；AI 适配器错误映射、事实校验和降级路径已覆盖；测试宿主显式关闭 AI 与 WorldTides，无真实付费调用 |
 | 阻塞/待确认 | 当前机器仍无 Docker CLI，不能验证 Docker Secret 注入及真实 Compose/PostgreSQL/代理/备份恢复；真实 WorldTides 请求会消耗 Credit，本次未自动调用；后台 Web 启动探针被环境策略阻止 |
 | 最后更新 | 2026-08-13 |
 
@@ -215,6 +215,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-13 | `MI-0027` | 补齐上线数据署名合规：Dashboard 页脚新增 Open-Meteo（CC BY 4.0）与 WorldTides 数据署名，安全免责声明（「结果仅供辅助决策，请以官方预警和现场管理为准」）此前已存在；`RootDashboardRendersQueryShell` 增加 `Open-Meteo.com` 署名断言；同步 RoadMap 阶段 4 交付项与变更记录 2.9 | Release 构建 0 警告、0 错误；全量测试 175/175 通过（Domain 51、Application 51、Infrastructure 37、Web 36）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 | 操作手册与剩余 S1/S2 缺陷复查待上线前收尾；真实 Docker/PostgreSQL/WorldTides/AI 外部验证仍待用户自验 |
 | 2026-08-13 | `MI-0029` | 完成分析结果持久化闭环：Domain 落地 `AnalysisReport` 聚合根、`AnalysisRisk`/`AnalysisSourceBatch` 值对象和 `AnalysisSourceRole` 枚举；Application 新增 `IAnalysisReportRepository` 端口、`AnalysisReportAssembler` 投影和 `AnalysisReportService` 编排（属主校验）；Infrastructure 新增三张表实体/配置/手动映射和仓储，生成 SQLite 与 PostgreSQL 双迁移并刷新幂等 SQL；Web 在 Dashboard 认证分支落库并新增 `GET /api/v1/marine-analyses/{id}` 属主读取端点；匿名查询不落库 | Release 构建 0 警告、0 错误；全量测试 173/173 通过（Domain 51、Application 51、Infrastructure 36、Web 35）；`dotnet format --verify-no-changes`、`git diff --check` 通过，34 个改动文本文件 BOM/CRLF 已统一；未执行真实 PostgreSQL 迁移和登录后落库人工验证 | 历史对比（多结果并排）、`algorithm_versions` 外键升级（MI-0021 仓储落地后）、分析结果清理 Job 留待后续；真实 PostgreSQL/登录落库由用户自验 |
 | 2026-08-13 | `MI-0028` | 完成 AI 解读引擎闭环：Application 新增解释端口、事实 DTO、规则模板、事实/安全校验器和 `ExplanationService` 编排；Infrastructure 新增 OpenAI 兼容适配器、`AI` 配置校验和 `IMemoryCache` 缓存；Web 的 API 与 Dashboard 均投影 `explanation`，AI 默认关闭且失败一律降级模板；修复 `AI:CacheLifetime` 用 `"24:00:00"` 被 `TimeSpan` 解析为 24 天的问题，改为 `"1.00:00:00"` | .NET 全量测试 161/161 通过（Application 47、Domain 51、Infrastructure 32、Web 31）；AI 适配器 401/403/429/5xx/非法 JSON/超时错误映射与事实校验/降级路径均已覆盖；测试宿主显式关闭 AI，无真实模型调用 | 真实 Key 联调由用户自验：`scripts/configure-ai-secret.ps1` 配置 `AI:ApiKey`+`Enabled=true` 后查询应返回 `explanation.source=ai`；断网/超时应自动降级 `degraded=true`；MI-0027 仍等待 Docker/Staging 与真实 WorldTides 外部验证 |
 | 2026-08-13 | `MI-0027` | 完成 WorldTides 密钥维护设计和本机配置：真实 Key 仅存入当前用户的 .NET User Secrets；增加安全提示式配置/删除脚本、可选 Compose 外部 Secret、Git/Docker 排除规则、CI/E2E 付费调用隔离和轮换/泄露处置文档；未把明文写入仓库或输出 | User Secrets 中 `Enabled=true` 且 Key 非空；仓库跟踪内容和当前差异无明文 Key；本地/部署 Secret 路径均被 Git 忽略；Release 构建 0 警告/0 错误，Web 30/30、WorldTides 契约 2/2、格式和 PowerShell AST 通过；后台启动探针被策略阻止，未发出真实 WorldTides 请求 | 明确接受一次 Credit 消耗后做真实潮汐/Credit 联调；Docker 可用后用 `compose.worldtides.yaml` 验证 Key-per-file 注入；由于 Key 曾出现在对话中，若对话可能共享或长期保留，应在供应商控制台轮换 |

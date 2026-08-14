@@ -22,6 +22,7 @@ public sealed class DashboardQuerySessionTests
         Assert.Contains("地点搜索", html, StringComparison.Ordinal);
         Assert.Contains("地图选点", html, StringComparison.Ordinal);
         Assert.Contains("OpenStreetMap", html, StringComparison.Ordinal);
+        Assert.Contains("Open-Meteo.com", html, StringComparison.Ordinal);
         Assert.Contains("纬度", html, StringComparison.Ordinal);
         Assert.Contains("经度", html, StringComparison.Ordinal);
         Assert.Contains("等待查询", html, StringComparison.Ordinal);

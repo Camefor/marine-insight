@@ -112,7 +112,7 @@
 - `MI-0027` 已完成 PostgreSQL 独立迁移集、幂等 SQL、备份/恢复脚本；真实 PostgreSQL 迁移和恢复演练待 Staging 验证。
 - 接入日志、指标、Trace、Provider 配额和关键告警。
 - `MI-0027` 已增加 WorldTides 故障降级、安全代理/Secret 基线和 Playwright 桌面/360px 用例，浏览器回归 2/2 通过；性能、真实故障注入和容器化视觉回归仍待 Staging 执行。
-- 已完成 `MI-0025`：升级 EF Core SQLite 补丁线并消除 `SQLitePCLRaw.lib.e_sqlite3 2.1.11` High 漏洞；继续修复其余 S1/S2 缺陷，完成操作手册、免责声明和数据署名。
+- 已完成 `MI-0025`：升级 EF Core SQLite 补丁线并消除 `SQLitePCLRaw.lib.e_sqlite3 2.1.11` High 漏洞；Dashboard 已展示安全免责声明与 Open-Meteo/WorldTides 数据署名；操作手册和剩余 S1/S2 缺陷复查待上线前收尾。
 - 发布 `v1.0.0`，观察 5xx、延迟、Stale、数据质量和 Unknown 比例。
 
 ## 8. 版本路线
@@ -188,3 +188,4 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 2.6 | 2026-08-12 | 完成 ASP.NET Core Identity 基础认证闭环、账户静态 SSR 页面、Cookie/锁定/防伪安全基线和用户表迁移 |
 | 2.7 | 2026-08-13 | 完成 P1 可选增量 AI 解读引擎：OpenAI 兼容适配器、事实校验、缓存与规则模板降级（MI-0028） |
 | 2.8 | 2026-08-13 | 完成分析结果持久化（MI-0029）：登录用户查询落库 `analysis_results`/`analysis_risks`/`analysis_source_batches` 摘要，新增 `GET /api/v1/marine-analyses/{id}` 属主读取端点 |
+| 2.9 | 2026-08-13 | Dashboard 补充 Open-Meteo（CC BY 4.0）与 WorldTides 数据署名页脚，安全免责声明已就位，满足上线数据署名合规要求 |

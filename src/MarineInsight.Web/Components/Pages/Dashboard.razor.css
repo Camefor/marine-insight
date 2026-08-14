@@ -855,6 +855,31 @@ th {
     text-align: left;
 }
 
+.dashboard-footer {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin: 0 auto;
+    max-width: 1180px;
+    padding: 4px 0 8px;
+    text-align: center;
+}
+
+.dashboard-footer p {
+    margin: 0;
+}
+
+.dashboard-footer a {
+    color: var(--accent-strong);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.dashboard-footer a:hover,
+.dashboard-footer a:focus-visible {
+    text-decoration: underline;
+}
+
 @media (max-width: 959px) {
     .dashboard-shell {
         padding: 18px;
