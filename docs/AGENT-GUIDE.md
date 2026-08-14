@@ -124,15 +124,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0027` |
-| 当前状态 | `BLOCKED` |
-| 当前目标 | 一次性完成阶段 3 剩余产品闭环与阶段 4 可部署基线：收藏/历史/单位设置、移动端可访问性、管理员运维视图、WorldTides 可配置降级、容器化、备份恢复和上线验证 |
-| 最后完成动作 | `MI-0028` AI 解读引擎与 `MI-0029` 分析结果持久化已闭环；Dashboard 页脚已补充 Open-Meteo（CC BY 4.0）与 WorldTides 数据署名，安全免责声明已就位，上线数据署名合规缺口已消除；WorldTides Key 已写入当前用户的 .NET User Secrets 并启用，WebApplicationFactory 和 Playwright 均强制关闭真实 Provider 与 AI，防止自动化测试消耗付费额度 |
-| 下一步动作 | AI 真实联调由用户自验：`scripts/configure-ai-secret.ps1` 配置 `AI:ApiKey`+`Enabled=true` 后查询应返回 `source=ai`，断网/超时应自动降级 `degraded=true`；MI-0027 仍待人工受控 WorldTides 查询与 Docker/Staging 外部验证 |
-| 涉及文件 | Application/Infrastructure/Web 的 AI 解读与用户工作区、WorldTides、独立 PostgreSQL 迁移项目、Docker/Caddy/Secret、运维脚本、CI、Playwright 测试及数据库/API/Provider/UI/部署/测试/RoadMap 文档 |
-| 验证结果 | Release 构建 0 警告、0 错误；.NET 测试基线 175 个（Domain 51、Application 51、Infrastructure 37、Web 36）全量通过；AI 适配器错误映射、事实校验和降级路径已覆盖；测试宿主显式关闭 AI 与 WorldTides，无真实付费调用 |
-| 阻塞/待确认 | 当前机器仍无 Docker CLI，不能验证 Docker Secret 注入及真实 Compose/PostgreSQL/代理/备份恢复；真实 WorldTides 请求会消耗 Credit，本次未自动调用；后台 Web 启动探针被环境策略阻止 |
-| 最后更新 | 2026-08-13 |
+| 当前任务 ID | `MI-0031` |
+| 当前状态 | `DONE` |
+| 当前目标 | 修正天地图 Key 泄露：`Map:Tianditu:Key` 移出 `appsettings.json`，改走 User Secrets（本地）与 Docker key-per-file Secret（生产），并重申密钥规范 |
+| 最后完成动作 | `MI-0030` 天地图替换与预置地点更新、`MI-0031` Key 移出源码均已闭环；`compose.tianditu.yaml` 与 `scripts/configure-tianditu-secret.ps1` 已就绪；生产服务器已写入 `/etc/marine-insight/secrets/tianditu_key` 并重建验证，`appsettings.json` 不再含 Key |
+| 下一步动作 | 用户浏览器人工确认天地图瓦片/注记加载；后续任何 Key 统一走 Secret，不得进入源码；AI/WorldTides 真实 Key 联调仍由用户自验 |
+| 涉及文件 | `appsettings.json`、`compose.tianditu.yaml`、`scripts/configure-tianditu-secret.ps1`、`.secrets/README.md`、`deploy/secrets/README.md`、`docs/17-开发规范.md`、`docs/22-腾讯云生产部署手册.md`、`docs/AGENT-GUIDE.md` |
+| 验证结果 | 重建后 `appsettings.json` 不再含 Key；天地图瓦片带浏览器 UA 请求返回 200 PNG（Key 有效）；本地 User Secrets + 生产 key-per-file Secret 双路径就绪 |
+| 阻塞/待确认 | AI/WorldTides 真实 Key 联调仍待用户自验；浏览器端地图瓦片最终视觉效果由用户人工确认 |
+| 最后更新 | 2026-08-14 |
 
 <!-- agent-state:end -->
 
@@ -204,6 +204,8 @@
 | [x] | `MI-0026` | 2026-08-12 | 实现 ASP.NET Core Identity 基础认证闭环 | 新增 UUID Identity 用户/角色迁移、注册/登录/退出、静态 SSR 账户页、Header 认证状态、Secure Cookie、密码/锁定、防伪、账户限流和 5 个认证集成测试；匿名 Dashboard/API 保持可用 |
 | [x] | `MI-0028` | 2026-08-13 | 实现 AI 解读引擎（OpenAI 兼容协议） | Application 定义 `IExplanationProvider`/`IExplanationCache` 端口、`ExplanationService` 编排、规则模板和事实/安全校验；Infrastructure 提供 OpenAI 兼容适配器、`IMemoryCache` 缓存和 `AI` 配置校验；Web 的 API 与 Dashboard 均投影 `explanation`，AI 关闭/失败降级为模板；密钥脚本与 `.secrets` 文档同步；新增 23 个自动化用例 |
 | [x] | `MI-0029` | 2026-08-13 | 实现分析结果持久化（AnalysisReport） | Domain 新增 `AnalysisReport` 聚合根、`AnalysisRisk`/`AnalysisSourceBatch` 值对象和 `AnalysisSourceRole` 枚举；Application 定义 `IAnalysisReportRepository` 端口、`AnalysisReportAssembler` 投影和 `AnalysisReportService` 编排（属主校验）；Infrastructure 提供三张表实体/配置/手动映射和仓储，SQLite 与 PostgreSQL 双迁移；Web 在 Dashboard 认证分支落库并提供 `GET /api/v1/marine-analyses/{id}` 属主读取端点；匿名查询不落库，历史对比与 `algorithm_versions` 外键升级留待后续 |
+| [x] | `MI-0030` | 2026-08-14 | 地图服务商替换为天地图并更新预置地点 | Dashboard 地图选点由 OpenStreetMap 切换为天地图 WMTS（CGCS2000≈WGS-84 免纠偏，底图 vec_w + 注记 cva_w 双层），Leaflet 1.9.4 自托管移除 unpkg 依赖，Key 经 `Map:Tianditu:Key` 配置注入；东极岛预置坐标更新为庙子湖岛 `30.200, 122.680`，新增岱山岛 `30.288, 122.165`，SQLite/PostgreSQL 双迁移与幂等 SQL 同步；地图署名与 `RootDashboardRendersQueryShell` 断言改为天地图 |
+| [x] | `MI-0031` | 2026-08-14 | 天地图 Key 移出 `appsettings.json` 并重申密钥规范 | 将 `Map:Tianditu:Key` 从 `appsettings.json` 移除，新增 `compose.tianditu.yaml`（Docker key-per-file Secret `Map__Tianditu__Key`）与 `scripts/configure-tianditu-secret.ps1`（本地 User Secrets），同步 `.secrets`/`deploy/secrets` README；在 `docs/17-开发规范.md` 第 12 节重申「任何 API Key / 浏览器端 Key 一律不写入源码」并登记变更记录；生产服务器写入 `/etc/marine-insight/secrets/tianditu_key` 并重建后地图瓦片仍正常 |
 
 ### 9.2 取消任务
 
@@ -215,6 +217,8 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-14 | `MI-0031` | 修正天地图 Key 泄露：将 `Map:Tianditu:Key` 移出 `appsettings.json`，新增 `compose.tianditu.yaml`（key-per-file Secret `Map__Tianditu__Key`）与 `scripts/configure-tianditu-secret.ps1`（User Secrets），同步 `.secrets`/`deploy/secrets` README 与 `docs/17`/`docs/22` 规范；生产服务器写入 `/etc/marine-insight/secrets/tianditu_key` 并重建验证 | 重建后 `appsettings.json` 不再含 Key；天地图瓦片带浏览器 UA 请求返回 200 PNG（Key 有效）；本地 User Secrets + 生产 key-per-file Secret 双路径就绪 | 用户浏览器人工确认地图瓦片/注记加载；后续所有 Key 统一走 Secret，不进入源码 |
+| 2026-08-14 | `MI-0030` | 完成地图服务商替换与预置地点更新：Dashboard 地图选点由 OpenStreetMap 切换为天地图 WMTS（CGCS2000≈WGS-84 免纠偏，底图 vec_w + 注记 cva_w），Leaflet 1.9.4 自托管移除 unpkg 依赖，Key 经 `Map:Tianditu:Key` 配置注入；东极岛预置坐标更新为庙子湖岛 30.200/122.680，新增岱山岛 30.288/122.165；同步 PRD/SRS/SAD/05/15/16/20/21 文档与 `RootDashboardRendersQueryShell` 地图署名断言 | Release 构建 0 警告、0 错误；全量测试 175/175 通过（Domain 51、Application 51、Infrastructure 37、Web 36）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一，静态资源 manifest 确认 leaflet.js/css 与图片已指纹化 | 生产服务器应用 `UpdatePresetLocations` 迁移后人工验证天地图瓦片加载、注记可见、坐标回填与 Key 正确；若标记图标未渲染则显式设置 `L.Icon.Default.imagePath` |
 | 2026-08-13 | `MI-0027` | 补齐上线数据署名合规：Dashboard 页脚新增 Open-Meteo（CC BY 4.0）与 WorldTides 数据署名，安全免责声明（「结果仅供辅助决策，请以官方预警和现场管理为准」）此前已存在；`RootDashboardRendersQueryShell` 增加 `Open-Meteo.com` 署名断言；同步 RoadMap 阶段 4 交付项与变更记录 2.9 | Release 构建 0 警告、0 错误；全量测试 175/175 通过（Domain 51、Application 51、Infrastructure 37、Web 36）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 | 操作手册与剩余 S1/S2 缺陷复查待上线前收尾；真实 Docker/PostgreSQL/WorldTides/AI 外部验证仍待用户自验 |
 | 2026-08-13 | `MI-0029` | 完成分析结果持久化闭环：Domain 落地 `AnalysisReport` 聚合根、`AnalysisRisk`/`AnalysisSourceBatch` 值对象和 `AnalysisSourceRole` 枚举；Application 新增 `IAnalysisReportRepository` 端口、`AnalysisReportAssembler` 投影和 `AnalysisReportService` 编排（属主校验）；Infrastructure 新增三张表实体/配置/手动映射和仓储，生成 SQLite 与 PostgreSQL 双迁移并刷新幂等 SQL；Web 在 Dashboard 认证分支落库并新增 `GET /api/v1/marine-analyses/{id}` 属主读取端点；匿名查询不落库 | Release 构建 0 警告、0 错误；全量测试 173/173 通过（Domain 51、Application 51、Infrastructure 36、Web 35）；`dotnet format --verify-no-changes`、`git diff --check` 通过，34 个改动文本文件 BOM/CRLF 已统一；未执行真实 PostgreSQL 迁移和登录后落库人工验证 | 历史对比（多结果并排）、`algorithm_versions` 外键升级（MI-0021 仓储落地后）、分析结果清理 Job 留待后续；真实 PostgreSQL/登录落库由用户自验 |
 | 2026-08-13 | `MI-0028` | 完成 AI 解读引擎闭环：Application 新增解释端口、事实 DTO、规则模板、事实/安全校验器和 `ExplanationService` 编排；Infrastructure 新增 OpenAI 兼容适配器、`AI` 配置校验和 `IMemoryCache` 缓存；Web 的 API 与 Dashboard 均投影 `explanation`，AI 默认关闭且失败一律降级模板；修复 `AI:CacheLifetime` 用 `"24:00:00"` 被 `TimeSpan` 解析为 24 天的问题，改为 `"1.00:00:00"` | .NET 全量测试 161/161 通过（Application 47、Domain 51、Infrastructure 32、Web 31）；AI 适配器 401/403/429/5xx/非法 JSON/超时错误映射与事实校验/降级路径均已覆盖；测试宿主显式关闭 AI，无真实模型调用 | 真实 Key 联调由用户自验：`scripts/configure-ai-secret.ps1` 配置 `AI:ApiKey`+`Enabled=true` 后查询应返回 `explanation.source=ai`；断网/超时应自动降级 `degraded=true`；MI-0027 仍等待 Docker/Staging 与真实 WorldTides 外部验证 |

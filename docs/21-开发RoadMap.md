@@ -92,6 +92,7 @@
 - `MI-0027` 已实现管理员 Provider 状态、当前算法版本和审计只读查询；Provider 启停和算法发布仍不在本次范围。
 - `MI-0027` 已接入 WorldTides 潮汐、Credit 余额状态、长 TTL 缓存和无潮汐降级；本地 Key 已安全配置，真实付费联调尚未执行。
 - 已完成 `MI-0029`：实现分析结果持久化，登录用户在 Dashboard 查询时落库 `analysis_results`/`analysis_risks`/`analysis_source_batches` 摘要，并提供 `GET /api/v1/marine-analyses/{id}` 属主读取端点；匿名查询不落库，历史对比与 `algorithm_versions` 外键升级留待后续。
+- 已完成 `MI-0030`：地图选点由 OpenStreetMap 切换为天地图（CGCS2000≈WGS-84 免纠偏），Leaflet 自托管移除 unpkg 依赖；东极岛预置坐标更新为庙子湖岛 `30.200, 122.680`，新增岱山岛 `30.288, 122.165` 预置地点。
 
 ### P1 可选增量
 
@@ -189,3 +190,4 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 2.7 | 2026-08-13 | 完成 P1 可选增量 AI 解读引擎：OpenAI 兼容适配器、事实校验、缓存与规则模板降级（MI-0028） |
 | 2.8 | 2026-08-13 | 完成分析结果持久化（MI-0029）：登录用户查询落库 `analysis_results`/`analysis_risks`/`analysis_source_batches` 摘要，新增 `GET /api/v1/marine-analyses/{id}` 属主读取端点 |
 | 2.9 | 2026-08-13 | Dashboard 补充 Open-Meteo（CC BY 4.0）与 WorldTides 数据署名页脚，安全免责声明已就位，满足上线数据署名合规要求 |
+| 3.0 | 2026-08-14 | 完成地图服务商替换（MI-0030）：天地图瓦片 + Leaflet 自托管，东极岛坐标更新为庙子湖岛 30.200/122.680 并新增岱山岛 30.288/122.165 预置地点 |

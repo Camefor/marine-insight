@@ -195,7 +195,7 @@ public sealed class MarineAnalysisApiTests
         Assert.Equal(
             "8a477d67-73fa-4f43-b954-cd29d238a89d",
             location.GetProperty("locationId").GetString());
-        Assert.Equal(30.194, location.GetProperty("latitude").GetDouble());
+        Assert.Equal(30.200, location.GetProperty("latitude").GetDouble());
     }
 
     [Fact]

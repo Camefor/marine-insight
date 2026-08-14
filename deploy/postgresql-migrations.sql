@@ -536,3 +536,30 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260814024526_UpdatePresetLocations') THEN
+    UPDATE locations SET latitude = 30.2, longitude = 122.68
+    WHERE id = '8a477d67-73fa-4f43-b954-cd29d238a89d';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260814024526_UpdatePresetLocations') THEN
+    INSERT INTO locations (id, coast_orientation_deg, created_at, display_name, is_preset, latitude, location_type, longitude, normalized_name, time_zone_id)
+    VALUES ('9b2c4d6e-8f1a-4b7c-9d3e-5f0a2c4b6d8e', NULL, TIMESTAMPTZ '2026-01-01T00:00:00+00:00', '岱山岛', TRUE, 30.288, 1, 122.165, '岱山岛', 'Asia/Shanghai');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260814024526_UpdatePresetLocations') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260814024526_UpdatePresetLocations', '10.0.11');
+    END IF;
+END $EF$;
+COMMIT;
+

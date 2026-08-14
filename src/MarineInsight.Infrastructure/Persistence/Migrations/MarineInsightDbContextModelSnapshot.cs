@@ -646,9 +646,9 @@ namespace MarineInsight.Infrastructure.Persistence.Migrations
                             CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             DisplayName = "东极岛",
                             IsPreset = true,
-                            Latitude = 30.194m,
+                            Latitude = 30.200m,
                             LocationType = (short)1,
-                            Longitude = 122.687m,
+                            Longitude = 122.680m,
                             NormalizedName = "东极岛",
                             TimeZoneId = "Asia/Shanghai"
                         },
@@ -674,6 +674,18 @@ namespace MarineInsight.Infrastructure.Persistence.Migrations
                             LocationType = (short)1,
                             Longitude = 122.388m,
                             NormalizedName = "普陀山",
+                            TimeZoneId = "Asia/Shanghai"
+                        },
+                        new
+                        {
+                            Id = new Guid("9b2c4d6e-8f1a-4b7c-9d3e-5f0a2c4b6d8e"),
+                            CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayName = "岱山岛",
+                            IsPreset = true,
+                            Latitude = 30.288m,
+                            LocationType = (short)1,
+                            Longitude = 122.165m,
+                            NormalizedName = "岱山岛",
                             TimeZoneId = "Asia/Shanghai"
                         });
                 });

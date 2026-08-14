@@ -1,0 +1,8 @@
+services:
+    web:
+        secrets:
+            - Map__Tianditu__Key
+
+secrets:
+    Map__Tianditu__Key:
+        file: ${MARINE_INSIGHT_TIANDITU_SECRET_FILE:-./.secrets/tianditu_key}

@@ -185,7 +185,7 @@ public sealed record MarineForecastPoint(
 | 专业海洋增强 | Stormglass.io | 默认关闭；按预算用于多来源、海温、洋流或潮汐增强 |
 | 潮汐 | WorldTides | P1 可选；按 Credit 预算、长 TTL 缓存和额度告警运行 |
 | 原始模型/观测 | NOAA/NCEP WW3、NDBC | v2.0 后台文件管线和校准数据，不进入 MVP 热路径 |
-| 地图 | OpenStreetMap + Leaflet | 遵守瓦片使用政策，生产可配置服务商 |
+| 地图 | 天地图 + Leaflet（自托管） | 遵守天地图使用条款与瓦片配额，Key 可配置 |
 | AI | 可插拔 LLM Provider | 可完全关闭，超时后规则降级 |
 | 数据库 | PostgreSQL | EF Core 迁移管理 |
 | 缓存 | Memory + 可选 Redis | Redis 失败不阻断基本查询 |

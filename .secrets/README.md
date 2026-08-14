@@ -21,4 +21,12 @@ For the optional AI explanation engine (OpenAI-compatible), run `scripts/configu
 
 In Docker, mount the key via the key-per-file pattern: a file whose name is `AI__ApiKey` under `/run/secrets`, or set the `AI__ApiKey` environment variable.
 
+For the Tianditu map (browser-side key), run `scripts/configure-tianditu-secret.ps1` to store `Map:Tianditu:Key` in .NET User Secrets; pass `-Disable` to remove it. In Docker, create `.secrets/tianditu_key` containing only the key, then start Compose with `-f compose.tianditu.yaml`:
+
+```powershell
+docker compose -f compose.yaml -f compose.production.yaml -f compose.tianditu.yaml up -d --build
+```
+
+Even though the Tianditu key is a browser-side key that appears in tile URLs, it is still kept out of `appsettings.json` per the project secret convention; without it the map picker degrades to coordinate input.
+
 Prefer an external secret manager or a host file readable only by the deployment account in staging and production.

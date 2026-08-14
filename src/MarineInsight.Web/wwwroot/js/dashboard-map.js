@@ -24,16 +24,27 @@ export function init(elementId, dotNetReference, options) {
         zoomControl: true
     }).setView([latitude, longitude], zoom);
 
-    // OpenStreetMap public tiles are loaded only for the visible map; no prefetch or offline cache is used here.
-    const tileLayer = window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    });
+    // Tianditu WMTS tiles use CGCS2000, which is aligned with WGS-84 for point picking; base + label layers.
+    const tk = options?.tk ?? "";
+    const baseLayer = window.L.tileLayer(
+        `https://t{s}.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${tk}`,
+        {
+            subdomains: ["0", "1", "2", "3", "4", "5", "6", "7"],
+            maxZoom: 18,
+            attribution: '&copy; <a href="https://www.tianditu.gov.cn" target="_blank" rel="noopener noreferrer">天地图</a>'
+        });
+    const labelLayer = window.L.tileLayer(
+        `https://t{s}.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${tk}`,
+        {
+            subdomains: ["0", "1", "2", "3", "4", "5", "6", "7"],
+            maxZoom: 18
+        });
 
-    tileLayer.on("tileerror", () => notifyUnavailable(
+    baseLayer.on("tileerror", () => notifyUnavailable(
         dotNetReference,
         "地图瓦片加载失败，请直接输入经纬度继续查询。"));
-    tileLayer.addTo(map);
+    baseLayer.addTo(map);
+    labelLayer.addTo(map);
 
     const marker = window.L.marker([latitude, longitude]).addTo(map);
     map.on("click", event => {

@@ -137,7 +137,7 @@ sequenceDiagram
 | 运行时 | .NET 10 / ASP.NET Core | 当前 LTS，与用户技术栈一致，性能和可观测性完善 | 无，项目统一使用 .NET 10 |
 | UI | Blazor Web App + MudBlazor | C# 全栈、组件成熟、响应式支持 | 原生 Razor 组件 |
 | 图表 | ApexCharts for Blazor | 逐小时多序列展示成熟 | ECharts 封装 |
-| 地图 | Leaflet + OpenStreetMap | 轻量、易于坐标选点 | MapLibre |
+| 地图 | Leaflet + 天地图 | 轻量、国内可达、CGCS2000≈WGS-84 免纠偏 | MapLibre |
 | 数据访问 | EF Core | 迁移、测试和 PostgreSQL 支持 | Dapper 用于热点查询 |
 | 数据库 | PostgreSQL | 稳定、索引和 JSON 能力完善 | SQLite 本地开发 |
 | 缓存 | IMemoryCache + 可选 Redis | 单机简单、扩展时共享缓存 | PostgreSQL 缓存表 |

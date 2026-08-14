@@ -1,10 +1,12 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @using System.Globalization
+@using Microsoft.Extensions.Configuration
 @inject DashboardQuerySession Session
 @inject IJSRuntime Js
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserWorkspaceService Workspace
+@inject IConfiguration Configuration
 @implements IAsyncDisposable
 
 
@@ -71,14 +73,14 @@
                             <p>点击地图或输入经纬度，坐标会进入同一海况查询流程。</p>
                         </div>
                         <p class="map-attribution">
-                            地图数据 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors
+                            地图数据 © <a href="https://www.tianditu.gov.cn" target="_blank" rel="noopener noreferrer">天地图</a>
                         </p>
                     </div>
 
                     <div id="dashboard-map-picker"
                          class="map-canvas"
                          role="application"
-                         aria-label="OpenStreetMap 地图选点"></div>
+                         aria-label="天地图地图选点"></div>
 
                     @if (Session.IsMapUnavailable || !string.IsNullOrWhiteSpace(Session.MapError))
                     {
@@ -691,7 +693,8 @@
                 {
                     latitude = Session.MapLatitude,
                     longitude = Session.MapLongitude,
-                    zoom = 9
+                    zoom = 9,
+                    tk = Configuration["Map:Tianditu:Key"] ?? ""
                 });
 
             if (!_mapInitialized)
