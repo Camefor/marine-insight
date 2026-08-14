@@ -1,0 +1,10 @@
+services:
+    web:
+        environment:
+            AI__Enabled: "true"
+        secrets:
+            - AI__ApiKey
+
+secrets:
+    AI__ApiKey:
+        file: ${MARINE_INSIGHT_AI_SECRET_FILE:-./.secrets/ai_api_key}

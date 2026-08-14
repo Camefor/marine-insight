@@ -19,7 +19,11 @@ docker compose -f compose.yaml -f compose.worldtides.yaml up -d --build
 
 For the optional AI explanation engine (OpenAI-compatible), run `scripts/configure-ai-secret.ps1`. It stores `AI:ApiKey` and enables `AI:Enabled` in .NET User Secrets; pass `-Disable` to remove the key and turn the provider off. The AI provider is disabled by default and never required for the deterministic rule-template explanation.
 
-In Docker, mount the key via the key-per-file pattern: a file whose name is `AI__ApiKey` under `/run/secrets`, or set the `AI__ApiKey` environment variable.
+In Docker, create `.secrets/ai_api_key` containing only the key, then start Compose with the AI overlay (`compose.ai.yaml` mounts it as `AI__ApiKey` under `/run/secrets`):
+
+```powershell
+docker compose -f compose.yaml -f compose.production.yaml -f compose.ai.yaml up -d --build
+```
 
 For the Tianditu map (browser-side key), run `scripts/configure-tianditu-secret.ps1` to store `Map:Tianditu:Key` in .NET User Secrets; pass `-Disable` to remove it. In Docker, create `.secrets/tianditu_key` containing only the key, then start Compose with `-f compose.tianditu.yaml`:
 
