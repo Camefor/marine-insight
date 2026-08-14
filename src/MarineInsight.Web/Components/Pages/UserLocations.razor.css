@@ -1,0 +1,48 @@
+﻿.map-field {
+    display: grid;
+    gap: 10px;
+}
+
+.map-toggle {
+    background: #ffffff;
+    border: 1px solid #9db0ab;
+    border-radius: 4px;
+    color: #245e55;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    justify-self: start;
+    min-height: 40px;
+    padding: 8px 14px;
+}
+
+.map-toggle:hover,
+.map-toggle:focus-visible {
+    background: #f0f7f5;
+}
+
+.location-map-picker {
+    background: #dfe7e6;
+    border: 1px solid #aebdb9;
+    border-radius: 6px;
+    min-height: 300px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.map-hint,
+.map-error {
+    color: #52736d;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.map-error {
+    color: #9a3329;
+}
+
+.map-hint a {
+    color: #1f6b5d;
+    font-weight: 700;
+}

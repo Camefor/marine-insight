@@ -2,9 +2,12 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @using System.Globalization
+@using Microsoft.Extensions.Configuration
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserWorkspaceService Workspace
 @inject IJSRuntime Js
+@inject IConfiguration Configuration
+@implements IAsyncDisposable
 
 <PageTitle>我的地点 - Marine Insight</PageTitle>
 
@@ -17,7 +20,7 @@
         <a class="workspace-primary" href="/">查询新地点</a>
     </header>
 
-    <section class="workspace-form" aria-labelledby="location-form-title">
+    <form class="workspace-form" aria-labelledby="location-form-title" @onsubmit="SaveAsync" @onsubmit:preventDefault>
         <h2 id="location-form-title">@(_editingId.HasValue ? "编辑地点" : "新增地点")</h2>
         <label>
             <span>名称</span>
@@ -31,6 +34,23 @@
             <span>经度</span>
             <input type="number" step="0.000001" min="-180" max="180" @bind="_longitude" required />
         </label>
+        <div class="map-field">
+            <button class="map-toggle" type="button" @onclick="ToggleMapAsync">
+                @(_isMapOpen ? "收起地图" : "地图选点")
+            </button>
+            @if (_isMapOpen)
+            {
+                <div id="user-locations-map-picker"
+                     class="location-map-picker"
+                     role="application"
+                     aria-label="天地图地图选点"></div>
+                <p class="map-hint">点击地图任意位置，自动填充上方经纬度。地图数据 © <a href="https://www.tianditu.gov.cn" target="_blank" rel="noopener noreferrer">天地图</a></p>
+            }
+            @if (!string.IsNullOrWhiteSpace(_mapError))
+            {
+                <p class="map-error" role="status">@_mapError</p>
+            }
+        </div>
         <label>
             <span>默认活动</span>
             <select @bind="_defaultActivity">
@@ -61,7 +81,7 @@
                 <button class="workspace-danger" type="button" @onclick="CancelEdit">取消</button>
             }
         </div>
-    </section>
+    </form>
 
     @if (_loading)
     {
@@ -115,6 +135,12 @@
     private string _note = string.Empty;
     private int _sortOrder;
     private string? _formError;
+    private bool _isMapOpen;
+    private IJSObjectReference? _mapModule;
+    private DotNetObjectReference<UserLocations>? _mapCallback;
+    private bool _mapInitialized;
+    private bool _mapInitializationAttempted;
+    private string? _mapError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -225,6 +251,113 @@
         _note = string.Empty;
         _sortOrder = 0;
         _formError = null;
+        _mapError = null;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_isMapOpen)
+        {
+            await EnsureMapAsync();
+        }
+    }
+
+    private async Task ToggleMapAsync()
+    {
+        _isMapOpen = !_isMapOpen;
+        _mapError = null;
+        if (!_isMapOpen)
+        {
+            await DisposeMapAsync();
+        }
+    }
+
+    private async Task EnsureMapAsync()
+    {
+        if (_mapInitialized || _mapInitializationAttempted)
+        {
+            return;
+        }
+
+        _mapInitializationAttempted = true;
+        try
+        {
+            _mapModule ??= await Js.InvokeAsync<IJSObjectReference>("import", "./js/dashboard-map.js");
+            _mapCallback ??= DotNetObjectReference.Create(this);
+            _mapInitialized = await _mapModule.InvokeAsync<bool>(
+                "init",
+                "user-locations-map-picker",
+                _mapCallback,
+                new
+                {
+                    latitude = MapCenterLatitude,
+                    longitude = MapCenterLongitude,
+                    zoom = 9,
+                    tk = Configuration["Map:Tianditu:Key"] ?? ""
+                });
+
+            if (!_mapInitialized)
+            {
+                _mapError = "地图暂时不可用，请直接输入经纬度。";
+            }
+        }
+        catch (JSException)
+        {
+            _mapError = "地图脚本加载失败，请直接输入经纬度。";
+        }
+        catch (InvalidOperationException)
+        {
+            _mapError = "地图交互暂时不可用，请直接输入经纬度。";
+        }
+    }
+
+    private double MapCenterLatitude => _latitude == 0 && _longitude == 0 ? 30.194 : _latitude;
+
+    private double MapCenterLongitude => _latitude == 0 && _longitude == 0 ? 122.687 : _longitude;
+
+    [JSInvokable]
+    public Task SelectMapPointFromJs(double latitude, double longitude)
+    {
+        _latitude = Math.Round(latitude, 6, MidpointRounding.AwayFromZero);
+        _longitude = Math.Round(longitude, 6, MidpointRounding.AwayFromZero);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task HandleMapUnavailableFromJs(string? message)
+    {
+        _mapError = message;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async ValueTask DisposeMapAsync()
+    {
+        if (_mapModule is not null)
+        {
+            try
+            {
+                await _mapModule.InvokeVoidAsync("dispose", "user-locations-map-picker");
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+
+        _mapInitialized = false;
+        _mapInitializationAttempted = false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeMapAsync();
+        if (_mapModule is not null)
+        {
+            await _mapModule.DisposeAsync();
+        }
+
+        _mapCallback?.Dispose();
     }
 
     private static ActivityType? ParseActivity(string? value) => string.IsNullOrWhiteSpace(value)
