@@ -127,7 +127,7 @@
 | 当前任务 ID | `MI-0037` |
 | 当前状态 | `DONE` |
 | 当前目标 | 首页收藏入口 + 我的地点地图选点 + 查询 Loading 特效 |
-| 最后完成动作 | Dashboard 摘要栏以星标按钮（☆/★）切换收藏/取消收藏，匿名用户显示「登录后收藏」链接；「我的地点」表单接入天地图地图选点（复用 `dashboard-map.js`，点击自动填充经纬度）并修复保存按钮未绑定表单的缺陷；查询中新增全屏 Loading 遮罩 + 旋转 spinner；已部署上线（migrate 应用迁移 exit 0、web healthy、公网 `/`、`/account/register`、`/account/login`、`/health/live` 均 200、数据库预置地点正常） |
+| 最后完成动作 | Dashboard 摘要栏以星标按钮（☆/★）切换收藏/取消收藏，匿名用户显示「登录后收藏」链接；「我的地点」表单接入天地图地图选点（复用 `dashboard-map.js`，点击自动填充经纬度）并修复保存按钮未绑定表单的缺陷；查询中新增全屏 Loading 遮罩 + 旋转 spinner；修复收藏入口不可见问题——把收藏星标从摘要栏移到查询区 `selected-location-bar`，选中预置地点后立即显示（无需先提交查询），已重新部署上线（公网 `/`、`/health/live`、`/account/register` 均 200） |
 | 下一步动作 | 待用户浏览器人工验证收藏星标切换、`/my-locations` 地图选点自动填充与保存、查询 Loading 遮罩及移动端展示 |
 | 涉及文件 | `src/MarineInsight.Web/Components/Pages/Dashboard.razor`、`Dashboard.razor.css`、`UserLocations.razor`、`UserLocations.razor.css`、`docs/AGENT-GUIDE.md`、`docs/21-开发RoadMap.md` |
 | 验证结果 | Release 构建 0 警告、0 错误；全量测试 192/192 通过（Domain 51、Application 51、Infrastructure 37、Web 53）；`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 |
