@@ -132,8 +132,8 @@
 | 当前任务 ID | `MI-0038` |
 | 当前状态 | `DONE` |
 | 当前目标 | 地图选点自定义命名 + 完善地图点收藏 |
-| 最后完成动作 | `MarineAnalysisQuery` 新增可选 `DisplayName`，地图选点查询携带自定义名称；收藏数据模型 `FavoriteLocationEntity` 将 `LocationId` 改为可空外键并冗余存储 `DisplayName/Latitude/Longitude`，同时支持预置地点（反查目录）与地图坐标点（落库冗余）两类收藏，按 `(UserId, lat, lon)` 去重；Dashboard 地图选点区新增「地点名称（可选）」输入（留空回退「自定义坐标」），摘要标题改用自定义名称，选中地图点时显示收藏星标；Favorites 页对地图点用 `/?lat=&lon=&name=` 生成「再次查询」链接；SQLite + PostgreSQL 双迁移 `AddMapPointFavorites` 与幂等 SQL 已生成 |
-| 下一步动作 | 标准 git 提交 + 推送 `origin`，随后按部署手册发布到生产并冒烟验证 |
+| 最后完成动作 | `MarineAnalysisQuery` 新增可选 `DisplayName`，地图选点查询携带自定义名称；收藏数据模型 `FavoriteLocationEntity` 将 `LocationId` 改为可空外键并冗余存储 `DisplayName/Latitude/Longitude`，同时支持预置地点（反查目录）与地图坐标点（落库冗余）两类收藏，按 `(UserId, lat, lon)` 去重；Dashboard 地图选点区新增「地点名称（可选）」输入（留空回退「自定义坐标」），摘要标题改用自定义名称，选中地图点时显示收藏星标；Favorites 页对地图点用 `/?lat=&lon=&name=` 生成「再次查询」链接；SQLite + PostgreSQL 双迁移 `AddMapPointFavorites` 与幂等 SQL 已生成；已标准提交 `bbe6ce6` 并生产部署上线（tar+ssh 同步、pg_dump 备份、`up -d --build` 重建，migrate 应用迁移 exit 0、web healthy、HTTPS `/health/live`、`/health/ready` 均 200、Dashboard 渲染正常、预置地点完好） |
+| 下一步动作 | git 推送 `origin` 因网络失败待重试（`github.com:443` 不可达）；待用户浏览器人工验证地图选点输入自定义名称、地图点收藏与 Favorites「再次查询」还原名称 |
 | 涉及文件 | `MarineAnalysisQuery.cs`、`UserWorkspaceModels.cs`、`UserWorkspaceService.cs`、`FavoriteLocationEntity.cs`、`FavoriteLocationConfiguration.cs`、`UserWorkspaceRepository.cs`、`DashboardQuerySession.cs`、`UserWorkspaceEndpointExtensions.cs`、`Dashboard.razor`、`Favorites.razor`、双迁移、`deploy/postgresql-migrations.sql`、`docs/05/06/15/16/21/AGENT-GUIDE` |
 | 验证结果 | Release 构建 0 警告、0 错误；全量测试 194/194 通过（Domain 51、Application 51、Infrastructure 38、Web 54）；`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 |
 | 阻塞/待确认 | 无 |
