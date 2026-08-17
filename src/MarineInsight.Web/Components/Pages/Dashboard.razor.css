@@ -347,7 +347,6 @@
     font: inherit;
     font-weight: 700;
     gap: 6px;
-    margin-top: 12px;
     min-height: 40px;
     padding: 8px 14px;
     text-decoration: none;
@@ -372,6 +371,35 @@
 .workspace-inline-status {
     display: inline-block;
     margin-left: 10px;
+}
+
+.selected-location-bar {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 10px 12px;
+}
+
+.selected-location-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.selected-location-name strong {
+    letter-spacing: 0;
+}
+
+.selected-location-name em {
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-style: normal;
 }
 
 .summary-grid,
