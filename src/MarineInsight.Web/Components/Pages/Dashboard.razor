@@ -146,7 +146,9 @@
             <div class="range-controls">
                 <label class="field">
                     <span>起报时间（@Session.DisplayTimeZoneLabel）</span>
-                    <input type="datetime-local" @bind="Session.ForecastStartLocal" @bind:format="yyyy-MM-ddTHH:mm" />
+                    <input type="datetime-local"
+                           value="@Session.ForecastStartLocal.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)"
+                           @onchange="OnForecastStartChanged" />
                 </label>
 
                 @if (HasSelection)
@@ -658,6 +660,17 @@
     }
 
     private Task SearchLocationsAsync() => Session.SearchLocationsAsync();
+
+    private Task OnForecastStartChanged(ChangeEventArgs e)
+    {
+        if (e.Value is string text &&
+            DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+        {
+            Session.ForecastStartLocal = parsed;
+        }
+
+        return Task.CompletedTask;
+    }
 
     private async Task SubmitAsync()
     {
