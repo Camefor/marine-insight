@@ -163,3 +163,4 @@ Compose 的 `depends_on` 只表达启动依赖，不能替代应用内重试和�
 | 1.4 | 2026-08-13 | 增加 WorldTides 可选 Compose 覆盖和仓库外 Secret 注入流程 |
 | 1.5 | 2026-08-14 | PostgreSQL 18+ 镜像数据目录改为按主版本分目录，命名卷挂载点由 `/var/lib/postgresql/data` 调整为 `/var/lib/postgresql` |
 | 1.6 | 2026-08-14 | 修复 Docker 镜像缺失 `_framework` 框架静态资源：发布阶段移除 `--no-restore`，避免「先仅 csproj 还原再复制源码」导致 Blazor 交互脚本未被解析 |
+| 1.7 | 2026-08-17 | 新增部署后磁盘空间优化脚本 `deploy/docker-cleanup.sh`：清理悬空镜像、无用构建缓存、已退出容器与无用网络，每次部署 `up -d --build` 后执行以减少磁盘占用（详见 22-腾讯云生产部署手册 第 22 节） |

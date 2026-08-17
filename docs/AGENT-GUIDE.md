@@ -121,7 +121,7 @@
 ### 6.1 提交与部署工作流
 
 - **标准 git 提交**：任务完成收尾时，按 `<type>(<scope>): <summary>` 生成标准提交说明（如 `feat(web): ...`），仅 `git add` 本次需求相关文件（排除密钥/.env），随后 `git push origin main`。
-- **关键词触发部署**：当用户消息中出现「发布 / 部署 / 上线」等关键词时，即按 `docs/22-腾讯云生产部署手册.md` 执行生产部署：本地 Release 构建 + 全量测试 → `tar` 同步 `src/` 与 `deploy/postgresql-migrations.sql` 到服务器 → `pg_dump` 备份 → `docker compose up -d --build`（叠加 `compose.production/ai/tianditu` overlay）→ 冒烟验证健康检查、预置地点、静态资源与天地图瓦片。部署结果回写本节「会话记录」。
+- **关键词触发部署**：当用户消息中出现「发布 / 部署 / 上线」等关键词时，即按 `docs/22-腾讯云生产部署手册.md` 执行生产部署：本地 Release 构建 + 全量测试 → `tar` 同步 `src/`、`deploy/postgresql-migrations.sql` 与 `deploy/docker-cleanup.sh` 到服务器 → `pg_dump` 备份 → `docker compose up -d --build`（叠加 `compose.production/ai/tianditu` overlay）→ 冒烟验证健康检查、预置地点、静态资源与天地图瓦片 → `bash deploy/docker-cleanup.sh` 清理 Docker 悬空镜像/构建缓存/已退出容器/无用网络。部署结果回写本节「会话记录」。
 
 ## 7. 当前执行状态
 
