@@ -141,6 +141,25 @@ public sealed class DashboardQuerySessionTests
     }
 
     [Fact]
+    public async Task MapPointCustomNameFlowsIntoResultDisplayName()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 0, 0, 0);
+        session.Hours = 24;
+        session.MapPointName = " 我的海钓点 ";
+
+        Assert.True(session.SelectMapPoint(30.194, 122.687));
+        await session.SubmitAnalysisAsync();
+
+        Assert.Null(session.AnalysisError);
+        Assert.NotNull(session.Result);
+        Assert.Equal("我的海钓点", session.Result.DisplayName);
+    }
+
+    [Fact]
     public async Task InvalidMapPointLeavesCoordinateFallbackErrorAndBlocksSubmit()
     {
         using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();

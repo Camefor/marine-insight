@@ -4,7 +4,7 @@ namespace MarineInsight.Application.Users;
 
 public sealed record FavoriteLocation(
     Guid Id,
-    Guid LocationId,
+    Guid? LocationId,
     string DisplayName,
     double Latitude,
     double Longitude,
@@ -48,7 +48,10 @@ public sealed record UserSettings(
 }
 
 public sealed record SaveFavoriteCommand(
-    Guid LocationId,
+    Guid? LocationId,
+    string? DisplayName,
+    double Latitude,
+    double Longitude,
     ActivityType? DefaultActivity,
     string? Note,
     int SortOrder);
@@ -75,8 +78,8 @@ public sealed record RecordQueryHistoryCommand(
 
 public sealed class FavoriteAlreadyExistsException : Exception
 {
-    public FavoriteAlreadyExistsException(Guid locationId)
-        : base($"Location '{locationId}' is already a favorite for this user.")
+    public FavoriteAlreadyExistsException(string message)
+        : base(message)
     {
     }
 }

@@ -601,3 +601,42 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260817030832_AddMapPointFavorites') THEN
+    ALTER TABLE favorite_locations ALTER COLUMN "LocationId" DROP NOT NULL;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260817030832_AddMapPointFavorites') THEN
+    ALTER TABLE favorite_locations ADD "DisplayName" character varying(200);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260817030832_AddMapPointFavorites') THEN
+    ALTER TABLE favorite_locations ADD "Latitude" double precision;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260817030832_AddMapPointFavorites') THEN
+    ALTER TABLE favorite_locations ADD "Longitude" double precision;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260817030832_AddMapPointFavorites') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260817030832_AddMapPointFavorites', '10.0.11');
+    END IF;
+END $EF$;
+COMMIT;
+

@@ -16,7 +16,7 @@ public sealed class UserWorkspaceRepositoryTests
         var firstUser = await fixture.CreateUserAsync("first@example.com");
         var secondUser = await fixture.CreateUserAsync("second@example.com");
         var locationId = Guid.Parse("8a477d67-73fa-4f43-b954-cd29d238a89d");
-        var command = new SaveFavoriteCommand(locationId, ActivityType.ShoreFishing, "常用钓点", 2);
+        var command = new SaveFavoriteCommand(locationId, null, 0, 0, ActivityType.ShoreFishing, "常用钓点", 2);
 
         var first = await fixture.Repository.AddFavoriteAsync(firstUser, command, default);
         var earlier = await fixture.Repository.AddFavoriteAsync(firstUser,
@@ -39,6 +39,33 @@ public sealed class UserWorkspaceRepositoryTests
         Assert.Single(await fixture.Repository.ListFavoritesAsync(secondUser, default));
         Assert.False(await fixture.Repository.DeleteFavoriteAsync(secondUser, first!.Id, default));
         Assert.True(await fixture.Repository.DeleteFavoriteAsync(firstUser, first.Id, default));
+    }
+
+    [Fact]
+    public async Task MapPointFavoritesStoreNameAndCoordinatesAndDedupeByCoordinate()
+    {
+        await using var fixture = await WorkspaceFixture.CreateAsync();
+        var user = await fixture.CreateUserAsync("map@example.com");
+        var command = new SaveFavoriteCommand(null, "我的钓点", 30.194, 122.687, ActivityType.Boat, null, 0);
+
+        var first = await fixture.Repository.AddFavoriteAsync(user, command, default);
+        var duplicate = await fixture.Repository.AddFavoriteAsync(user, command, default);
+        var other = await fixture.Repository.AddFavoriteAsync(user, command with { Longitude = 122.688 }, default);
+
+        Assert.NotNull(first);
+        Assert.Null(duplicate);
+        Assert.NotNull(other);
+
+        var favorites = await fixture.Repository.ListFavoritesAsync(user, default);
+        Assert.Equal(2, favorites.Count);
+
+        var saved = favorites.Single(favorite => favorite.Id == first.Id);
+        Assert.Null(saved.LocationId);
+        Assert.Equal("我的钓点", saved.DisplayName);
+        Assert.Equal(30.194, saved.Latitude, 6);
+        Assert.Equal(122.687, saved.Longitude, 6);
+
+        Assert.True(await fixture.Repository.DeleteFavoriteAsync(user, first.Id, default));
     }
 
     [Fact]

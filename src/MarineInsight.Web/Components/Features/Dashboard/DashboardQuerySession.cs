@@ -46,6 +46,8 @@ public sealed class DashboardQuerySession : IDisposable
 
     public string SearchText { get; set; } = "东极岛";
 
+    public string MapPointName { get; set; } = string.Empty;
+
     public int Hours { get; set; } = 24;
 
     public DateTime ForecastStartLocal
@@ -391,11 +393,12 @@ public sealed class DashboardQuerySession : IDisposable
             return null;
         }
 
-        // 地图选点没有地点目录元数据，保留纯坐标查询，结果中按自定义坐标展示。
+        // 地图选点没有地点目录元数据，保留纯坐标查询；用户可输入自定义名称，结果中按该名称（留空则“自定义坐标”）展示。
         return new MarineAnalysisQuery(
             new GeoPoint(SelectedMapPoint.Latitude, SelectedMapPoint.Longitude),
             range,
-            activities: RequestedActivities);
+            activities: RequestedActivities,
+            displayName: MapPointName);
     }
 
     private static DashboardLocationOption ToLocationOption(Location location) => new(
@@ -494,7 +497,7 @@ public sealed class DashboardQuerySession : IDisposable
 
         return new DashboardAnalysisResult(
             result.Snapshot.SnapshotId,
-            result.Query.LocationMetadata?.DisplayName ?? "自定义坐标",
+            result.Query.DisplayName ?? result.Query.LocationMetadata?.DisplayName ?? "自定义坐标",
             result.Query.Location.Latitude,
             result.Query.Location.Longitude,
             result.Snapshot.Range.StartUtc,

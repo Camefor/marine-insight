@@ -43,12 +43,12 @@
                 </button>
             </div>
 
-            @if (Session.SelectedLocation is not null)
+            @if (HasSelection)
             {
                 <div class="selected-location-bar">
                     <span class="selected-location-name">
-                        <strong>@Session.SelectedLocation.DisplayName</strong>
-                        <em>@Session.SelectedLocation.Latitude.ToString("0.###") / @Session.SelectedLocation.Longitude.ToString("0.###")</em>
+                        <strong>@SelectedDisplayName</strong>
+                        <em>@SelectedCoordinate</em>
                     </span>
                     <AuthorizeView>
                         <Authorized>
@@ -153,6 +153,14 @@
                             }
                         </span>
                     </div>
+
+                    <label class="field map-point-name">
+                        <span>地点名称（可选）</span>
+                        <input type="text"
+                               maxlength="200"
+                               placeholder="留空显示“自定义坐标”"
+                               @bind="Session.MapPointName" />
+                    </label>
                 </div>
             }
 
@@ -611,6 +619,10 @@
     [SupplyParameterFromQuery(Name = "lon")]
     public double? QueryLongitude { get; set; }
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "name")]
+    public string? QueryName { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -635,6 +647,7 @@
         else if (QueryLatitude.HasValue && QueryLongitude.HasValue)
         {
             Session.SelectMapPoint(QueryLatitude.Value, QueryLongitude.Value);
+            Session.MapPointName = QueryName ?? string.Empty;
         }
     }
 
@@ -659,17 +672,44 @@
         }
     }
 
-    private bool _isFavorited => _favorites.Any(favorite => favorite.LocationId == Session.SelectedLocation?.Id);
+    private bool HasSelection => Session.SelectedLocation is not null || Session.SelectedMapPoint is not null;
+
+    private string SelectedDisplayName => Session.SelectedLocation is { } location
+        ? location.DisplayName
+        : string.IsNullOrWhiteSpace(Session.MapPointName) ? "自定义坐标" : Session.MapPointName.Trim();
+
+    private string SelectedCoordinate => Session.SelectedLocation is { } location
+        ? $"{location.Latitude.ToString("0.###")} / {location.Longitude.ToString("0.###")}"
+        : Session.SelectedMapPoint is { } point
+            ? $"{point.Latitude.ToString("0.###")} / {point.Longitude.ToString("0.###")}"
+            : string.Empty;
+
+    private bool _isFavorited => Session.SelectedLocation is { } location
+        ? _favorites.Any(favorite => favorite.LocationId == location.Id)
+        : Session.SelectedMapPoint is { } point
+            ? _favorites.Any(favorite => favorite.LocationId is null &&
+                favorite.Latitude == point.Latitude && favorite.Longitude == point.Longitude)
+            : false;
 
     private async Task ToggleFavoriteAsync()
     {
-        if (!_userId.HasValue || Session.SelectedLocation is null)
+        if (!_userId.HasValue)
         {
             return;
         }
 
-        var locationId = Session.SelectedLocation.Id;
-        var existing = _favorites.FirstOrDefault(favorite => favorite.LocationId == locationId);
+        var catalogLocationId = Session.SelectedLocation?.Id;
+        var mapPoint = Session.SelectedLocation is null ? Session.SelectedMapPoint : null;
+
+        var existing = catalogLocationId.HasValue
+            ? _favorites.FirstOrDefault(favorite => favorite.LocationId == catalogLocationId)
+            : mapPoint is null
+                ? null
+                : _favorites.FirstOrDefault(favorite =>
+                    favorite.LocationId is null &&
+                    favorite.Latitude == mapPoint.Latitude &&
+                    favorite.Longitude == mapPoint.Longitude);
+
         try
         {
             if (existing is not null)
@@ -678,10 +718,26 @@
                 _favorites.RemoveAll(favorite => favorite.Id == existing.Id);
                 _workspaceStatus = "已取消收藏。";
             }
-            else
+            else if (catalogLocationId.HasValue)
             {
                 var added = await Workspace.AddFavoriteAsync(_userId.Value, new SaveFavoriteCommand(
-                    locationId,
+                    catalogLocationId,
+                    null,
+                    0,
+                    0,
+                    Session.SelectedActivity,
+                    null,
+                    0));
+                _favorites.Add(added);
+                _workspaceStatus = "已收藏。";
+            }
+            else if (mapPoint is not null)
+            {
+                var added = await Workspace.AddFavoriteAsync(_userId.Value, new SaveFavoriteCommand(
+                    null,
+                    string.IsNullOrWhiteSpace(Session.MapPointName) ? "自定义坐标" : Session.MapPointName.Trim(),
+                    mapPoint.Latitude,
+                    mapPoint.Longitude,
                     Session.SelectedActivity,
                     null,
                     0));

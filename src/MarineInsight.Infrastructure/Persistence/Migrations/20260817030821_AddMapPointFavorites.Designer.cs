@@ -3,100 +3,98 @@ using System;
 using MarineInsight.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MarineInsight.Migrations.PostgreSql.Migrations
+namespace MarineInsight.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MarineInsightDbContext))]
-    partial class MarineInsightDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260817030821_AddMapPointFavorites")]
+    partial class AddMapPointFavorites
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.11")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
-
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
 
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AnalysisReportEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("id");
 
                     b.Property<short?>("ActivityType")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("activity_type");
 
                     b.Property<string>("AlgorithmVersion")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("character varying(80)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("algorithm_version");
 
                     b.Property<double>("Confidence")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("confidence");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("created_at");
 
                     b.Property<int>("Hours")
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("hours");
 
                     b.Property<Guid?>("LocationId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("location_id");
 
                     b.Property<DateTimeOffset>("RangeEndUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("range_end");
 
                     b.Property<DateTimeOffset>("RangeStartUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("range_start");
 
                     b.Property<DateTimeOffset?>("RecommendedEndUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("recommended_end");
 
                     b.Property<DateTimeOffset?>("RecommendedStartUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("recommended_start");
 
                     b.Property<DateTimeOffset?>("ReturnBeforeUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("return_before");
 
                     b.Property<short>("RiskLevel")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("risk_level");
 
                     b.Property<double?>("Score")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("score");
 
                     b.Property<string>("SourceSetHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("source_set_hash");
 
                     b.Property<string>("SummaryTemplateCode")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("character varying(80)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("summary_template_code");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
@@ -112,43 +110,43 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("id");
 
                     b.Property<double?>("Actual")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("actual");
 
                     b.Property<Guid>("AnalysisResultId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("analysis_result_id");
 
                     b.Property<DateTimeOffset>("ForecastTimeUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("forecast_time");
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("message");
 
                     b.Property<double>("Penalty")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("penalty");
 
                     b.Property<string>("RuleCode")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("character varying(80)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("rule_code");
 
                     b.Property<short>("Severity")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("severity");
 
                     b.Property<double?>("Threshold")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("threshold");
 
                     b.HasKey("Id");
@@ -161,37 +159,37 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.AnalysisSourceBatchEntity", b =>
                 {
                     b.Property<Guid>("AnalysisResultId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("analysis_result_id");
 
                     b.Property<Guid>("BatchId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("batch_id");
 
                     b.Property<short>("SourceRole")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("source_role");
 
                     b.Property<short>("DataDomain")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("data_domain");
 
                     b.Property<string>("ProviderCode")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("provider_code");
 
                     b.Property<string>("SelectionPolicy")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("character varying(120)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("selection_policy");
 
                     b.Property<string>("SourceModel")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("source_model");
 
                     b.HasKey("AnalysisResultId", "BatchId", "SourceRole");
@@ -203,32 +201,32 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid?>("ActorUserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("EventType")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Summary")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TargetId")
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TargetType")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -243,40 +241,40 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DefaultActivity")
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<double?>("Latitude")
-                        .HasColumnType("double precision");
+                        .HasColumnType("REAL");
 
                     b.Property<Guid?>("LocationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<double?>("Longitude")
-                        .HasColumnType("double precision");
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -294,89 +292,89 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("id");
 
                     b.Property<double>("Completeness")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("completeness");
 
                     b.Property<short>("DataDomain")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("data_domain");
 
                     b.Property<string>("EndpointCode")
                         .HasMaxLength(60)
-                        .HasColumnType("character varying(60)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("endpoint_code");
 
                     b.Property<DateTimeOffset>("FetchedAtUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("fetched_at");
 
                     b.Property<short>("Freshness")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("freshness");
 
                     b.Property<decimal?>("GridLatitude")
                         .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("grid_latitude");
 
                     b.Property<decimal?>("GridLongitude")
                         .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("grid_longitude");
 
                     b.Property<DateTimeOffset?>("IssuedAtUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("issued_at");
 
                     b.Property<Guid>("LocationId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("location_id");
 
                     b.Property<string>("ModelCode")
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("model_code");
 
                     b.Property<string>("ProviderCode")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("provider_code");
 
                     b.Property<int>("QualityFlags")
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("quality_flags");
 
                     b.Property<short>("QualityStatus")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("quality_status");
 
                     b.Property<DateTimeOffset>("RangeEndUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("range_end");
 
                     b.Property<DateTimeOffset>("RangeStartUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("range_start");
 
                     b.Property<string>("RawPayloadHash")
                         .HasMaxLength(64)
-                        .HasColumnType("character(64)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("raw_payload_hash")
                         .IsFixedLength();
 
                     b.Property<decimal>("RequestedLatitude")
                         .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("requested_latitude");
 
                     b.Property<decimal>("RequestedLongitude")
                         .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("requested_longitude");
 
                     b.HasKey("Id");
@@ -393,151 +391,151 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("id");
 
                     b.Property<Guid>("BatchId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("batch_id");
 
                     b.Property<double?>("CapeJkg")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("cape_jkg");
 
                     b.Property<double?>("CloudCoverPct")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("cloud_cover_percent");
 
                     b.Property<double>("Completeness")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("completeness");
 
                     b.Property<double?>("CurrentDirectionDeg")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("current_direction_deg");
 
                     b.Property<double?>("CurrentSpeedMs")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("current_speed_ms");
 
                     b.Property<DateTimeOffset>("ForecastTimeUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("forecast_time");
 
                     b.Property<short>("Freshness")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("freshness");
 
                     b.Property<long>("MissingMetricsMask")
-                        .HasColumnType("bigint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("missing_mask");
 
                     b.Property<double?>("PrecipitationMmPerHour")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("precipitation_mm");
 
                     b.Property<int>("QualityFlags")
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("quality_flags");
 
                     b.Property<short>("QualityStatus")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("quality_status");
 
                     b.Property<double?>("RelativeHumidityPct")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("humidity_percent");
 
                     b.Property<double?>("SeaTemperatureC")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("sea_temperature_c");
 
                     b.Property<double?>("SurfacePressureHpa")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("pressure_hpa");
 
                     b.Property<double?>("SwellDirectionDeg")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("swell_direction_deg");
 
                     b.Property<double?>("SwellHeightM")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("swell_height_m");
 
                     b.Property<double?>("SwellPeakPeriodS")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("swell_peak_period_s");
 
                     b.Property<double?>("SwellPeriodS")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("swell_period_s");
 
                     b.Property<double?>("TemperatureC")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("temperature_c");
 
                     b.Property<bool?>("Thunderstorm")
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("thunderstorm");
 
                     b.Property<double?>("TideHeightM")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("tide_height_m");
 
                     b.Property<short?>("TideType")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("tide_type");
 
                     b.Property<double?>("VisibilityM")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("visibility_m");
 
                     b.Property<double?>("WaveDirectionDeg")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wave_direction_deg");
 
                     b.Property<double?>("WaveHeightM")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wave_height_m");
 
                     b.Property<double?>("WavePeakPeriodS")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wave_peak_period_s");
 
                     b.Property<double?>("WavePeriodS")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wave_period_s");
 
                     b.Property<int?>("WeatherCode")
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("weather_code");
 
                     b.Property<double?>("WindDirectionDeg")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wind_direction_deg");
 
                     b.Property<double?>("WindGustMs")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wind_gust_ms");
 
                     b.Property<double?>("WindSpeedMs")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wind_speed_ms");
 
                     b.Property<double?>("WindWaveDirectionDeg")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wind_wave_direction_deg");
 
                     b.Property<double?>("WindWaveHeightM")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wind_wave_height_m");
 
                     b.Property<double?>("WindWavePeakPeriodS")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wind_wave_peak_period_s");
 
                     b.Property<double?>("WindWavePeriodS")
-                        .HasColumnType("double precision")
+                        .HasColumnType("REAL")
                         .HasColumnName("wind_wave_period_s");
 
                     b.HasKey("Id");
@@ -551,43 +549,43 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.ForecastPointSourceEntity", b =>
                 {
                     b.Property<Guid>("ForecastPointId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("forecast_point_id");
 
                     b.Property<short>("Metric")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("metric");
 
                     b.Property<Guid>("BatchId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("batch_id");
 
                     b.Property<DateTimeOffset>("ForecastTimeUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("forecast_time");
 
                     b.Property<short>("Freshness")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("freshness");
 
                     b.Property<string>("ProviderCode")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("provider_code");
 
                     b.Property<int>("QualityFlags")
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("quality_flags");
 
                     b.Property<short>("QualityStatus")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("quality_status");
 
                     b.Property<string>("SourceModel")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("character varying(80)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("source_model");
 
                     b.HasKey("ForecastPointId", "Metric");
@@ -599,52 +597,52 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                        .HasColumnType("TEXT")
                         .HasColumnName("id");
 
                     b.Property<decimal?>("CoastOrientationDeg")
                         .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("coast_orientation_deg");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasColumnName("created_at");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("display_name");
 
                     b.Property<bool>("IsPreset")
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("is_preset");
 
                     b.Property<decimal>("Latitude")
                         .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("latitude");
 
                     b.Property<short>("LocationType")
-                        .HasColumnType("smallint")
+                        .HasColumnType("INTEGER")
                         .HasColumnName("location_type");
 
                     b.Property<decimal>("Longitude")
                         .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("longitude");
 
                     b.Property<string>("NormalizedName")
                         .IsRequired()
                         .HasMaxLength(160)
-                        .HasColumnType("character varying(160)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("normalized_name");
 
                     b.Property<string>("TimeZoneId")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
+                        .HasColumnType("TEXT")
                         .HasColumnName("time_zone_id");
 
                     b.HasKey("Id");
@@ -709,49 +707,49 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Activities")
                         .IsRequired()
                         .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("AnalysisId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("ForecastFromUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Hours")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<double>("Latitude")
-                        .HasColumnType("double precision");
+                        .HasColumnType("REAL");
 
                     b.Property<Guid?>("LocationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<double>("Longitude")
-                        .HasColumnType("double precision");
+                        .HasColumnType("REAL");
 
                     b.Property<string>("RiskLevel")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("character varying(30)");
+                        .HasColumnType("TEXT");
 
                     b.Property<double?>("Score")
-                        .HasColumnType("double precision");
+                        .HasColumnType("REAL");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -764,38 +762,38 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DefaultActivity")
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)");
+                        .HasColumnType("TEXT");
 
                     b.Property<double>("Latitude")
-                        .HasColumnType("double precision");
+                        .HasColumnType("REAL");
 
                     b.Property<double>("Longitude")
-                        .HasColumnType("double precision");
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -807,33 +805,33 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.UserSettingEntity", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DefaultActivity")
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TemperatureUnit")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TimeZoneId")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("WaveHeightUnit")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("WindSpeedUnit")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("UserId");
 
@@ -844,54 +842,54 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -909,19 +907,19 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -936,18 +934,16 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -960,18 +956,16 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -983,16 +977,16 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -1004,10 +998,10 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -1019,16 +1013,16 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 

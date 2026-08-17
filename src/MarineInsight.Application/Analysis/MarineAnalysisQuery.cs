@@ -13,7 +13,8 @@ public sealed record MarineAnalysisQuery
         GeoPoint location,
         ForecastRange range,
         Location? locationMetadata = null,
-        IEnumerable<ActivityType>? activities = null)
+        IEnumerable<ActivityType>? activities = null,
+        string? displayName = null)
     {
         if (locationMetadata is not null && locationMetadata.Coordinates != location)
         {
@@ -28,6 +29,7 @@ public sealed record MarineAnalysisQuery
         Activities = ActivityProfile.SelectDefaults(activities)
             .Select(profile => profile.ActivityType)
             .ToArray();
+        DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
     }
 
     public GeoPoint Location { get; }
@@ -37,4 +39,9 @@ public sealed record MarineAnalysisQuery
     public Location? LocationMetadata { get; }
 
     public IReadOnlyList<ActivityType> Activities { get; }
+
+    /// <summary>
+    /// Presentation label for coordinate-only queries that have no location catalog metadata.
+    /// </summary>
+    public string? DisplayName { get; }
 }

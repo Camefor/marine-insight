@@ -30,9 +30,17 @@ public sealed class UserWorkspaceRepository(
 
     public async Task<FavoriteLocation?> AddFavoriteAsync(Guid userId, SaveFavoriteCommand command, CancellationToken cancellationToken)
     {
-        if (await dbContext.FavoriteLocations.AnyAsync(
-            entity => entity.UserId == userId && entity.LocationId == command.LocationId,
-            cancellationToken))
+        var exists = command.LocationId.HasValue
+            ? await dbContext.FavoriteLocations.AnyAsync(
+                entity => entity.UserId == userId && entity.LocationId == command.LocationId,
+                cancellationToken)
+            : await dbContext.FavoriteLocations.AnyAsync(
+                entity => entity.UserId == userId &&
+                          entity.LocationId == null &&
+                          entity.Latitude == command.Latitude &&
+                          entity.Longitude == command.Longitude,
+                cancellationToken);
+        if (exists)
         {
             return null;
         }
@@ -43,6 +51,9 @@ public sealed class UserWorkspaceRepository(
             Id = Guid.NewGuid(),
             UserId = userId,
             LocationId = command.LocationId,
+            DisplayName = command.LocationId.HasValue ? null : command.DisplayName,
+            Latitude = command.LocationId.HasValue ? null : command.Latitude,
+            Longitude = command.LocationId.HasValue ? null : command.Longitude,
             DefaultActivity = command.DefaultActivity?.ToString(),
             Note = command.Note,
             SortOrder = command.SortOrder,
@@ -51,7 +62,11 @@ public sealed class UserWorkspaceRepository(
         };
         dbContext.FavoriteLocations.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await dbContext.Entry(entity).Reference(item => item.Location).LoadAsync(cancellationToken);
+        if (command.LocationId.HasValue)
+        {
+            await dbContext.Entry(entity).Reference(item => item.Location).LoadAsync(cancellationToken);
+        }
+
         return MapFavorite(entity);
     }
 
@@ -222,9 +237,9 @@ public sealed class UserWorkspaceRepository(
     private static FavoriteLocation MapFavorite(FavoriteLocationEntity entity) => new(
         entity.Id,
         entity.LocationId,
-        entity.Location.DisplayName,
-        (double)entity.Location.Latitude,
-        (double)entity.Location.Longitude,
+        entity.Location is not null ? entity.Location.DisplayName : entity.DisplayName ?? "自定义坐标",
+        entity.Location is not null ? (double)entity.Location.Latitude : entity.Latitude ?? 0,
+        entity.Location is not null ? (double)entity.Location.Longitude : entity.Longitude ?? 0,
         ParseActivity(entity.DefaultActivity),
         entity.Note,
         entity.SortOrder,

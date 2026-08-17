@@ -1,6 +1,7 @@
 ﻿@page "/favorites"
 @attribute [Authorize]
 @rendermode InteractiveServer
+@using System.Globalization
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserWorkspaceService Workspace
 
@@ -95,5 +96,7 @@
     };
 
     private static string BuildQueryUrl(FavoriteLocation favorite) =>
-        $"/?locationId={favorite.LocationId}&activity={favorite.DefaultActivity}";
+        favorite.LocationId is { } locationId
+            ? $"/?locationId={locationId}&activity={favorite.DefaultActivity}"
+            : $"/?lat={favorite.Latitude.ToString(CultureInfo.InvariantCulture)}&lon={favorite.Longitude.ToString(CultureInfo.InvariantCulture)}&name={Uri.EscapeDataString(favorite.DisplayName)}";
 }

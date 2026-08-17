@@ -177,7 +177,8 @@ public static class UserWorkspaceEndpointExtensions
     }
 
     private static SaveFavoriteCommand ToCommand(FavoriteRequest request) =>
-        new(request.LocationId, ParseActivity(request.DefaultActivity), request.Note, request.SortOrder);
+        new(request.LocationId, request.DisplayName, request.Latitude, request.Longitude,
+            ParseActivity(request.DefaultActivity), request.Note, request.SortOrder);
 
     private static SaveUserLocationCommand ToCommand(UserLocationRequest request) =>
         new(request.Name, request.Latitude, request.Longitude, ParseActivity(request.DefaultActivity), request.Note, request.SortOrder);
@@ -195,7 +196,14 @@ public static class UserWorkspaceEndpointExtensions
         extensions: new Dictionary<string, object?> { ["code"] = "VALIDATION_FAILED" });
 }
 
-public sealed record FavoriteRequest(Guid LocationId, string? DefaultActivity, string? Note, int SortOrder);
+public sealed record FavoriteRequest(
+    Guid? LocationId,
+    string? DisplayName,
+    double Latitude,
+    double Longitude,
+    string? DefaultActivity,
+    string? Note,
+    int SortOrder);
 
 public sealed record UserLocationRequest(
     string Name,

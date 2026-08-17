@@ -10,6 +10,7 @@ public sealed class FavoriteLocationConfiguration : IEntityTypeConfiguration<Fav
     {
         builder.ToTable("favorite_locations");
         builder.HasKey(entity => entity.Id);
+        builder.Property(entity => entity.DisplayName).HasMaxLength(200);
         builder.Property(entity => entity.DefaultActivity).HasMaxLength(40);
         builder.Property(entity => entity.Note).HasMaxLength(500);
         builder.HasIndex(entity => new { entity.UserId, entity.LocationId }).IsUnique();

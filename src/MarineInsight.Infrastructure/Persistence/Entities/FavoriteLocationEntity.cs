@@ -6,7 +6,13 @@ public sealed class FavoriteLocationEntity
 
     public Guid UserId { get; set; }
 
-    public Guid LocationId { get; set; }
+    public Guid? LocationId { get; set; }
+
+    public string? DisplayName { get; set; }
+
+    public double? Latitude { get; set; }
+
+    public double? Longitude { get; set; }
 
     public string? DefaultActivity { get; set; }
 
@@ -18,5 +24,5 @@ public sealed class FavoriteLocationEntity
 
     public DateTimeOffset UpdatedAtUtc { get; set; }
 
-    public LocationEntity Location { get; set; } = null!;
+    public LocationEntity? Location { get; set; }
 }

@@ -247,8 +247,18 @@ namespace MarineInsight.Infrastructure.Persistence.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("LocationId")
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
@@ -1052,8 +1062,7 @@ namespace MarineInsight.Infrastructure.Persistence.Migrations
                     b.HasOne("MarineInsight.Infrastructure.Persistence.Entities.LocationEntity", "Location")
                         .WithMany()
                         .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("MarineInsight.Infrastructure.Persistence.MarineInsightUser", null)
                         .WithMany()

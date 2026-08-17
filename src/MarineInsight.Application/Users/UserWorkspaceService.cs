@@ -23,13 +23,14 @@ public sealed class UserWorkspaceService
     public async Task<FavoriteLocation> AddFavoriteAsync(Guid userId, SaveFavoriteCommand command, CancellationToken cancellationToken = default)
     {
         ValidateFavorite(command);
-        if (await _locations.GetByIdAsync(command.LocationId, cancellationToken) is null)
+        if (command.LocationId.HasValue &&
+            await _locations.GetByIdAsync(command.LocationId.Value, cancellationToken) is null)
         {
             throw new KeyNotFoundException("The selected location does not exist.");
         }
 
         return await _repository.AddFavoriteAsync(RequireUser(userId), Normalize(command), cancellationToken)
-            ?? throw new FavoriteAlreadyExistsException(command.LocationId);
+            ?? throw new FavoriteAlreadyExistsException("The selected location is already a favorite for this user.");
     }
 
     public async Task<FavoriteLocation?> UpdateFavoriteAsync(Guid userId, Guid favoriteId, SaveFavoriteCommand command, CancellationToken cancellationToken = default)
@@ -105,9 +106,29 @@ public sealed class UserWorkspaceService
 
     private static void ValidateFavorite(SaveFavoriteCommand command)
     {
-        if (command.LocationId == Guid.Empty)
+        if (command.LocationId is { } locationId)
         {
-            throw new ArgumentException("A valid location id is required.", nameof(command));
+            if (locationId == Guid.Empty)
+            {
+                throw new ArgumentException("A valid location id is required.", nameof(command));
+            }
+        }
+        else
+        {
+            if (!double.IsFinite(command.Latitude) || command.Latitude is < -90 or > 90)
+            {
+                throw new ArgumentOutOfRangeException(nameof(command), "Latitude must be between -90 and 90.");
+            }
+
+            if (!double.IsFinite(command.Longitude) || command.Longitude is < -180 or > 180)
+            {
+                throw new ArgumentOutOfRangeException(nameof(command), "Longitude must be between -180 and 180.");
+            }
+
+            if ((command.DisplayName ?? string.Empty).Trim().Length > 200)
+            {
+                throw new ArgumentException("Favorite display name must not exceed 200 characters.", nameof(command));
+            }
         }
 
         if (command.Note?.Length > 500)
@@ -121,7 +142,13 @@ public sealed class UserWorkspaceService
         }
     }
 
-    private static SaveFavoriteCommand Normalize(SaveFavoriteCommand command) => command with { Note = NormalizeText(command.Note) };
+    private static SaveFavoriteCommand Normalize(SaveFavoriteCommand command) => command with
+    {
+        DisplayName = command.LocationId.HasValue
+            ? null
+            : string.IsNullOrWhiteSpace(command.DisplayName) ? "自定义坐标" : command.DisplayName.Trim(),
+        Note = NormalizeText(command.Note)
+    };
 
     private static void ValidateUserLocation(SaveUserLocationCommand command)
     {
