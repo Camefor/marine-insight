@@ -151,33 +151,6 @@
                            @onchange="OnForecastStartChanged" />
                 </label>
 
-                @if (HasSelection)
-                {
-                    <div class="favorite-controls">
-                        <AuthorizeView>
-                            <Authorized>
-                                <button class="favorite-button @(_isFavorited ? "active" : null)" type="button"
-                                        aria-pressed="@_isFavorited"
-                                        title="@(_isFavorited ? "取消收藏" : "收藏当前地点")"
-                                        @onclick="ToggleFavoriteAsync">
-                                    <span class="favorite-star" aria-hidden="true">@(_isFavorited ? "★" : "☆")</span>
-                                    <span>@(_isFavorited ? "已收藏" : "收藏")</span>
-                                </button>
-                                @if (!string.IsNullOrWhiteSpace(_workspaceStatus))
-                                {
-                                    <span class="workspace-inline-status" role="status">@_workspaceStatus</span>
-                                }
-                            </Authorized>
-                            <NotAuthorized>
-                                <a class="favorite-button" href="/account/login?returnUrl=/">
-                                    <span class="favorite-star" aria-hidden="true">☆</span>
-                                    <span>登录后收藏</span>
-                                </a>
-                            </NotAuthorized>
-                        </AuthorizeView>
-                    </div>
-                }
-
                 <fieldset class="segmented-group">
                     <legend>范围</legend>
                     @foreach (var hours in HourOptions)
@@ -259,6 +232,33 @@
                     <dd>@Session.FormatDisplay(result.FromUtc) - @Session.FormatDisplay(result.ToUtc)</dd>
                 </div>
             </dl>
+
+            @if (HasSelection)
+            {
+                <div class="favorite-controls">
+                    <AuthorizeView>
+                        <Authorized>
+                            <button class="favorite-button @(_isFavorited ? "active" : null)" type="button"
+                                    aria-pressed="@_isFavorited"
+                                    title="@(_isFavorited ? "取消收藏" : "收藏当前地点")"
+                                    @onclick="ToggleFavoriteAsync">
+                                <span class="favorite-star" aria-hidden="true">@(_isFavorited ? "★" : "☆")</span>
+                                <span>@(_isFavorited ? "已收藏" : "收藏")</span>
+                            </button>
+                            @if (!string.IsNullOrWhiteSpace(_workspaceStatus))
+                            {
+                                <span class="workspace-inline-status" role="status">@_workspaceStatus</span>
+                            }
+                        </Authorized>
+                        <NotAuthorized>
+                            <a class="favorite-button" href="/account/login?returnUrl=/">
+                                <span class="favorite-star" aria-hidden="true">☆</span>
+                                <span>登录后收藏</span>
+                            </a>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            }
         </section>
 
         <section class="explanation-section" aria-labelledby="explanation-title">
