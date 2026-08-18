@@ -1,0 +1,26 @@
+﻿.admin-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid #d9e1df;
+    padding-bottom: 12px;
+}
+
+.admin-tab {
+    border: 1px solid #d9e1df;
+    border-radius: 8px;
+    color: #465956;
+    font-size: 0.9rem;
+    padding: 6px 14px;
+    text-decoration: none;
+}
+
+.admin-tab:hover {
+    background: #edf3f4;
+}
+
+.admin-tab.active {
+    background: #255e57;
+    border-color: #255e57;
+    color: #fff;
+}

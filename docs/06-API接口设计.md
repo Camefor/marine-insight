@@ -49,6 +49,11 @@
 | 设置 | GET/PUT | `/user-settings` | 用户单位和偏好 | 登录 |
 | 管理 | GET | `/admin/providers` | Provider 状态与配额摘要 | 管理员 |
 | 管理 | POST | `/admin/algorithms/{id}/publish` | 发布算法版本 | 管理员 |
+| 管理 | GET | `/admin/locations` | 预置地点列表 | 管理员 |
+| 管理 | POST | `/admin/locations` | 新增预置地点 | 管理员 |
+| 管理 | PUT | `/admin/locations/{id}` | 修改预置地点 | 管理员 |
+| 管理 | DELETE | `/admin/locations/{id}` | 删除预置地点（返回级联收藏引用数） | 管理员 |
+| 管理 | GET | `/admin/users` | 已注册用户只读列表 | 管理员 |
 | 系统 | GET | `/health/live` | 存活检查 | 基础设施 |
 | 系统 | GET | `/health/ready` | 就绪检查 | 基础设施 |
 
@@ -321,7 +326,35 @@
 
 同一用户收藏同一地点返回 `409 FAVORITE_ALREADY_EXISTS`。删除必须校验资源所有者。
 
-## 8. 错误响应
+## 8. 后台管理接口
+
+管理端点统一挂 `/api/v1/admin/**`，要求 `Administrator` 角色，写操作携带防伪头 `RequestVerificationToken`，并受 `admin` 限流策略（5/min/用户）约束。
+
+### 8.1 预置地点管理
+
+`POST/PUT /api/v1/admin/locations[/{id}]` 请求体：
+
+```json
+{
+  "displayName": "枸杞岛",
+  "latitude": 30.72,
+  "longitude": 122.77,
+  "timeZoneId": "Asia/Shanghai",
+  "locationType": "island",
+  "coastOrientationDeg": 45
+}
+```
+
+- `POST` 返回 `201` 与新建地点；`PUT /{id}` 返回 `200`，地点不存在返回 `404 LOCATION_NOT_FOUND`。
+- 名称 + 经纬度与既有预置地点冲突返回 `409 LOCATION_CONFLICT`。
+- `DELETE /{id}` 返回 `200` 与 `{ "deleted": true, "cascadedFavoriteCount": n }`，`n` 为级联删除的收藏行数；被 `forecast_batches` 引用的地点返回 `409 LOCATION_IN_USE` 不可删除。
+- 全部写操作落 `audit_logs`（`location.created/updated/deleted`），删除前由服务层预检外键约束。
+
+### 8.2 用户列表
+
+`GET /api/v1/admin/users` 返回只读用户摘要数组（`email`/`emailConfirmed`/`lockoutEnabled`/`lockoutEnd`/`accessFailedCount`），不暴露密码哈希。
+
+## 9. 错误响应
 
 ```json
 {
@@ -341,18 +374,20 @@
 | `ANALYSIS_NOT_FOUND` | 404 | 分析结果不存在或不可访问 |
 | `FORECAST_INSUFFICIENT` | 422 | 关键字段不足，无法可靠分析 |
 | `FAVORITE_ALREADY_EXISTS` | 409 | 重复收藏 |
+| `LOCATION_CONFLICT` | 409 | 预置地点名称 + 经纬度重复 |
+| `LOCATION_IN_USE` | 409 | 预置地点已被预报批次引用，禁止删除 |
 | `RATE_LIMITED` | 429 | 请求超过配额 |
 | `PROVIDER_UNAVAILABLE` | 503 | 外部数据源且缓存均不可用 |
 | `AI_EXPLANATION_UNAVAILABLE` | 200/降级标记 | AI 失败但规则结果仍可返回 |
 
-## 9. 缓存与条件请求
+## 10. 缓存与条件请求
 
 - 地点搜索可缓存 24 小时；预报按 Provider 更新节奏缓存 10-30 分钟。
 - 分析响应的 ETag 由来源批次集合哈希、来源选择策略、算法版本和归一化活动集合组成；单位偏好仅影响展示换算，不进入领域分析缓存键。
 - 客户端可发送 `If-None-Match`；服务端返回 `304` 时不重复传输结果。
 - 任何缓存响应都必须保留原数据 `fetchedAt`，不能将命中时间伪装为数据时间。
 
-## 10. 限流
+## 11. 限流
 
 | 场景 | 初始策略 |
 | --- | --- |
@@ -369,14 +404,14 @@
 
 `MI-0027` 已实现登录用户的收藏、查询历史和单位设置端点，以及管理员只读运行状态端点。分析响应新增 `tide` 状态：`disabled` 表示未启用，`available` 表示潮汐可用，`degraded` 表示仍返回潮汐但 Credit 已低于告警阈值，`unavailable` 表示本次潮汐失败；可选潮汐失败不改变基础天气/海况分析的成功状态。
 
-## 11. 版本与废弃
+## 12. 版本与废弃
 
 - URL 主版本用于破坏性协议变化，例如 `/api/v2`。
 - 新增可选字段不升级主版本；删除或改变语义需要新版本。
 - 废弃接口至少保留一个发布周期，并返回 `Deprecation` 与 `Sunset` 响应头。
 - 算法版本通过响应字段独立管理，不等同于 API 版本。
 
-## 12. 变更记录
+## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |
 | --- | --- | --- |
@@ -392,3 +427,4 @@
 | 1.8 | 2026-08-13 | 增加分析响应 `explanation` 字段与 AI/模板降级标记（MI-0028） |
 | 1.9 | 2026-08-14 | 增加 `MI-0036` 用户地点 CRUD 与查询历史删除/清空端点，落地全接口限流策略与注册/登录验证码 |
 | 2.0 | 2026-08-17 | 收藏请求体支持地图坐标点（`MI-0038`）：`POST/PUT /api/v1/favorites` 的 `locationId` 改为可空，新增 `displayName`/`latitude`/`longitude` 字段；`locationId` 非空为预置地点收藏，为空为地图坐标点收藏（冗余名称/坐标，服务端校验纬度 `[-90,90]`、经度 `[-180,180]`、名称 ≤200，按 `(用户, 坐标)` 去重） |
+| 2.1 | 2026-08-18 | 增加 `MI-0039` 后台管理端点：`GET/POST/PUT/DELETE /api/v1/admin/locations[/{id}]` 与 `GET /api/v1/admin/users`（均要求 `Administrator` 角色 + `admin` 限流，写操作带防伪头），新增 `LOCATION_CONFLICT`/`LOCATION_IN_USE` 错误码，删除返回级联收藏引用数 |

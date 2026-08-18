@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using MarineInsight.Application.Admin;
 using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
@@ -11,6 +12,7 @@ using MarineInsight.Infrastructure.Persistence;
 using MarineInsight.Infrastructure.Providers.Explanation;
 using MarineInsight.Infrastructure.Providers.OpenMeteo;
 using MarineInsight.Infrastructure.Providers.WorldTides;
+using MarineInsight.Web.Admin;
 using MarineInsight.Web.Api;
 using MarineInsight.Web.Authentication;
 using MarineInsight.Web.Components;
@@ -160,6 +162,7 @@ builder.Services.AddRateLimiter(options =>
 });
 builder.Services.AddMarineInsightCaching(builder.Configuration);
 builder.Services.Configure<CaptchaOptions>(builder.Configuration.GetSection("Captcha"));
+builder.Services.Configure<AdminOptions>(builder.Configuration.GetSection("Admin"));
 builder.Services.AddSingleton<CaptchaService>();
 builder.Services.AddOpenMeteoForecastProviders(builder.Configuration);
 builder.Services.AddWorldTidesProvider(builder.Configuration);
@@ -172,6 +175,8 @@ builder.Services.AddScoped<AnalysisReportService>();
 builder.Services.AddScoped<LocationQueryService>();
 builder.Services.AddScoped<UserWorkspaceService>();
 builder.Services.AddScoped<OperationsOverviewService>();
+builder.Services.AddScoped<AdminLocationService>();
+builder.Services.AddScoped<AdminUserService>();
 builder.Services.AddScoped<DashboardQuerySession>();
 builder.Services.AddMarineInsightTelemetry(builder.Configuration);
 builder.Services
@@ -248,6 +253,7 @@ app.MapAnalysisReportEndpoints();
 app.MapAccountEndpoints();
 app.MapUserWorkspaceEndpoints();
 app.MapOperationsEndpoints();
+app.MapAdminEndpoints();
 
 app.Run();
 

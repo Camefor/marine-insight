@@ -6,6 +6,9 @@
                 <a class="account-link" href="/my-locations">我的地点</a>
                 <a class="account-link" href="/query-history">历史</a>
                 <a class="account-link" href="/settings">设置</a>
+                <AuthorizeView Policy="Administrator">
+                    <a class="account-link" href="/admin">后台管理</a>
+                </AuthorizeView>
             </nav>
             <span class="account-email">@authenticationState.User.Identity?.Name</span>
             <form method="post" action="/account/logout">

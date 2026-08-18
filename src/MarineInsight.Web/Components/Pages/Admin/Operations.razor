@@ -1,4 +1,4 @@
-@page "/admin"
+﻿@page "/admin"
 @attribute [Authorize(Policy = "Administrator")]
 @rendermode InteractiveServer
 @inject OperationsOverviewService OperationsService
@@ -9,6 +9,8 @@
     <header class="workspace-heading">
         <div><p class="workspace-eyebrow">管理员</p><h1>运行状态</h1></div>
     </header>
+
+    <AdminTabs />
 
     @if (_overview is null)
     {

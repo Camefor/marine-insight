@@ -2,11 +2,19 @@
 using MarineInsight.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace MarineInsight.Web.Authentication;
 
 public static class AccountEndpointExtensions
 {
+    private static readonly Action<ILogger, string, string, Exception?> GrantAdministratorFailed =
+        LoggerMessage.Define<string, string>(
+            LogLevel.Warning,
+            new EventId(1001, "GrantAdministratorFailed"),
+            "Failed to grant {Role} role to {Email}.");
+
     public static IEndpointRouteBuilder MapAccountEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/account")
@@ -25,7 +33,9 @@ public static class AccountEndpointExtensions
         [FromForm] RegisterRequest request,
         CaptchaService captcha,
         UserManager<MarineInsightUser> userManager,
-        SignInManager<MarineInsightUser> signInManager)
+        SignInManager<MarineInsightUser> signInManager,
+        IOptions<AdminOptions> adminOptions,
+        ILoggerFactory loggerFactory)
     {
         // 验证码在进入 Identity 逻辑前校验，失败不触发密码锁定计数。
         if (captcha.Enabled && !captcha.Validate(request.CaptchaId, request.CaptchaCode))
@@ -62,6 +72,21 @@ public static class AccountEndpointExtensions
                     ? "email-exists"
                     : "unavailable";
             return Results.LocalRedirect($"/account/register?error={error}");
+        }
+
+        // 管理员邮箱自动授权：注册即加入 Administrator 角色，失败只记日志不阻断注册。
+        if (!string.IsNullOrWhiteSpace(adminOptions.Value.Email)
+            && string.Equals(email, adminOptions.Value.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            var roleResult = await userManager.AddToRoleAsync(user, AdminOptions.AdministratorRoleName);
+            if (!roleResult.Succeeded)
+            {
+                GrantAdministratorFailed(
+                    loggerFactory.CreateLogger(typeof(AccountEndpointExtensions)),
+                    AdminOptions.AdministratorRoleName,
+                    email,
+                    null);
+            }
         }
 
         if (userManager.Options.SignIn.RequireConfirmedEmail)

@@ -90,6 +90,7 @@
 - `MI-0027` 已实现收藏地点、查询历史、单位/默认活动设置和再次查询上下文恢复；邮箱确认/密码重置/MFA 仍待后续。
 - `MI-0027` 已完成移动端响应式样式和基础键盘/ARIA 控件；1440x900 与 360x800 Playwright 用例已使用本机 Chrome 执行 2/2 通过。
 - `MI-0027` 已实现管理员 Provider 状态、当前算法版本和审计只读查询；Provider 启停和算法发布仍不在本次范围。
+- 已完成 `MI-0039`：后台管理模块落地。EF 迁移固化 `Administrator` 角色并幂等补授 `xuehaq@gmail.com`，注册该邮箱自动授权（`Admin:Email` 配置）；预置地点增删改查完整闭环（审计落库、重复名称+坐标冲突校验、被预报批次引用禁止删除、级联收藏计数二次确认），后台页含运行状态/预置地点/用户 Tab 与天地图选点。
 - `MI-0027` 已接入 WorldTides 潮汐、Credit 余额状态、长 TTL 缓存和无潮汐降级；本地 Key 已安全配置，真实付费联调尚未执行。
 - 已完成 `MI-0029`：实现分析结果持久化，登录用户在 Dashboard 查询时落库 `analysis_results`/`analysis_risks`/`analysis_source_batches` 摘要，并提供 `GET /api/v1/marine-analyses/{id}` 属主读取端点；匿名查询不落库，历史对比与 `algorithm_versions` 外键升级留待后续。
 - 已完成 `MI-0030`：地图选点由 OpenStreetMap 切换为天地图（CGCS2000≈WGS-84 免纠偏），Leaflet 自托管移除 unpkg 依赖；东极岛预置坐标更新为庙子湖岛 `30.200, 122.680`，新增岱山岛 `30.288, 122.165` 预置地点。
@@ -198,3 +199,4 @@ AI、UI 星级和通知都依赖确定性分析；不得先用 AI 文本替代�
 | 3.5 | 2026-08-14 | 完善用户模块（MI-0036）：注册/登录接入自研 SVG 验证码并增加确认密码与邮箱格式校验；新增 `user_locations` 表与「我的地点」页面 CRUD + 再次查询深链；查询历史支持删除单条/清空；`AddRateLimiter` 扩为 account/location/analysis/authenticated/admin 五策略并按认证态分桶，各 API 组全量限流 |
 | 3.6 | 2026-08-14 | 首页收藏入口 + 我的地点地图选点 + 查询 Loading 特效（MI-0037）：Dashboard 摘要栏新增星标（☆/★）收藏切换与匿名「登录后收藏」入口；「我的地点」表单接入天地图地图选点自动填充经纬度并修复保存按钮绑定缺陷；查询期间新增全屏 Loading 遮罩 + 旋转 spinner |
 | 3.7 | 2026-08-17 | 地图选点自定义命名 + 完善地图点收藏（MI-0038）：地图选点查询支持输入自定义名称（留空回退「自定义坐标」）；收藏数据模型改为可空 `LocationId` 并冗余名称/坐标，同时支持预置地点与地图坐标点两类收藏；Dashboard 地图选点区新增名称输入与收藏星标，Favorites 页地图点以 `/?lat=&lon=&name=` 再次查询 |
+| 3.8 | 2026-08-18 | 后台管理模块（MI-0039）：迁移固化 `Administrator` 角色并幂等补授 `xuehaq@gmail.com`，注册该邮箱自动授权；预置地点 CRUD（审计落库、名称+经纬度唯一冲突、预报批次引用禁止删除、级联收藏计数）；后台页 Tab（运行状态/预置地点/用户）+ 天地图选点；`GET /api/v1/admin/locations`、`GET /api/v1/admin/users` 等管理端点与 `LOCATION_CONFLICT`/`LOCATION_IN_USE` 错误码 |

@@ -1,0 +1,62 @@
+﻿@page "/admin/users"
+@attribute [Authorize(Policy = "Administrator")]
+@rendermode InteractiveServer
+@using MarineInsight.Application.Admin
+@using MarineInsight.Web.Admin
+@inject AdminUserService AdminService
+
+<PageTitle>用户列表 - Marine Insight</PageTitle>
+
+<main class="workspace-page admin-page">
+    <header class="workspace-heading">
+        <div><p class="workspace-eyebrow">管理员</p><h1>用户列表</h1></div>
+    </header>
+
+    <AdminTabs />
+
+    @if (_loading)
+    {
+        <p class="workspace-status" role="status">正在加载用户…</p>
+    }
+    else if (_users.Count == 0)
+    {
+        <section class="workspace-empty">
+            <h2>暂无注册用户</h2>
+            <p>用户注册后会计入此列表。</p>
+        </section>
+    }
+    else
+    {
+        <section class="admin-section" aria-labelledby="users-title">
+            <h2 id="users-title">已注册用户（@_users.Count）</h2>
+            <div class="admin-table-wrap">
+                <table>
+                    <thead><tr><th>邮箱</th><th>邮箱确认</th><th>锁定启用</th><th>锁定截止</th><th>失败次数</th></tr></thead>
+                    <tbody>
+                        @foreach (var user in _users)
+                        {
+                            <tr @key="user.Id">
+                                <td>@user.Email</td>
+                                <td>@(user.EmailConfirmed ? "是" : "否")</td>
+                                <td>@(user.LockoutEnabled ? "是" : "否")</td>
+                                <td>@(user.LockoutEnd?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "—")</td>
+                                <td>@user.AccessFailedCount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+</main>
+
+@code {
+    private bool _loading = true;
+    private IReadOnlyList<AdminUserSummary> _users = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _users = await AdminService.ListUsersAsync();
+        _loading = false;
+    }
+}

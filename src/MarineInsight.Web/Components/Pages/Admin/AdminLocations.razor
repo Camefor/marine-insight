@@ -1,0 +1,368 @@
+﻿@page "/admin/locations"
+@attribute [Authorize(Policy = "Administrator")]
+@rendermode InteractiveServer
+@using System.Globalization
+@using MarineInsight.Application.Admin
+@using MarineInsight.Domain.Location
+@using Microsoft.Extensions.Configuration
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AdminLocationService AdminService
+@inject IJSRuntime Js
+@inject IConfiguration Configuration
+@implements IAsyncDisposable
+
+<PageTitle>预置地点管理 - Marine Insight</PageTitle>
+
+<main class="workspace-page admin-page">
+    <header class="workspace-heading">
+        <div><p class="workspace-eyebrow">管理员</p><h1>预置地点</h1></div>
+    </header>
+
+    <AdminTabs />
+
+    <form class="workspace-form" aria-labelledby="location-form-title" @onsubmit="SaveAsync" @onsubmit:preventDefault>
+        <h2 id="location-form-title">@(_editingId.HasValue ? "编辑预置地点" : "新增预置地点")</h2>
+        <label>
+            <span>名称</span>
+            <input type="text" @bind="_displayName" maxlength="200" required placeholder="例如：枸杞岛" />
+        </label>
+        <label>
+            <span>类型</span>
+            <select @bind="_locationType">
+                @foreach (var type in Enum.GetValues<LocationType>())
+                {
+                    @if (type != LocationType.Unknown)
+                    {
+                        <option value="@type">@LocationTypeText(type)</option>
+                    }
+                }
+            </select>
+        </label>
+        <label>
+            <span>纬度</span>
+            <input type="number" step="0.000001" min="-90" max="90" @bind="_latitude" required />
+        </label>
+        <label>
+            <span>经度</span>
+            <input type="number" step="0.000001" min="-180" max="180" @bind="_longitude" required />
+        </label>
+        <div class="map-field">
+            <button class="map-toggle" type="button" @onclick="ToggleMapAsync">
+                @(_isMapOpen ? "收起地图" : "地图选点")
+            </button>
+            @if (_isMapOpen)
+            {
+                <div id="admin-locations-map-picker"
+                     class="location-map-picker"
+                     role="application"
+                     aria-label="天地图地图选点"></div>
+                <p class="map-hint">点击地图任意位置，自动填充上方经纬度。地图数据 © <a href="https://www.tianditu.gov.cn" target="_blank" rel="noopener noreferrer">天地图</a></p>
+            }
+            @if (!string.IsNullOrWhiteSpace(_mapError))
+            {
+                <p class="map-error" role="status">@_mapError</p>
+            }
+        </div>
+        <label>
+            <span>时区</span>
+            <input type="text" @bind="_timeZoneId" maxlength="64" required placeholder="Asia/Shanghai" />
+        </label>
+        <label>
+            <span>海岸朝向（度，可选）</span>
+            <input type="number" step="0.01" min="0" max="360" @bind="_coastOrientationDeg" placeholder="0-360，留空表示未知" />
+        </label>
+        @if (!string.IsNullOrWhiteSpace(_formError))
+        {
+            <p class="account-alert" role="alert">@_formError</p>
+        }
+        <div class="workspace-form-actions">
+            <button class="workspace-primary" type="submit">保存</button>
+            @if (_editingId.HasValue)
+            {
+                <button class="workspace-danger" type="button" @onclick="CancelEdit">取消</button>
+            }
+        </div>
+    </form>
+
+    @if (_loading)
+    {
+        <p class="workspace-status" role="status">正在加载预置地点…</p>
+    }
+    else if (_locations.Count == 0)
+    {
+        <section class="workspace-empty">
+            <h2>暂无预置地点</h2>
+            <p>在下方表单添加供所有用户查询的预置地点。</p>
+        </section>
+    }
+    else
+    {
+        <section class="admin-section" aria-labelledby="locations-title">
+            <h2 id="locations-title">预置地点（@_locations.Count）</h2>
+            <div class="admin-table-wrap">
+                <table>
+                    <thead><tr><th>名称</th><th>类型</th><th>纬度</th><th>经度</th><th>时区</th><th>海岸朝向</th><th>操作</th></tr></thead>
+                    <tbody>
+                        @foreach (var location in _locations)
+                        {
+                            <tr @key="location.Id">
+                                <td>@location.DisplayName</td>
+                                <td>@LocationTypeText(location.LocationType)</td>
+                                <td>@location.Latitude.ToString("0.####", CultureInfo.InvariantCulture)</td>
+                                <td>@location.Longitude.ToString("0.####", CultureInfo.InvariantCulture)</td>
+                                <td>@location.TimeZoneId</td>
+                                <td>@(location.CoastOrientationDeg is { } deg ? deg.ToString("0.#", CultureInfo.InvariantCulture) : "—")</td>
+                                <td>
+                                    <button class="workspace-icon-button" type="button" title="编辑" aria-label="编辑 @location.DisplayName" @onclick="() => BeginEdit(location)">✎</button>
+                                    <button class="workspace-icon-button danger" type="button" title="删除" aria-label="删除 @location.DisplayName" @onclick="() => DeleteAsync(location.Id, location.DisplayName)">×</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+</main>
+
+@code {
+    private Guid _userId;
+    private bool _loading = true;
+    private IReadOnlyList<Location> _locations = [];
+    private Guid? _editingId;
+    private string _displayName = string.Empty;
+    private LocationType _locationType = LocationType.Island;
+    private double _latitude;
+    private double _longitude;
+    private string _timeZoneId = "Asia/Shanghai";
+    private double? _coastOrientationDeg;
+    private string? _formError;
+    private bool _isMapOpen;
+    private IJSObjectReference? _mapModule;
+    private DotNetObjectReference<AdminLocations>? _mapCallback;
+    private bool _mapInitialized;
+    private bool _mapInitializationAttempted;
+    private string? _mapError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _userId = await GetUserIdAsync();
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        _locations = await AdminService.ListPresetsAsync();
+        _loading = false;
+    }
+
+    private async Task<Guid> GetUserIdAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return UserWorkspaceEndpointExtensions.GetUserId(state.User);
+    }
+
+    private async Task SaveAsync()
+    {
+        _formError = null;
+        try
+        {
+            if (_editingId.HasValue)
+            {
+                await AdminService.UpdateAsync(
+                    _userId,
+                    _editingId.Value,
+                    new UpdateLocationCommand(_displayName, _latitude, _longitude, _timeZoneId, _locationType, _coastOrientationDeg));
+            }
+            else
+            {
+                await AdminService.CreateAsync(
+                    _userId,
+                    new CreateLocationCommand(_displayName, _latitude, _longitude, _timeZoneId, _locationType, _coastOrientationDeg));
+            }
+
+            ResetForm();
+            await ReloadAsync();
+        }
+        catch (AdminLocationConflictException exception)
+        {
+            _formError = exception.Message;
+        }
+        catch (ArgumentException exception)
+        {
+            _formError = exception.Message;
+        }
+    }
+
+    private void BeginEdit(Location location)
+    {
+        _editingId = location.Id;
+        _displayName = location.DisplayName;
+        _locationType = location.LocationType;
+        _latitude = location.Latitude;
+        _longitude = location.Longitude;
+        _timeZoneId = location.TimeZoneId;
+        _coastOrientationDeg = location.CoastOrientationDeg;
+        _formError = null;
+    }
+
+    private void CancelEdit() => ResetForm();
+
+    private async Task DeleteAsync(Guid id, string displayName)
+    {
+        // 删除前先统计级联收藏数，让管理员明确删除影响。
+        var favoriteCount = await AdminService.CountFavoriteReferencesAsync(id);
+        var message = favoriteCount > 0
+            ? $"删除预置地点「{displayName}」将同时删除 {favoriteCount} 条用户收藏，确定继续吗？"
+            : $"确定删除预置地点「{displayName}」吗？";
+        if (!await Js.InvokeAsync<bool>("confirm", message))
+        {
+            return;
+        }
+
+        try
+        {
+            await AdminService.DeleteAsync(_userId, id);
+            if (_editingId == id)
+            {
+                ResetForm();
+            }
+
+            await ReloadAsync();
+        }
+        catch (AdminLocationInUseException exception)
+        {
+            _formError = exception.Message;
+        }
+    }
+
+    private void ResetForm()
+    {
+        _editingId = null;
+        _displayName = string.Empty;
+        _locationType = LocationType.Island;
+        _latitude = 0;
+        _longitude = 0;
+        _timeZoneId = "Asia/Shanghai";
+        _coastOrientationDeg = null;
+        _formError = null;
+        _mapError = null;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_isMapOpen)
+        {
+            await EnsureMapAsync();
+        }
+    }
+
+    private async Task ToggleMapAsync()
+    {
+        _isMapOpen = !_isMapOpen;
+        _mapError = null;
+        if (!_isMapOpen)
+        {
+            await DisposeMapAsync();
+        }
+    }
+
+    private async Task EnsureMapAsync()
+    {
+        if (_mapInitialized || _mapInitializationAttempted)
+        {
+            return;
+        }
+
+        _mapInitializationAttempted = true;
+        try
+        {
+            _mapModule ??= await Js.InvokeAsync<IJSObjectReference>("import", "./js/dashboard-map.js");
+            _mapCallback ??= DotNetObjectReference.Create(this);
+            _mapInitialized = await _mapModule.InvokeAsync<bool>(
+                "init",
+                "admin-locations-map-picker",
+                _mapCallback,
+                new
+                {
+                    latitude = MapCenterLatitude,
+                    longitude = MapCenterLongitude,
+                    zoom = 9,
+                    tk = Configuration["Map:Tianditu:Key"] ?? ""
+                });
+
+            if (!_mapInitialized)
+            {
+                _mapError = "地图暂时不可用，请直接输入经纬度。";
+            }
+        }
+        catch (JSException)
+        {
+            _mapError = "地图脚本加载失败，请直接输入经纬度。";
+        }
+        catch (InvalidOperationException)
+        {
+            _mapError = "地图交互暂时不可用，请直接输入经纬度。";
+        }
+    }
+
+    private double MapCenterLatitude => _latitude == 0 && _longitude == 0 ? 30.194 : _latitude;
+
+    private double MapCenterLongitude => _latitude == 0 && _longitude == 0 ? 122.687 : _longitude;
+
+    [JSInvokable]
+    public Task SelectMapPointFromJs(double latitude, double longitude)
+    {
+        _latitude = Math.Round(latitude, 6, MidpointRounding.AwayFromZero);
+        _longitude = Math.Round(longitude, 6, MidpointRounding.AwayFromZero);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task HandleMapUnavailableFromJs(string? message)
+    {
+        _mapError = message;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async ValueTask DisposeMapAsync()
+    {
+        if (_mapModule is not null)
+        {
+            try
+            {
+                await _mapModule.InvokeVoidAsync("dispose", "admin-locations-map-picker");
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+
+        _mapInitialized = false;
+        _mapInitializationAttempted = false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeMapAsync();
+        if (_mapModule is not null)
+        {
+            await _mapModule.DisposeAsync();
+        }
+
+        _mapCallback?.Dispose();
+    }
+
+    private static string LocationTypeText(LocationType type) => type switch
+    {
+        LocationType.Island => "海岛",
+        LocationType.Port => "港口",
+        LocationType.Pier => "码头",
+        LocationType.City => "城市",
+        LocationType.Coordinate => "坐标",
+        _ => type.ToString()
+    };
+}

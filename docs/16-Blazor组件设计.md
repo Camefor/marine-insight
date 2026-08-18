@@ -76,6 +76,9 @@ Components/
 | `HourlyDetailPanel` | `Assessment`, `IsOpen`, `OnClose` | 完整指标和规则贡献 |
 | `DataSourceStatusList` | `Sources` | 分数据域展示 Provider、模型、时效、缓存与质量 |
 | `LeafletMapPicker` | `Center`, `SelectedPoint`, `OnPointChanged` | 地图选点 |
+| `AdminTabs` | 无（静态 NavLink） | 后台管理 Tab 导航（运行状态 / 预置地点 / 用户），`[Authorize(Policy="Administrator")]` |
+| `AdminLocations` | `AdminLocationService` | 预置地点表格 + 新增/编辑表单 + 天地图选点 + 删除确认（级联收藏引用数提示） |
+| `AdminUsers` | `AdminUserService` | 已注册用户只读列表 |
 
 ## 6. 组件接口约定
 
@@ -178,3 +181,4 @@ public sealed partial class RiskSummary
 | 2.2 | 2026-08-14 | 记录 `MI-0035` 新增静态 SSR 组件 `About.razor`（`@page "/about"`，无 `@rendermode`）与 scoped 样式 `About.razor.css`；`MainLayout.razor` 的 `.app-header` 拆分为 `.app-header-brand`（`.app-brand` + `.main-nav`）+ `<AccountNav />`，`app.css` 新增 `.app-header-brand`/`.main-nav` 布局与移动端换行规则 |
 | 2.3 | 2026-08-14 | 记录 `MI-0036` 新增页面组件 `UserLocations.razor`（`@page "/my-locations"`，`[Authorize]` + `InteractiveServer`）与 `AccountNav` 入口「我的地点」；`Login.razor`/`Register.razor` 注入 `CaptchaService` 并在 `OnInitialized` 生成 `_challenge`，以 `MarkupString` 渲染 SVG 验证码；`Dashboard.razor` 增加 `QueryLatitude`/`QueryLongitude` 查询参数恢复自定义坐标；`QueryHistory.razor` 增加 `IJSRuntime` `confirm` 二次确认的删除/清空交互 |
 | 2.4 | 2026-08-17 | 记录 `MI-0038` `DashboardQuerySession` 新增 `MapPointName` 状态并把自定义名称经 `MarineAnalysisQuery.DisplayName`（可选，纯展示语义，不参与缓存键/算法）传递到 `Project` 投影；`Dashboard.razor` 新增「地点名称（可选）」输入与 `[SupplyParameterFromQuery(Name="name")]` 回填，地图选点分支收藏星标复用预置地点收藏逻辑；`Favorites.razor` 的 `BuildQueryUrl` 对地图点生成 `/?lat=&lon=&name=` 深链 |
+| 2.5 | 2026-08-18 | 记录 `MI-0039` 新增 `AdminTabs`/`AdminLocations`(+`.razor.css`)/`AdminUsers` 三个 `[Authorize(Policy="Administrator")]` + `InteractiveServer` 页面组件；`Operations.razor` 顶部挂 `AdminTabs`；`AdminLocations` 复用 `wwwroot/js/dashboard-map.js` 天地图选点（`EnsureMap`/`SelectMapPoint`）并注入 `IConfiguration` 取 `Map:Tianditu:Key`；`AccountNav.razor` 新增管理员可见「后台管理」入口 |

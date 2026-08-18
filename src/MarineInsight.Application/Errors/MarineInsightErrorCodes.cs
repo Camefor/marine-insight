@@ -23,4 +23,8 @@ public static class MarineInsightErrorCodes
     public const string AiExplanationUnavailable = "AI_EXPLANATION_UNAVAILABLE";
 
     public const string AnalysisNotFound = "ANALYSIS_NOT_FOUND";
+
+    public const string LocationConflict = "LOCATION_CONFLICT";
+
+    public const string LocationInUse = "LOCATION_IN_USE";
 }

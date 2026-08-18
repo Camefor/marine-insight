@@ -640,3 +640,29 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260818104512_AddAdministratorRole') THEN
+    INSERT INTO roles ("Id", "Name", "NormalizedName", "ConcurrencyStamp")
+    VALUES ('0f4c3f6a-6c7d-4e1f-9a2b-3c4d5e6f7081', 'Administrator', 'ADMINISTRATOR', '0f4c3f6a-6c7d-4e1f-9a2b-3c4d5e6f7081');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260818104512_AddAdministratorRole') THEN
+    INSERT INTO "user_roles" ("UserId", "RoleId") SELECT u."Id", '0f4c3f6a-6c7d-4e1f-9a2b-3c4d5e6f7081' FROM "users" u WHERE u."Email" = 'xuehaq@gmail.com' AND NOT EXISTS (SELECT 1 FROM "user_roles" r WHERE r."UserId" = u."Id" AND r."RoleId" = '0f4c3f6a-6c7d-4e1f-9a2b-3c4d5e6f7081');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260818104512_AddAdministratorRole') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260818104512_AddAdministratorRole', '10.0.11');
+    END IF;
+END $EF$;
+COMMIT;
+
