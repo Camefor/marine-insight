@@ -166,6 +166,8 @@ public sealed partial class RiskSummary
 
 `MI-0043` 保持既有业务组件和状态容器边界不变，只重构呈现层：`MainLayout.razor` 增加移动底部主导航，`app.css` 提供跨页面深海色板、Header、账户与用户工作区基础样式，`Dashboard.razor.css` 独立维护查询工作台、摘要、活动/风险、趋势、来源、指标和逐小时表格。地图选点、收藏、AI 解读、时区和查询事件仍由原组件与 `DashboardQuerySession` 处理，避免视觉改造引入重复状态；`About`、`UserLocations`、`AdminLocations` 和 `AdminTabs` 的 scoped CSS 仅覆盖自身视觉。E2E 同时验证地图辅助入口默认收起、1440×900 与 360×800 无横向溢出以及账户页响应式。
 
+`MI-0045` 不新增日期时间状态或第三方组件：`Dashboard.razor` 继续以 `datetime-local` 和 `OnForecastStartChanged` 维护同一查询语义，仅增加 `.datetime-control` 展示容器、时区徽标和无交互 SVG 图标。Chromium 的原生 calendar indicator 透明扩展到右侧选择热区，SVG 使用 `pointer-events:none`，所以点击仍由原生输入处理；不需要 JS 互操作，也不改变时区转换或表单提交逻辑。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |
@@ -190,3 +192,4 @@ public sealed partial class RiskSummary
 | 2.7 | 2026-08-19 | 记录 `MI-0040` 跟进：逆地理编码从 `TiandituOptions.Key` 拆出独立 `ServerKey`（`Map:Tianditu:ServerKey`），`TiandituReverseGeocoder` 改用服务端权限 Key；浏览器端瓦片仍读取 `Key` |
 | 2.8 | 2026-08-19 | 记录 `MI-0041` 品牌/SEO 组件边界：`App.razor` 维护默认搜索与社交元数据、图标和 manifest，各页面通过 `PageTitle` 输出唯一标题，`Dashboard.razor` 维护首页 canonical，`MainLayout.razor` 渲染 Marine AI 品牌组合；`wwwroot` 提供品牌 PNG、robots 与 sitemap |
 | 2.9 | 2026-08-19 | 记录 `MI-0043` 呈现层重构：业务状态和事件链保持不变，`MainLayout`/`app.css` 负责全站设计系统与移动底部导航，`Dashboard.razor.css` 负责决策工作台和数据可视化，辅助页面通过 scoped CSS 对齐同一视觉语言 |
+| 3.0 | 2026-08-19 | 记录 `MI-0045` 原生日期时间控件封装：不引入新状态或 JS，Razor 增加显示容器与 SVG，scoped CSS 负责暗色 indicator、48px 级点击区域和移动端 16px 输入字体 |

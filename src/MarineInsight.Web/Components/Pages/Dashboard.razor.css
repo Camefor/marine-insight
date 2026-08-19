@@ -215,6 +215,94 @@
     outline: none;
 }
 
+.datetime-label {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.datetime-label small {
+    background: rgba(72, 224, 192, 0.09);
+    border: 1px solid rgba(72, 224, 192, 0.18);
+    border-radius: 999px;
+    color: var(--dash-accent);
+    font-size: 0.63rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    max-width: 60%;
+    overflow: hidden;
+    padding: 3px 8px;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
+}
+
+.datetime-control {
+    display: block;
+    position: relative;
+}
+
+.datetime-control input {
+    color-scheme: dark;
+    font-family: "DM Mono", Consolas, monospace;
+    font-size: 0.86rem;
+    font-variant-numeric: tabular-nums;
+    padding: 10px 58px 10px 13px;
+    width: 100%;
+}
+
+.datetime-control input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    height: 100%;
+    inset: 0 0 0 auto;
+    margin: 0;
+    opacity: 0;
+    padding: 0;
+    position: absolute;
+    width: 52px;
+}
+
+.datetime-control input::-webkit-datetime-edit,
+.datetime-control input::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+}
+
+.datetime-control:focus-within .datetime-action {
+    background: var(--dash-accent);
+    border-color: var(--dash-accent);
+    color: var(--dash-bg);
+    box-shadow: 0 0 0 3px rgba(72, 224, 192, 0.12);
+}
+
+.datetime-action {
+    align-items: center;
+    background: rgba(72, 224, 192, 0.11);
+    border: 1px solid rgba(72, 224, 192, 0.28);
+    border-radius: 7px;
+    color: var(--dash-accent);
+    display: flex;
+    height: 36px;
+    justify-content: center;
+    pointer-events: none;
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    width: 42px;
+}
+
+.datetime-action svg {
+    fill: none;
+    height: 20px;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+    width: 20px;
+}
+
 .primary-button,
 .secondary-button,
 .candidate-button,
@@ -1152,6 +1240,17 @@ td {
     .segment {
         min-height: 44px;
         width: 100%;
+    }
+
+    .datetime-control input {
+        font-size: 16px;
+        min-height: 50px;
+        padding-right: 62px;
+    }
+
+    .datetime-action {
+        height: 40px;
+        width: 46px;
     }
 
     .trend-point {

@@ -152,11 +152,23 @@
             }
 
             <div class="range-controls">
-                <label class="field">
-                    <span>起报时间（@Session.DisplayTimeZoneLabel）</span>
-                    <input type="datetime-local"
-                           value="@Session.ForecastStartLocal.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)"
-                           @onchange="OnForecastStartChanged" />
+                <label class="field datetime-field">
+                    <span class="datetime-label">
+                        <span>起报时间</span>
+                        <small>@Session.DisplayTimeZoneLabel</small>
+                    </span>
+                    <span class="datetime-control">
+                        <input type="datetime-local"
+                               aria-label="起报时间"
+                               value="@Session.ForecastStartLocal.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)"
+                               @onchange="OnForecastStartChanged" />
+                        <span class="datetime-action" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                                <path d="M7 3v3M17 3v3M4.5 9h15M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+                                <path d="M12 12v3l2 1" />
+                            </svg>
+                        </span>
+                    </span>
                 </label>
 
                 <fieldset class="segmented-group">

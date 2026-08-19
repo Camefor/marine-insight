@@ -17,6 +17,36 @@ test('dashboard and account shell remain usable without layout overflow', async 
   await expect(page.getByLabel('纬度')).toBeHidden();
   await expect(page.getByLabel('经度')).toBeHidden();
 
+  const forecastStart = page.getByLabel('起报时间', { exact: true });
+  const datetimeAction = page.locator('.datetime-action');
+  await expect(forecastStart).toBeVisible();
+  await expect(datetimeAction).toBeVisible();
+  const datetimeLayout = await page.evaluate(() => {
+    const input = document.querySelector('.datetime-control input');
+    const action = document.querySelector('.datetime-action');
+    if (!input || !action) throw new Error('Date time control is missing.');
+
+    const inputBox = input.getBoundingClientRect();
+    const actionBox = action.getBoundingClientRect();
+    const actionStyle = getComputedStyle(action);
+    return {
+      inputWidth: inputBox.width,
+      inputHeight: inputBox.height,
+      actionWidth: actionBox.width,
+      actionHeight: actionBox.height,
+      actionInsideInput: actionBox.right <= inputBox.right && actionBox.left >= inputBox.left,
+      actionColor: actionStyle.color,
+      actionBorder: actionStyle.borderColor
+    };
+  });
+  expect(datetimeLayout.inputWidth).toBeGreaterThan(200);
+  expect(datetimeLayout.inputHeight).toBeGreaterThanOrEqual(46);
+  expect(datetimeLayout.actionWidth).toBeGreaterThanOrEqual(42);
+  expect(datetimeLayout.actionHeight).toBeGreaterThanOrEqual(36);
+  expect(datetimeLayout.actionInsideInput).toBeTruthy();
+  expect(datetimeLayout.actionColor).not.toBe('rgba(0, 0, 0, 0)');
+  expect(datetimeLayout.actionBorder).not.toBe('rgba(0, 0, 0, 0)');
+
   const queryBand = page.locator('section[aria-labelledby="query-title"]');
   const initialState = page.getByRole('heading', { name: '等待查询' }).locator('..');
   await expect(queryBand).toBeVisible();

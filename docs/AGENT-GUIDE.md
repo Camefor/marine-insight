@@ -129,14 +129,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0044` |
+| 当前任务 ID | `MI-0045` |
 | 当前状态 | `DONE` |
-| 当前目标 | 将 `MI-0043` 的全站 UI 重构标准提交并推送到 `origin/main`，安全部署至腾讯云生产环境，并完成备份、健康检查、线上视觉/功能冒烟和 Docker 清理 |
-| 最后完成动作 | 已将 UI 重构提交 `d9b67bc` 推送 `origin/main`；发布包本地/远端 SHA-256 一致，生产备份非空后叠加 production/ai/tianditu overlay 重建成功；迁移退出 0、Web healthy，公网与线上 Playwright 验收通过并完成 Docker 清理 |
-| 下一步动作 | 发布已完成；后续 UI 迭代继续从新的生产视觉基线开展 |
-| 涉及文件 | `MI-0043` 的 13 个 UI/文档/测试文件及 `docs/AGENT-GUIDE.md` 发布记录；生产 `/opt/marine-insight/src/`、`deploy/postgresql-migrations.sql`、`deploy/docker-cleanup.sh` |
-| 验证结果 | 本地 Release 构建 0 警告/0 错误、230/230 测试、Playwright 2/2、format/diff 通过；生产备份 `marine-insight-20260819-085836.dump` 为 59,567 字节；migrate exit 0、Web healthy；公网首页/live/ready/login/about 200；5 个预置地点完整，搜索与逆地理编码正常，HSTS/nosniff 正常，样式标识生效，线上桌面/移动 Playwright 2/2，关键错误日志为空，Docker 清理完成 |
-| 阻塞/待确认 | 业务提交 `d9b67bc` 已推送；发布记录提交因 GitHub HTTPS 连接重置暂未同步，网络恢复后推送即可。生产 Secret 与 `.env` 未进入 Git、终端回显或同步包 |
+| 当前目标 | 修复深色主题下起报时间原生选择按钮不可见的问题，提供更现代、清晰且兼容 PC 与移动端的日期时间选择体验 |
+| 最后完成动作 | 已重构起报时间控件：增加时区徽标、等宽数字、日历时钟 SVG、52px 原生选择热区和移动端 16px 输入字体；桌面与 360px 截图确认按钮清晰、布局无溢出 |
+| 下一步动作 | 任务已完成；后续可直接使用当前原生日期时间弹层选择起报时间 |
+| 涉及文件 | `src/MarineInsight.Web/Components/Pages/Dashboard.razor`、`Dashboard.razor.css`、`tests/e2e/dashboard.spec.js`、UI/Blazor/测试文档与 `docs/AGENT-GUIDE.md` |
+| 验证结果 | Release 构建 0 警告/0 错误；全量测试 230/230；format/diff 通过；Playwright 1440×900 与 360×800 2/2，通过输入/图标可见性、尺寸、位置、颜色和无横向溢出断言 |
+| 阻塞/待确认 | 无；内置浏览器不可用，已使用仓库 Playwright Chromium 完成真实页面与截图验收 |
 | 最后更新 | 2026-08-19 |
 
 <!-- agent-state:end -->
@@ -183,6 +183,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0045` | 2026-08-19 | 重做起报日期时间选择框 | 深色原生输入增加时区徽标、日历时钟图标和 52px 选择热区，移动端使用 16px 字号避免自动缩放；保留系统原生选择弹层；Release 构建、230/230 测试、format/diff 与 Playwright 桌面/移动 2/2 通过 |
 | [x] | `MI-0044` | 2026-08-19 | 提交并部署 `MI-0043` 全站 UI 重构 | 提交 `d9b67bc` 已推送 `origin/main`；发布包 SHA-256 本地/远端一致；生产备份 59,567 字节；完整 overlay 重建后 migrate exit 0、Web healthy；公网 5 个核心页面/健康端点均 200，地点、逆地理编码、安全头、CSS 标识和线上双视口 Playwright 通过，关键错误日志为空并完成 Docker 清理 |
 | [x] | `MI-0043` | 2026-08-19 | 依据持续迭代 UI 设计原型大改网站视觉与交互 | 全站切换为深海暗色设计系统，Dashboard 重组为搜索优先的决策工作台并强化逐小时趋势、风险、来源和指标读数；Header、账户、功能介绍、工作区、地图与后台同步统一，移动端新增底部导航并修复账户表单溢出；Release 构建 0 警告/0 错误、230/230 测试、format、Playwright 桌面/移动 2/2 通过 |
 | [x] | `MI-0042` | 2026-08-19 | 发布 Marine AI 品牌与 SEO 改动到腾讯云生产环境 | 提交 `f0f8ff0` 已通过 tar+ssh 发布；升级前备份 `marine-insight-20260819-065535.dump`（59,567 字节）；production/ai/tianditu overlay 重建成功，迁移退出码 0、Web healthy；公网健康、品牌与 SEO、7 个静态资源、地点搜索、逆地理编码、5 个预置地点和天地图双瓦片均通过；最近关键错误日志为空，Docker 清理完成；当前环境无内置浏览器，桌面/移动截图待补 |
@@ -234,6 +235,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-19 | `MI-0045` | 修复深色主题下起报时间原生图标不可见：保持 `datetime-local` 原生键盘/桌面弹层/移动系统选择器，在输入右侧增加统一日历时钟 SVG 与 52px 选择热区；时间值使用等宽数字，显示时区改为青色徽标；焦点时按钮反色增强，移动端输入提升到 16px、控件高度 50px，避免 iOS 自动缩放 | Release 构建 0 警告/0 错误；全量测试 230/230；`dotnet format --verify-no-changes --no-restore` 与 `git diff --check` 通过；Playwright 1440×900 与 360×800 2/2，通过控件可见、输入/图标尺寸、图标位于输入区域内、颜色非透明与页面无横向溢出断言；桌面/移动截图人工复核通过 | 实现完成，按标准工作流提交并推送；如需立即上线可触发部署流程 |
 | 2026-08-19 | `MI-0044` | 将 `MI-0043` 全站 UI 重构提交并部署生产：提交 `d9b67bc` 推送 `origin/main`；生成 803,103 字节发布包并与远端校验 SHA-256 一致；升级前创建 PostgreSQL custom-format 备份；同步源码与部署资产后以 production/ai/tianditu 完整 overlay 构建重建；完成远端临时包、退出容器与构建缓存清理 | 本地 Release 构建 0 警告/0 错误、全量测试 230/230、format/diff、Playwright 2/2；生产备份 `marine-insight-20260819-085836.dump` 非空（59,567 字节）；migrate exit 0、Web healthy；公网首页/live/ready/login/about 均 200；5 个预置地点完整，地点搜索返回普陀山，逆地理编码返回普陀山真实地址，HSTS/nosniff 正常，全局/Dashboard 新设计 CSS 标识生效；线上 1440×900 与 360×800 Playwright 2/2，最近关键错误日志为空；Docker 清理完成，磁盘占用约 38% | 发布完成；业务提交已推送，发布记录提交因 GitHub HTTPS 连接重置暂待网络恢复后同步 |
 | 2026-08-19 | `MI-0043` | 依据 `docs/持续迭代/UI设计` 全部资料完成网站设计大改：建立深海蓝/青色/珊瑚暗色设计系统，重做 Header、账户和工作区外壳；Dashboard 采用品牌结论、搜索优先查询工作台、半透明仪表面板、等宽数据读数、风险语义和高权重逐小时时间轴；功能介绍、用户地点/后台地图与后台 Tab 同步统一；移动端新增海况/地图/收藏/设置底部导航，并修复账户输入框横向溢出；保留现有查询、地图、收藏、AI、时区和数据来源事件链 | Release 构建 0 警告/0 错误；全量测试 230/230 通过（Domain 51、Application 69、Infrastructure 50、Web 60）；`dotnet format --verify-no-changes --no-restore` 通过；Playwright 1440×900 与 360×800 共 2/2 通过，Dashboard/账户页无横向溢出或区域重叠；设计、组件与测试文档已同步 | 本地改造完成，未提交、推送或部署；如需生产上线，另行按部署手册执行备份、迁移、健康检查和线上视觉冒烟 |
 | 2026-08-19 | `MI-0042` | 将提交 `f0f8ff0` 的 Marine AI 品牌与 SEO 改动发布到腾讯云生产：本地生成 802,629 字节发布包并与远端校验 SHA-256 一致；升级前执行 PostgreSQL custom-format 备份；同步源码与部署产物后叠加 production/ai/tianditu overlay 构建重建；清理临时发布包、悬空镜像、构建缓存、已退出容器和无用网络 | 本地 Release 0 警告/0 错误、230/230 测试、format/diff 通过；备份 `marine-insight-20260819-065535.dump` 非空（59,567 字节）；migrate exit 0，web healthy；公网首页/live/ready 200，HSTS/nosniff 正常；Title 唯一且精确，H1/Slogan/Logo/canonical/Description/OG/Twitter 与 robots/sitemap/manifest/4 个 PNG 全部通过；地点搜索返回普陀山，逆地理编码返回真实地址，5 个预置地点完整，浏览器请求语义下天地图 vec/cva 均 200 PNG；最近关键错误日志为空；清理后磁盘占用 37% | 发布完成；当前环境没有可用内置浏览器，后续可补做 1440×900、390×844 视觉截图复核 |
