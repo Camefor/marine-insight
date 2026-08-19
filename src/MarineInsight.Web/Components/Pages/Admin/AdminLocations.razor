@@ -71,6 +71,11 @@
             <span>海岸朝向（度，可选）</span>
             <input type="number" step="0.01" min="0" max="360" @bind="_coastOrientationDeg" placeholder="0-360，留空表示未知" />
         </label>
+        <label class="account-checkbox home-default-toggle">
+            <input type="checkbox" @bind="_isHomeDefault" />
+            <span>设为首页默认地点</span>
+        </label>
+        <p class="map-hint">首页打开时如未指定地点，将自动预选该预置地点（仅一处生效）。</p>
         @if (!string.IsNullOrWhiteSpace(_formError))
         {
             <p class="account-alert" role="alert">@_formError</p>
@@ -101,7 +106,7 @@
             <h2 id="locations-title">预置地点（@_locations.Count）</h2>
             <div class="admin-table-wrap">
                 <table>
-                    <thead><tr><th>名称</th><th>类型</th><th>纬度</th><th>经度</th><th>时区</th><th>海岸朝向</th><th>操作</th></tr></thead>
+                    <thead><tr><th>名称</th><th>类型</th><th>纬度</th><th>经度</th><th>时区</th><th>海岸朝向</th><th>首页默认</th><th>操作</th></tr></thead>
                     <tbody>
                         @foreach (var location in _locations)
                         {
@@ -112,6 +117,7 @@
                                 <td>@location.Longitude.ToString("0.####", CultureInfo.InvariantCulture)</td>
                                 <td>@location.TimeZoneId</td>
                                 <td>@(location.CoastOrientationDeg is { } deg ? deg.ToString("0.#", CultureInfo.InvariantCulture) : "—")</td>
+                                <td>@(location.IsHomeDefault ? "是" : "—")</td>
                                 <td>
                                     <button class="workspace-icon-button" type="button" title="编辑" aria-label="编辑 @location.DisplayName" @onclick="() => BeginEdit(location)">✎</button>
                                     <button class="workspace-icon-button danger" type="button" title="删除" aria-label="删除 @location.DisplayName" @onclick="() => DeleteAsync(location.Id, location.DisplayName)">×</button>
@@ -136,6 +142,7 @@
     private double _longitude;
     private string _timeZoneId = "Asia/Shanghai";
     private double? _coastOrientationDeg;
+    private bool _isHomeDefault;
     private string? _formError;
     private bool _isMapOpen;
     private IJSObjectReference? _mapModule;
@@ -173,13 +180,13 @@
                 await AdminService.UpdateAsync(
                     _userId,
                     _editingId.Value,
-                    new UpdateLocationCommand(_displayName, _latitude, _longitude, _timeZoneId, _locationType, _coastOrientationDeg));
+                    new UpdateLocationCommand(_displayName, _latitude, _longitude, _timeZoneId, _locationType, _coastOrientationDeg, _isHomeDefault));
             }
             else
             {
                 await AdminService.CreateAsync(
                     _userId,
-                    new CreateLocationCommand(_displayName, _latitude, _longitude, _timeZoneId, _locationType, _coastOrientationDeg));
+                    new CreateLocationCommand(_displayName, _latitude, _longitude, _timeZoneId, _locationType, _coastOrientationDeg, _isHomeDefault));
             }
 
             ResetForm();
@@ -204,6 +211,7 @@
         _longitude = location.Longitude;
         _timeZoneId = location.TimeZoneId;
         _coastOrientationDeg = location.CoastOrientationDeg;
+        _isHomeDefault = location.IsHomeDefault;
         _formError = null;
     }
 
@@ -246,6 +254,7 @@
         _longitude = 0;
         _timeZoneId = "Asia/Shanghai";
         _coastOrientationDeg = null;
+        _isHomeDefault = false;
         _formError = null;
         _mapError = null;
     }
@@ -322,6 +331,14 @@
 
     [JSInvokable]
     public Task HandleMapUnavailableFromJs(string? message)
+    {
+        _mapError = message;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task HandleLocateUnavailableFromJs(string? message)
     {
         _mapError = message;
         StateHasChanged();

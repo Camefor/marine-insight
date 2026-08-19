@@ -31,6 +31,38 @@ public sealed class LocationRepositoryTests
     }
 
     [Fact]
+    public async Task GetHomeDefaultReturnsHomeDefaultPreset()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var dbContext = CreateDbContext(connection);
+        await dbContext.Database.MigrateAsync();
+
+        var homeEntity = new Persistence.Entities.LocationEntity
+        {
+            Id = Guid.NewGuid(),
+            NormalizedName = "home-default-test",
+            DisplayName = "Home default",
+            Latitude = 30,
+            Longitude = 122,
+            TimeZoneId = "Asia/Shanghai",
+            LocationType = 0,
+            IsPreset = true,
+            IsHomeDefault = true,
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        };
+        dbContext.Locations.Add(homeEntity);
+        await dbContext.SaveChangesAsync();
+
+        var repository = new LocationRepository(dbContext);
+        var home = await repository.GetHomeDefaultAsync();
+
+        Assert.NotNull(home);
+        Assert.Equal(homeEntity.Id, home.Id);
+        Assert.True(home.IsHomeDefault);
+    }
+
+    [Fact]
     public async Task SearchExcludesNonPresetCatalogRows()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");

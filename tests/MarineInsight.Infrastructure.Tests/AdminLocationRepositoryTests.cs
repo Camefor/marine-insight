@@ -18,7 +18,8 @@ public sealed class AdminLocationRepositoryTests
         122.77,
         "Asia/Shanghai",
         LocationType.Island,
-        CoastOrientationDeg: 45);
+        CoastOrientationDeg: 45,
+        IsHomeDefault: false);
 
     [Fact]
     public async Task AddPersistsLocationAndWritesAudit()
@@ -61,7 +62,7 @@ public sealed class AdminLocationRepositoryTests
         var updated = await repository.UpdateAsync(
             ActorUserId,
             created.Id,
-            new UpdateLocationCommand("东极岛", 30.19, 122.68, "Asia/Shanghai", LocationType.Island, CoastOrientationDeg: null));
+            new UpdateLocationCommand("东极岛", 30.19, 122.68, "Asia/Shanghai", LocationType.Island, CoastOrientationDeg: null, IsHomeDefault: false));
 
         Assert.NotNull(updated);
         Assert.Equal("东极岛", updated.DisplayName);
@@ -179,6 +180,33 @@ public sealed class AdminLocationRepositoryTests
 
         var selfExcluded = await repository.ExistsByNormalizedCoordinatesAsync("枸杞岛", 30.72, 122.77, created.Id);
         Assert.False(selfExcluded);
+    }
+
+    [Fact]
+    public async Task SettingNewHomeDefaultClearsPreviousHomeDefault()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var dbContext = CreateDbContext(connection);
+        await dbContext.Database.MigrateAsync();
+
+        var repository = new AdminLocationRepository(dbContext, TimeProvider.System);
+        var first = await repository.AddAsync(ActorUserId, ValidCommand with { IsHomeDefault = true });
+        var second = await repository.AddAsync(
+            ActorUserId,
+            ValidCommand with
+            {
+                DisplayName = "东极岛",
+                Latitude = 30.19,
+                Longitude = 122.68,
+                IsHomeDefault = true
+            });
+
+        var firstEntity = await dbContext.Locations.AsNoTracking().SingleAsync(location => location.Id == first.Id);
+        var secondEntity = await dbContext.Locations.AsNoTracking().SingleAsync(location => location.Id == second.Id);
+
+        Assert.False(firstEntity.IsHomeDefault);
+        Assert.True(secondEntity.IsHomeDefault);
     }
 
     private static MarineInsightDbContext CreateDbContext(SqliteConnection connection)

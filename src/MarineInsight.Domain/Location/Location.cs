@@ -17,7 +17,8 @@ public sealed class Location
         LocationType locationType,
         double? coastOrientationDeg,
         bool isPreset,
-        DateTimeOffset createdAtUtc)
+        DateTimeOffset createdAtUtc,
+        bool isHomeDefault = false)
     {
         if (id == Guid.Empty)
         {
@@ -61,6 +62,7 @@ public sealed class Location
         LocationType = locationType;
         CoastOrientationDeg = coastOrientationDeg;
         IsPreset = isPreset;
+        IsHomeDefault = isHomeDefault;
         CreatedAtUtc = createdAtUtc.ToUniversalTime();
     }
 
@@ -85,6 +87,9 @@ public sealed class Location
     public double? CoastOrientationDeg { get; }
 
     public bool IsPreset { get; }
+
+    /// <summary>是否为首页默认地点：首页无查询参数时预选该预置地点。</summary>
+    public bool IsHomeDefault { get; }
 
     public DateTimeOffset CreatedAtUtc { get; }
 }

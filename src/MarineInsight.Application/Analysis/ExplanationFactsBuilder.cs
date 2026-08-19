@@ -5,7 +5,9 @@ namespace MarineInsight.Application.Analysis;
 
 public static class ExplanationFactsBuilder
 {
-    public static ExplanationFacts Build(MarineAnalysisQueryResult result)
+    public static ExplanationFacts Build(
+        MarineAnalysisQueryResult result,
+        string? displayTimeZoneId = null)
     {
         ArgumentNullException.ThrowIfNull(result);
 
@@ -58,9 +60,12 @@ public static class ExplanationFactsBuilder
 
         var quality = result.Snapshot.Quality;
 
+        // 展示与解读统一使用用户所在时区；未指定或无法解析时回退到地点的时区。
+        var resolvedTimeZoneId = ResolveTimeZoneId(displayTimeZoneId, result.Query.LocationMetadata?.TimeZoneId);
+
         return new ExplanationFacts(
             result.Query.LocationMetadata?.DisplayName ?? "自定义坐标",
-            result.Query.LocationMetadata?.TimeZoneId,
+            resolvedTimeZoneId,
             result.Snapshot.Range.StartUtc,
             result.Snapshot.Range.EndUtc,
             result.Snapshot.Range.Hours,
@@ -74,6 +79,31 @@ public static class ExplanationFactsBuilder
             windows,
             ExplanationDefaults.Disclaimer,
             result.CacheIdentity.Activities);
+    }
+
+    private static string? ResolveTimeZoneId(string? displayTimeZoneId, string? locationTimeZoneId)
+    {
+        var candidate = string.IsNullOrWhiteSpace(displayTimeZoneId)
+            ? locationTimeZoneId
+            : displayTimeZoneId;
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            return null;
+        }
+
+        try
+        {
+            _ = TimeZoneInfo.FindSystemTimeZoneById(candidate);
+            return candidate;
+        }
+        catch (TimeZoneNotFoundException)
+        {
+        }
+        catch (InvalidTimeZoneException)
+        {
+        }
+
+        return locationTimeZoneId;
     }
 
     private static string ToName<TEnum>(TEnum value)

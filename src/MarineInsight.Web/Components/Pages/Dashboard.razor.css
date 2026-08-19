@@ -292,6 +292,17 @@
     padding-bottom: 10px;
 }
 
+.map-point-name {
+    max-width: 480px;
+}
+
+.map-point-hint {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin: -4px 0 0;
+}
+
 .status-band {
     align-items: center;
     border-radius: 8px;

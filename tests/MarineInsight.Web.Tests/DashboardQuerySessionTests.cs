@@ -12,6 +12,7 @@ public sealed class DashboardQuerySessionTests
     public async Task RootDashboardRendersQueryShell()
     {
         using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        await factory.MigrateDatabaseAsync();
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync("/");
@@ -20,12 +21,10 @@ public sealed class DashboardQuerySessionTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("海况 Dashboard", html, StringComparison.Ordinal);
         Assert.Contains("地点搜索", html, StringComparison.Ordinal);
-        Assert.Contains("地图选点", html, StringComparison.Ordinal);
-        Assert.Contains("天地图", html, StringComparison.Ordinal);
-        Assert.Contains("Open-Meteo.com", html, StringComparison.Ordinal);
-        Assert.Contains("纬度", html, StringComparison.Ordinal);
-        Assert.Contains("经度", html, StringComparison.Ordinal);
         Assert.Contains("等待查询", html, StringComparison.Ordinal);
+        Assert.Contains("Open-Meteo.com", html, StringComparison.Ordinal);
+        // 需求1：地图默认收起，选点面板内容（含“地图选点/天地图/纬度/经度”）不预渲染。
+        Assert.DoesNotContain("map-picker-title", html, StringComparison.Ordinal);
     }
 
     [Fact]

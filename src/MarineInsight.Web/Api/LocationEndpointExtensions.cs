@@ -26,6 +26,10 @@ public static class LocationEndpointExtensions
             .WithName("FindNearbyLocations")
             .Produces<IReadOnlyList<LocationResponse>>(StatusCodes.Status200OK)
             .ProducesValidationProblem(StatusCodes.Status400BadRequest);
+        group.MapGet("/locations/reverse-geocode", HandleReverseGeocodeAsync)
+            .WithName("ReverseGeocodeLocation")
+            .Produces<ReverseGeocodeResponse>(StatusCodes.Status200OK)
+            .ProducesValidationProblem(StatusCodes.Status400BadRequest);
 
         return endpoints;
     }
@@ -140,6 +144,49 @@ public static class LocationEndpointExtensions
             errors["location"] = [exception.Message];
             return CreateValidationProblem(errors, traceId);
         }
+    }
+
+    private static async Task<IResult> HandleReverseGeocodeAsync(
+        double? lat,
+        double? lon,
+        ReverseGeocodeService reverseGeocodeService,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var traceId = GetTraceId(httpContext);
+        httpContext.Response.Headers["Trace-Id"] = traceId;
+        var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+
+        if (!lat.HasValue)
+        {
+            errors["lat"] = ["Latitude is required."];
+        }
+
+        if (!lon.HasValue)
+        {
+            errors["lon"] = ["Longitude is required."];
+        }
+
+        GeoPoint point = default;
+        if (lat.HasValue && lon.HasValue)
+        {
+            try
+            {
+                point = new GeoPoint(lat.Value, lon.Value);
+            }
+            catch (ArgumentOutOfRangeException exception)
+            {
+                errors["location"] = [exception.Message];
+            }
+        }
+
+        if (errors.Count > 0)
+        {
+            return CreateValidationProblem(errors, traceId);
+        }
+
+        var name = await reverseGeocodeService.FindNearestNameAsync(point, cancellationToken);
+        return Results.Ok(new ReverseGeocodeResponse(name));
     }
 
     private static LocationResponse Project(Location location) => new(

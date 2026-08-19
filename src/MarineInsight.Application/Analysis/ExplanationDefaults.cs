@@ -2,7 +2,7 @@
 
 public static class ExplanationDefaults
 {
-    public const string PromptVersion = "explanation-prompt.v1";
+    public const string PromptVersion = "explanation-prompt.v2";
 
     public const string Locale = "zh-CN";
 

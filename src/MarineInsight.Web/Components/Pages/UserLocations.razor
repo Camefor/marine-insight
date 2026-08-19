@@ -332,6 +332,14 @@
         return Task.CompletedTask;
     }
 
+    [JSInvokable]
+    public Task HandleLocateUnavailableFromJs(string? message)
+    {
+        _mapError = message;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
     private async ValueTask DisposeMapAsync()
     {
         if (_mapModule is not null)

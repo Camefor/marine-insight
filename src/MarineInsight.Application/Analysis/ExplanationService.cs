@@ -35,11 +35,12 @@ public sealed partial class ExplanationService
 
     public async Task<AnalysisExplanation> GenerateAsync(
         MarineAnalysisQueryResult result,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? displayTimeZoneId = null)
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        var facts = ExplanationFactsBuilder.Build(result);
+        var facts = ExplanationFactsBuilder.Build(result, displayTimeZoneId);
         var provider = _provider;
         if (provider is null || !provider.IsEnabled)
         {
@@ -50,7 +51,8 @@ public sealed partial class ExplanationService
             result.CacheIdentity.Value,
             ExplanationDefaults.PromptVersion,
             provider.ModelVersion,
-            ExplanationDefaults.Locale).Value;
+            ExplanationDefaults.Locale,
+            facts.TimeZoneId ?? string.Empty).Value;
 
         var cached = await _cache.GetAsync(cacheKey, cancellationToken);
         if (cached is not null)

@@ -1,11 +1,14 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @using System.Globalization
+@using MarineInsight.Application.Locations
+@using MarineInsight.Domain.Forecast
 @using Microsoft.Extensions.Configuration
 @inject DashboardQuerySession Session
 @inject IJSRuntime Js
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserWorkspaceService Workspace
+@inject ReverseGeocodeService ReverseGeocode
 @inject IConfiguration Configuration
 @implements IAsyncDisposable
 
@@ -61,7 +64,7 @@
                         <button type="button"
                                 class="candidate-button @(Session.SelectedLocation?.Id == location.Id ? "selected" : null)"
                                 title="@($"{location.DisplayName} {location.Latitude:0.###}, {location.Longitude:0.###}")"
-                                @onclick="() => Session.SelectLocation(location.Id)">
+                                @onclick="() => SelectLocationAsync(location.Id)">
                             <strong>@location.DisplayName</strong>
                             <span>@location.LocationType · @location.TimeZone · @location.Latitude.ToString("0.###")/@location.Longitude.ToString("0.###")</span>
                         </button>
@@ -137,9 +140,10 @@
                         <span>地点名称（可选）</span>
                         <input type="text"
                                maxlength="200"
-                               placeholder="留空显示“自定义坐标”"
+                               placeholder="地图选点后自动填充，留空显示“自定义坐标”"
                                @bind="Session.MapPointName" />
                     </label>
+                    <p class="map-point-hint">该名称仅作为地点备注，收藏地点时将按此名称显示。</p>
                 </div>
             }
 
@@ -657,9 +661,34 @@
             Session.SelectMapPoint(QueryLatitude.Value, QueryLongitude.Value);
             Session.MapPointName = QueryName ?? string.Empty;
         }
+        else
+        {
+            // 未携带地点参数时，预选首页默认地点（若已配置），地图默认收起。
+            await Session.SelectHomeDefaultAsync();
+        }
     }
 
-    private Task SearchLocationsAsync() => Session.SearchLocationsAsync();
+    private async Task SearchLocationsAsync()
+    {
+        await Session.SearchLocationsAsync();
+        if (Session.IsMapPickerOpen)
+        {
+            await EnsureMapAsync();
+            await UpdateMapSelectionAsync();
+        }
+    }
+
+    private async Task SelectLocationAsync(Guid locationId)
+    {
+        Session.SelectLocation(locationId);
+        if (!Session.IsMapPickerOpen)
+        {
+            Session.ToggleMapPicker();
+        }
+
+        await EnsureMapAsync();
+        await UpdateMapSelectionAsync();
+    }
 
     private Task OnForecastStartChanged(ChangeEventArgs e)
     {
@@ -884,17 +913,47 @@
     }
 
     [JSInvokable]
-    public Task SelectMapPointFromJs(double latitude, double longitude)
+    public async Task SelectMapPointFromJs(double latitude, double longitude)
     {
         Session.SelectMapPoint(latitude, longitude);
         StateHasChanged();
-        return Task.CompletedTask;
+
+        if (Session.SelectedMapPoint is not { } point)
+        {
+            return;
+        }
+
+        string? name;
+        try
+        {
+            name = await ReverseGeocode.FindNearestNameAsync(new GeoPoint(point.Latitude, point.Longitude));
+        }
+        catch
+        {
+            // 反查失败保持空名称，不打断地图选点主流程。
+            return;
+        }
+
+        // 反查返回后确认用户没有再次选点，避免旧请求覆盖新选点的名称。
+        if (name is { Length: > 0 } && Session.SelectedMapPoint == point)
+        {
+            Session.MapPointName = name;
+            StateHasChanged();
+        }
     }
 
     [JSInvokable]
     public Task HandleMapUnavailableFromJs(string? message)
     {
         Session.MarkMapUnavailable(message);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task HandleLocateUnavailableFromJs(string? message)
+    {
+        Session.SetMapError(message ?? "定位失败，请直接输入经纬度。");
         StateHasChanged();
         return Task.CompletedTask;
     }

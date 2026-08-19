@@ -34,6 +34,9 @@ public sealed class LocationQueryService
         return _repository.GetByIdAsync(locationId, cancellationToken);
     }
 
+    public Task<Location?> GetHomeDefaultAsync(CancellationToken cancellationToken = default) =>
+        _repository.GetHomeDefaultAsync(cancellationToken);
+
     public Task<IReadOnlyList<Location>> SearchPresetsAsync(
         string query,
         int limit = DefaultLimit,

@@ -43,6 +43,9 @@ public sealed class LocationConfiguration : IEntityTypeConfiguration<LocationEnt
         builder.Property(location => location.IsPreset)
             .HasColumnName("is_preset")
             .IsRequired();
+        builder.Property(location => location.IsHomeDefault)
+            .HasColumnName("is_home_default")
+            .IsRequired();
         builder.Property(location => location.CreatedAtUtc)
             .HasColumnName("created_at")
             .IsRequired();

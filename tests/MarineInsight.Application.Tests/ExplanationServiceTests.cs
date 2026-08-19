@@ -48,6 +48,29 @@ public sealed class ExplanationServiceTests
     }
 
     [Fact]
+    public async Task DifferentDisplayTimeZonesDoNotShareAiCache()
+    {
+        var provider = new FakeExplanationProvider
+        {
+            Candidate = new ExplanationCandidate
+            {
+                Headline = "整体海况良好，适宜乘船活动。",
+                Summary = "综合评分约 72 分，风浪较小。",
+                ActivityNotes = [new ExplanationActivityNote { Activity = "boat", Text = "可以安排乘船活动。" }]
+            }
+        };
+        var service = CreateService(provider);
+        var result = AnalysisTestFactory.CreateResult([ActivityType.Boat]);
+
+        var shanghai = await service.GenerateAsync(result, default, "Asia/Shanghai");
+        var auckland = await service.GenerateAsync(result, default, "Pacific/Auckland");
+
+        Assert.Equal(ExplanationSource.Ai, shanghai.Source);
+        Assert.Equal(ExplanationSource.Ai, auckland.Source);
+        Assert.Equal(2, provider.CallCount);
+    }
+
+    [Fact]
     public async Task InvalidCandidateDegradesToTemplate()
     {
         var provider = new FakeExplanationProvider

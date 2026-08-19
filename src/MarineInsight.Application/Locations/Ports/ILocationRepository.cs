@@ -12,6 +12,9 @@ public interface ILocationRepository
         Guid locationId,
         CancellationToken cancellationToken = default);
 
+    Task<Location?> GetHomeDefaultAsync(
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Location>> SearchAsync(
         string normalizedQuery,
         int limit,

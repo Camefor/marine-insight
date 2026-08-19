@@ -20,6 +20,8 @@ public sealed class LocationEntity
 
     public bool IsPreset { get; set; }
 
+    public bool IsHomeDefault { get; set; }
+
     public DateTimeOffset CreatedAtUtc { get; set; }
 
     public ICollection<ForecastBatchEntity> ForecastBatches { get; } = new List<ForecastBatchEntity>();

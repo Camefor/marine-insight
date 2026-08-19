@@ -428,3 +428,4 @@
 | 1.9 | 2026-08-14 | 增加 `MI-0036` 用户地点 CRUD 与查询历史删除/清空端点，落地全接口限流策略与注册/登录验证码 |
 | 2.0 | 2026-08-17 | 收藏请求体支持地图坐标点（`MI-0038`）：`POST/PUT /api/v1/favorites` 的 `locationId` 改为可空，新增 `displayName`/`latitude`/`longitude` 字段；`locationId` 非空为预置地点收藏，为空为地图坐标点收藏（冗余名称/坐标，服务端校验纬度 `[-90,90]`、经度 `[-180,180]`、名称 ≤200，按 `(用户, 坐标)` 去重） |
 | 2.1 | 2026-08-18 | 增加 `MI-0039` 后台管理端点：`GET/POST/PUT/DELETE /api/v1/admin/locations[/{id}]` 与 `GET /api/v1/admin/users`（均要求 `Administrator` 角色 + `admin` 限流，写操作带防伪头），新增 `LOCATION_CONFLICT`/`LOCATION_IN_USE` 错误码，删除返回级联收藏引用数 |
+| 2.2 | 2026-08-19 | 增加 `MI-0040`：`GET /api/v1/locations/reverse-geocode?lat=&lon=` 逆地理编码端点（天地图服务端反查最近地名，返回 `{ name }`，失败返回 `null`，Best-effort 不阻塞主流程）；`POST /api/v1/marine-analyses` 请求体新增可选 `timeZone`（IANA），AI 解读与解释事实按该时区换算显示时间，缺省回退地点时区 |

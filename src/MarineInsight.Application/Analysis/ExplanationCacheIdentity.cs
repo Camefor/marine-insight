@@ -12,20 +12,24 @@ public sealed record ExplanationCacheIdentity
         string analysisIdentity,
         string promptVersion,
         string modelVersion,
-        string locale)
+        string locale,
+        string timeZoneId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(analysisIdentity);
         ArgumentException.ThrowIfNullOrWhiteSpace(promptVersion);
         ArgumentException.ThrowIfNullOrWhiteSpace(modelVersion);
         ArgumentException.ThrowIfNullOrWhiteSpace(locale);
 
+        // 解读文本包含当地时间，缓存键必须区分展示时区，避免不同时区共享同一段 AI 文本。
+        var zoneToken = string.IsNullOrWhiteSpace(timeZoneId) ? "none" : timeZoneId;
         var value = string.Join(
             ':',
             Prefix,
             Encode(analysisIdentity),
             Encode(promptVersion),
             Encode(modelVersion),
-            Encode(locale));
+            Encode(locale),
+            Encode(zoneToken));
         return new ExplanationCacheIdentity(value);
     }
 

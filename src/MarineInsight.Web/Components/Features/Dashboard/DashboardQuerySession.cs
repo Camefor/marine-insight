@@ -85,7 +85,7 @@ public sealed class DashboardQuerySession : IDisposable
         return true;
     }
 
-    public bool IsMapPickerOpen { get; private set; } = true;
+    public bool IsMapPickerOpen { get; private set; }
 
     public bool IsMapUnavailable { get; private set; }
 
@@ -154,6 +154,25 @@ public sealed class DashboardQuerySession : IDisposable
         _queryActivity = activity ?? _queryActivity;
     }
 
+    public async Task<bool> SelectHomeDefaultAsync(CancellationToken cancellationToken = default)
+    {
+        var location = await _locationQueryService.GetHomeDefaultAsync(cancellationToken);
+        if (location is null)
+        {
+            return false;
+        }
+
+        var option = ToLocationOption(location);
+        LocationResults = [option];
+        SelectedLocation = option;
+        SelectedMapPoint = null;
+        SearchText = option.DisplayName;
+        MapLatitude = option.Latitude;
+        MapLongitude = option.Longitude;
+        SearchError = null;
+        return true;
+    }
+
     public async Task<bool> SelectCatalogLocationAsync(Guid locationId, CancellationToken cancellationToken = default)
     {
         var location = await _locationQueryService.GetByIdAsync(locationId, cancellationToken);
@@ -189,6 +208,12 @@ public sealed class DashboardQuerySession : IDisposable
         MapError = string.IsNullOrWhiteSpace(message)
             ? "地图暂时不可用，请直接输入经纬度继续查询。"
             : message;
+    }
+
+    public void SetMapError(string message)
+    {
+        // 可恢复的地图提示（如定位失败），只影响本次提示，不把地图标记为永久不可用。
+        MapError = message;
     }
 
     public bool UseManualCoordinates() => SelectMapPoint(MapLatitude, MapLongitude);
@@ -263,15 +288,23 @@ public sealed class DashboardQuerySession : IDisposable
                 SearchText,
                 cancellationToken: cancellationToken);
             LocationResults = locations.Select(ToLocationOption).ToArray();
-            if (SelectedLocation is not null &&
-                LocationResults.All(location => location.Id != SelectedLocation.Id))
+
+            if (LocationResults.Count > 0)
+            {
+                // 命中预置地点：自动选中首个并打开地图，让地点标记在地图上跟随显示。
+                SelectedLocation = LocationResults[0];
+                SelectedMapPoint = null;
+                MapLatitude = SelectedLocation.Latitude;
+                MapLongitude = SelectedLocation.Longitude;
+                IsMapPickerOpen = true;
+                SearchError = null;
+            }
+            else
             {
                 SelectedLocation = null;
-            }
-
-            if (LocationResults.Count == 0)
-            {
-                SearchError = "没有找到匹配的预置地点。";
+                // 未命中时提示用户通过地图选点，并直接展开地图便于立即选点。
+                IsMapPickerOpen = true;
+                SearchError = "没有找到匹配的预置地点，请通过地图选点或输入经纬度继续。";
             }
         }
         catch (ArgumentException exception)
@@ -316,7 +349,8 @@ public sealed class DashboardQuerySession : IDisposable
                 await _analysisReportService.SaveAsync(result, userId.Value, _activeRequest.Token);
             }
 
-            var explanation = await _explanationService.GenerateAsync(result, _activeRequest.Token);
+            // 解读文本统一按用户所在时区生成与展示；底层查询仍以 UTC 边界执行。
+            var explanation = await _explanationService.GenerateAsync(result, _activeRequest.Token, _displayZone.Id);
 
             if (requestVersion == _requestVersion)
             {

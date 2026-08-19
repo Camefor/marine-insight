@@ -8,3 +8,6 @@ public sealed record LocationResponse(
     double Longitude,
     string TimeZone,
     string Source);
+
+public sealed record ReverseGeocodeResponse(
+    string? Name);

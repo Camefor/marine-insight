@@ -103,7 +103,8 @@ public static class AdminEndpointExtensions
         request.Longitude,
         request.TimeZoneId,
         ParseLocationType(request.LocationType),
-        request.CoastOrientationDeg);
+        request.CoastOrientationDeg,
+        request.IsHomeDefault);
 
     private static UpdateLocationCommand ToUpdateCommand(UpdateAdminLocationRequest request) => new(
         request.DisplayName,
@@ -111,7 +112,8 @@ public static class AdminEndpointExtensions
         request.Longitude,
         request.TimeZoneId,
         ParseLocationType(request.LocationType),
-        request.CoastOrientationDeg);
+        request.CoastOrientationDeg,
+        request.IsHomeDefault);
 
     private static LocationType ParseLocationType(string? value)
     {
@@ -131,6 +133,7 @@ public static class AdminEndpointExtensions
         location.Longitude,
         location.TimeZoneId,
         location.CoastOrientationDeg,
+        location.IsHomeDefault,
         location.CreatedAtUtc);
 
     private static IResult Conflict(MarineInsightException exception) =>
@@ -176,7 +179,8 @@ public sealed record CreateAdminLocationRequest(
     double Longitude,
     string TimeZoneId,
     string LocationType,
-    double? CoastOrientationDeg);
+    double? CoastOrientationDeg,
+    bool IsHomeDefault = false);
 
 public sealed record UpdateAdminLocationRequest(
     string DisplayName,
@@ -184,7 +188,8 @@ public sealed record UpdateAdminLocationRequest(
     double Longitude,
     string TimeZoneId,
     string LocationType,
-    double? CoastOrientationDeg);
+    double? CoastOrientationDeg,
+    bool IsHomeDefault = false);
 
 public sealed record AdminLocationResponse(
     Guid Id,
@@ -194,6 +199,7 @@ public sealed record AdminLocationResponse(
     double Longitude,
     string TimeZoneId,
     double? CoastOrientationDeg,
+    bool IsHomeDefault,
     DateTimeOffset CreatedAtUtc);
 
 public sealed record LocationDeleteResponse(

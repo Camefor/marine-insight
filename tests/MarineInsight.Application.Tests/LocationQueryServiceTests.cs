@@ -40,6 +40,10 @@ public sealed class LocationQueryServiceTests
             CancellationToken cancellationToken = default) =>
             Task.FromResult<Location?>(null);
 
+        public Task<Location?> GetHomeDefaultAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<Location?>(null);
+
         public Task<IReadOnlyList<Location>> SearchAsync(
             string normalizedQuery,
             int limit,

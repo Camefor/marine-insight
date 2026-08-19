@@ -11,6 +11,8 @@ public sealed record MarineAnalysisRequest
     public IReadOnlyList<string>? Activities { get; init; }
 
     public MarineAnalysisUnitsInput? Units { get; init; }
+
+    public string? TimeZone { get; init; }
 }
 
 public sealed record MarineAnalysisLocationInput

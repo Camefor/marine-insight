@@ -14,7 +14,8 @@ public sealed class AdminLocationServiceTests
         122.77,
         "Asia/Shanghai",
         LocationType.Island,
-        CoastOrientationDeg: 45);
+        CoastOrientationDeg: 45,
+        IsHomeDefault: false);
 
     [Fact]
     public async Task CreateRejectsMissingDisplayName()
@@ -157,7 +158,7 @@ public sealed class AdminLocationServiceTests
     }
 
     private static UpdateLocationCommand ToUpdate(CreateLocationCommand command) =>
-        new(command.DisplayName, command.Latitude, command.Longitude, command.TimeZoneId, command.LocationType, command.CoastOrientationDeg);
+        new(command.DisplayName, command.Latitude, command.Longitude, command.TimeZoneId, command.LocationType, command.CoastOrientationDeg, command.IsHomeDefault);
 
     private sealed class FakeAdminLocationRepository : IAdminLocationRepository
     {
@@ -218,7 +219,7 @@ public sealed class AdminLocationServiceTests
             }
 
             return Task.FromResult<Location?>(CreateLocation(new CreateLocationCommand(
-                command.DisplayName, command.Latitude, command.Longitude, command.TimeZoneId, command.LocationType, command.CoastOrientationDeg)));
+                command.DisplayName, command.Latitude, command.Longitude, command.TimeZoneId, command.LocationType, command.CoastOrientationDeg, command.IsHomeDefault)));
         }
 
         public Task<LocationDeleteResult?> DeleteAsync(

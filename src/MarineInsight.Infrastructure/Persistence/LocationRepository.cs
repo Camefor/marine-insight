@@ -19,6 +19,19 @@ public sealed class LocationRepository(MarineInsightDbContext dbContext) : ILoca
         return entity is null ? null : ToDomain(entity);
     }
 
+    public async Task<Location?> GetHomeDefaultAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await dbContext.Locations
+            .AsNoTracking()
+            .Where(location => location.IsPreset && location.IsHomeDefault)
+            .OrderBy(location => location.DisplayName)
+            .ThenBy(location => location.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return entity is null ? null : ToDomain(entity);
+    }
+
     public async Task<IReadOnlyList<Location>> SearchAsync(
         string normalizedQuery,
         int limit,
@@ -85,7 +98,8 @@ public sealed class LocationRepository(MarineInsightDbContext dbContext) : ILoca
             (LocationType)entity.LocationType,
             entity.CoastOrientationDeg is { } orientation ? (double)orientation : null,
             entity.IsPreset,
-            entity.CreatedAtUtc);
+            entity.CreatedAtUtc,
+            entity.IsHomeDefault);
     }
 
     private static string EscapeLikePattern(string value) =>

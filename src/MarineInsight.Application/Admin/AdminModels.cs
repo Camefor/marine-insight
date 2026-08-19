@@ -9,7 +9,8 @@ public sealed record CreateLocationCommand(
     double Longitude,
     string TimeZoneId,
     LocationType LocationType,
-    double? CoastOrientationDeg);
+    double? CoastOrientationDeg,
+    bool IsHomeDefault);
 
 public sealed record UpdateLocationCommand(
     string DisplayName,
@@ -17,7 +18,8 @@ public sealed record UpdateLocationCommand(
     double Longitude,
     string TimeZoneId,
     LocationType LocationType,
-    double? CoastOrientationDeg);
+    double? CoastOrientationDeg,
+    bool IsHomeDefault);
 
 public sealed record AdminLocation(
     Guid Id,

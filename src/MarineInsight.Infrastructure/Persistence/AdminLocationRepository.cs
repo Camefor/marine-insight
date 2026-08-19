@@ -61,8 +61,14 @@ public sealed class AdminLocationRepository(
             LocationType = (short)command.LocationType,
             CoastOrientationDeg = command.CoastOrientationDeg is { } orientation ? (decimal)orientation : null,
             IsPreset = true,
+            IsHomeDefault = command.IsHomeDefault,
             CreatedAtUtc = timeProvider.GetUtcNow()
         };
+        if (command.IsHomeDefault)
+        {
+            await ClearHomeDefaultsAsync(entity.Id, cancellationToken);
+        }
+
         dbContext.Locations.Add(entity);
         dbContext.AuditLogs.Add(CreateAudit(actorUserId, "location.created", entity, $"创建预置地点 {entity.DisplayName}"));
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -88,9 +94,26 @@ public sealed class AdminLocationRepository(
         entity.TimeZoneId = command.TimeZoneId.Trim();
         entity.LocationType = (short)command.LocationType;
         entity.CoastOrientationDeg = command.CoastOrientationDeg is { } orientation ? (decimal)orientation : null;
+        entity.IsHomeDefault = command.IsHomeDefault;
+        if (command.IsHomeDefault)
+        {
+            await ClearHomeDefaultsAsync(entity.Id, cancellationToken);
+        }
+
         dbContext.AuditLogs.Add(CreateAudit(actorUserId, "location.updated", entity, $"更新预置地点 {entity.DisplayName}"));
         await dbContext.SaveChangesAsync(cancellationToken);
         return ToDomain(entity);
+    }
+
+    private async Task ClearHomeDefaultsAsync(Guid keepId, CancellationToken cancellationToken)
+    {
+        var others = await dbContext.Locations
+            .Where(location => location.IsHomeDefault && location.Id != keepId)
+            .ToListAsync(cancellationToken);
+        foreach (var other in others)
+        {
+            other.IsHomeDefault = false;
+        }
     }
 
     public async Task<LocationDeleteResult?> DeleteAsync(
@@ -152,5 +175,6 @@ public sealed class AdminLocationRepository(
         (LocationType)entity.LocationType,
         entity.CoastOrientationDeg is { } orientation ? (double)orientation : null,
         entity.IsPreset,
-        entity.CreatedAtUtc);
+        entity.CreatedAtUtc,
+        entity.IsHomeDefault);
 }

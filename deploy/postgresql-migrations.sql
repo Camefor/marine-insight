@@ -666,3 +666,53 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260819035132_AddHomeDefaultLocation') THEN
+    ALTER TABLE locations ADD is_home_default boolean NOT NULL DEFAULT FALSE;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260819035132_AddHomeDefaultLocation') THEN
+    UPDATE locations SET is_home_default = FALSE
+    WHERE id = '70cfb8c4-7af7-4c43-8f38-9a27e7cc2de7';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260819035132_AddHomeDefaultLocation') THEN
+    UPDATE locations SET is_home_default = FALSE
+    WHERE id = '8a477d67-73fa-4f43-b954-cd29d238a89d';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260819035132_AddHomeDefaultLocation') THEN
+    UPDATE locations SET is_home_default = FALSE
+    WHERE id = '9b2c4d6e-8f1a-4b7c-9d3e-5f0a2c4b6d8e';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260819035132_AddHomeDefaultLocation') THEN
+    UPDATE locations SET is_home_default = FALSE
+    WHERE id = 'd6ac8e90-44ae-4d1f-88b9-8b73db7af6a1';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260819035132_AddHomeDefaultLocation') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260819035132_AddHomeDefaultLocation', '10.0.11');
+    END IF;
+END $EF$;
+COMMIT;
+

@@ -2,6 +2,7 @@
 using MarineInsight.Application.Forecast;
 using MarineInsight.Domain.Analysis;
 using MarineInsight.Domain.Forecast;
+using MarineInsight.Domain.Location;
 
 namespace MarineInsight.Application.Tests;
 
@@ -23,7 +24,8 @@ internal static class AnalysisTestFactory
         IReadOnlyList<RiskContribution>? contributions = null,
         IReadOnlyList<RecommendationWindow>? windows = null,
         IReadOnlyList<HourlyMarineAssessment>? assessments = null,
-        SnapshotQuality? snapshotQuality = null)
+        SnapshotQuality? snapshotQuality = null,
+        Location? locationMetadata = null)
     {
         var weatherBatch = CreateBatch(
             ForecastDataDomain.Weather,
@@ -68,7 +70,7 @@ internal static class AnalysisTestFactory
             AlgorithmVersion);
 
         return new MarineAnalysisQueryResult(
-            new MarineAnalysisQuery(Location, Range, activities: activityList),
+            new MarineAnalysisQuery(Location, Range, locationMetadata, activityList),
             CreateSnapshot(sourceBatches, quality),
             resolvedAssessments,
             windows ?? [],

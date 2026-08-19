@@ -1,6 +1,7 @@
 ﻿using MarineInsight.Application.Analysis;
 using MarineInsight.Domain.Analysis;
 using MarineInsight.Domain.Forecast;
+using MarineInsight.Domain.Location;
 
 namespace MarineInsight.Application.Tests;
 
@@ -93,4 +94,48 @@ public sealed class ExplanationFactsTests
 
         Assert.Equal([ActivityType.Boat, ActivityType.Camping], facts.SupportedActivities);
     }
+
+    [Fact]
+    public void BuildUsesDisplayTimeZoneWhenProvided()
+    {
+        var result = AnalysisTestFactory.CreateResult([ActivityType.Boat]);
+
+        var facts = ExplanationFactsBuilder.Build(result, "Pacific/Auckland");
+
+        Assert.Equal("Pacific/Auckland", facts.TimeZoneId);
+    }
+
+    [Fact]
+    public void BuildFallsBackToLocationTimeZoneWithoutDisplayZone()
+    {
+        var location = CreateLocation("Asia/Shanghai");
+        var result = AnalysisTestFactory.CreateResult([ActivityType.Boat], locationMetadata: location);
+
+        var facts = ExplanationFactsBuilder.Build(result);
+
+        Assert.Equal("Asia/Shanghai", facts.TimeZoneId);
+    }
+
+    [Fact]
+    public void BuildFallsBackToLocationTimeZoneForInvalidDisplayZone()
+    {
+        var location = CreateLocation("Asia/Shanghai");
+        var result = AnalysisTestFactory.CreateResult([ActivityType.Boat], locationMetadata: location);
+
+        var facts = ExplanationFactsBuilder.Build(result, "Not/AZone");
+
+        Assert.Equal("Asia/Shanghai", facts.TimeZoneId);
+    }
+
+    private static Location CreateLocation(string timeZoneId) => new(
+        Guid.NewGuid(),
+        "dongji",
+        "东极岛",
+        AnalysisTestFactory.Location.Latitude,
+        AnalysisTestFactory.Location.Longitude,
+        timeZoneId,
+        LocationType.Island,
+        coastOrientationDeg: null,
+        isPreset: true,
+        DateTimeOffset.UtcNow);
 }

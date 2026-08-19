@@ -617,6 +617,10 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("display_name");
 
+                    b.Property<bool>("IsHomeDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_home_default");
+
                     b.Property<bool>("IsPreset")
                         .HasColumnType("boolean")
                         .HasColumnName("is_preset");
@@ -660,6 +664,7 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                             Id = new Guid("8a477d67-73fa-4f43-b954-cd29d238a89d"),
                             CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             DisplayName = "东极岛",
+                            IsHomeDefault = false,
                             IsPreset = true,
                             Latitude = 30.200m,
                             LocationType = (short)1,
@@ -672,6 +677,7 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                             Id = new Guid("70cfb8c4-7af7-4c43-8f38-9a27e7cc2de7"),
                             CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             DisplayName = "嵊泗列岛",
+                            IsHomeDefault = false,
                             IsPreset = true,
                             Latitude = 30.727m,
                             LocationType = (short)1,
@@ -684,6 +690,7 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                             Id = new Guid("d6ac8e90-44ae-4d1f-88b9-8b73db7af6a1"),
                             CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             DisplayName = "普陀山",
+                            IsHomeDefault = false,
                             IsPreset = true,
                             Latitude = 30.010m,
                             LocationType = (short)1,
@@ -696,6 +703,7 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                             Id = new Guid("9b2c4d6e-8f1a-4b7c-9d3e-5f0a2c4b6d8e"),
                             CreatedAtUtc = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             DisplayName = "岱山岛",
+                            IsHomeDefault = false,
                             IsPreset = true,
                             Latitude = 30.288m,
                             LocationType = (short)1,

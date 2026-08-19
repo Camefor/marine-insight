@@ -19,6 +19,7 @@ public sealed class AuthenticationTests
     public async Task AnonymousDashboardAndAccountPagesRemainAvailable()
     {
         using var factory = new AuthenticationApplicationFactory();
+        await factory.MigrateDatabaseAsync();
         using var client = factory.CreateHttpsClient();
 
         using var dashboardResponse = await client.GetAsync("/");

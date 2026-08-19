@@ -76,7 +76,7 @@ public static class MarineAnalysisEndpointExtensions
                 return Results.StatusCode(StatusCodes.Status304NotModified);
             }
 
-            var explanation = await explanationService.GenerateAsync(result, cancellationToken);
+            var explanation = await explanationService.GenerateAsync(result, cancellationToken, request?.TimeZone);
             return Results.Ok(Project(result, explanation, traceId));
         }
         catch (ProviderException exception)
