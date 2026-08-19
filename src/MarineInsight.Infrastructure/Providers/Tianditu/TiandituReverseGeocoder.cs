@@ -21,7 +21,7 @@ public sealed class TiandituReverseGeocoder(
         CancellationToken cancellationToken = default)
     {
         var settings = options.Value;
-        if (string.IsNullOrWhiteSpace(settings.Key))
+        if (string.IsNullOrWhiteSpace(settings.ServerKey))
         {
             return null;
         }
@@ -30,7 +30,7 @@ public sealed class TiandituReverseGeocoder(
         {
             ["postStr"] = JsonSerializer.Serialize(new { lon = point.Longitude, lat = point.Latitude, ver = 1 }),
             ["type"] = "geocode",
-            ["tk"] = settings.Key
+            ["tk"] = settings.ServerKey
         };
         var uri = QueryHelpers.AddQueryString($"{settings.BaseUrl.TrimEnd('/')}/geocoder", query);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

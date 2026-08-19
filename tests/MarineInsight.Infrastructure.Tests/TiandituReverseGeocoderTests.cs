@@ -29,7 +29,7 @@ public sealed class TiandituReverseGeocoderTests
     {
         var handler = new StubHttpMessageHandler(_ => throw new InvalidOperationException("should not be called"));
         using var httpClient = new HttpClient(handler);
-        var geocoder = new TiandituReverseGeocoder(httpClient, CreateOptions(key: null));
+        var geocoder = new TiandituReverseGeocoder(httpClient, CreateOptions(serverKey: null));
 
         var name = await geocoder.GetNearestPlaceNameAsync(new GeoPoint(30.72, 122.77), default);
 
@@ -63,11 +63,11 @@ public sealed class TiandituReverseGeocoderTests
         Assert.Null(await emptyGeocoder.GetNearestPlaceNameAsync(new GeoPoint(30.72, 122.77), default));
     }
 
-    private static IOptions<TiandituOptions> CreateOptions(string? key) =>
+    private static IOptions<TiandituOptions> CreateOptions(string? serverKey) =>
         Options.Create(new TiandituOptions
         {
             BaseUrl = "https://api.tianditu.test",
-            Key = key,
+            ServerKey = serverKey,
             Timeout = TimeSpan.FromSeconds(5)
         });
 
