@@ -19,12 +19,36 @@ public sealed class DashboardQuerySessionTests
         var html = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("海况 Dashboard", html, StringComparison.Ordinal);
+        Assert.Contains("Marine AI | 海岛海况智能决策平台", html, StringComparison.Ordinal);
+        Assert.Equal(1, html.Split("<title>", StringSplitOptions.None).Length - 1);
+        Assert.Contains("id=\"dashboard-title\"", html, StringComparison.Ordinal);
+        Assert.Contains("海岛海况智能决策平台</h1>", html, StringComparison.Ordinal);
+        Assert.Contains("为海钓、露营、摄影和航海而生。", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"description\"", html, StringComparison.Ordinal);
+        Assert.Contains("/images/brand/marine-ai-mark-192.png", html, StringComparison.Ordinal);
         Assert.Contains("地点搜索", html, StringComparison.Ordinal);
         Assert.Contains("等待查询", html, StringComparison.Ordinal);
         Assert.Contains("Open-Meteo.com", html, StringComparison.Ordinal);
         // 需求1：地图默认收起，选点面板内容（含“地图选点/天地图/纬度/经度”）不预渲染。
         Assert.DoesNotContain("map-picker-title", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task SeoDiscoveryFilesAndBrandAssetsAreServed()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var robots = await client.GetStringAsync("/robots.txt");
+        var sitemap = await client.GetStringAsync("/sitemap.xml");
+        var manifest = await client.GetStringAsync("/site.webmanifest");
+        using var logoResponse = await client.GetAsync("/images/brand/marine-ai-mark-192.png");
+
+        Assert.Contains("Sitemap: https://marine.loyalme.life/sitemap.xml", robots, StringComparison.Ordinal);
+        Assert.Contains("https://marine.loyalme.life/about", sitemap, StringComparison.Ordinal);
+        Assert.Contains("Marine AI", manifest, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, logoResponse.StatusCode);
+        Assert.Equal("image/png", logoResponse.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]

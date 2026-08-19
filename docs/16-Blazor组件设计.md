@@ -162,6 +162,8 @@ public sealed partial class RiskSummary
 
 `MI-0027` 的 `DashboardQuerySession` 在服务端投影阶段完成单位换算，并保存当前请求活动供收藏与历史复用。Dashboard 将 `locationId`、`hours`、`from` 和 `activity` 查询参数恢复到同一状态容器；`from` 以字符串接收并按 Round-trip UTC 显式解析，避免 Blazor 不支持可空 `DateTimeOffset` 查询参数导致 SSR 500。收藏、历史、设置和管理员页均使用授权路由及 Interactive Server 交互。
 
+`MI-0041` 将品牌与 SEO 职责拆在既有组件边界内：`App.razor` 提供 SSR 可见的 Description、Open Graph/Twitter 元数据及 favicon/manifest；各路由使用唯一 `PageTitle`，根 `Dashboard.razor` 再通过 `HeadContent` 固化首页 canonical；`MainLayout.razor` 仅负责可见品牌组合和导航。静态 `robots.txt`、`sitemap.xml` 与品牌 PNG 位于 `wwwroot`，不引入运行时图片处理或额外 JS。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |
@@ -184,3 +186,4 @@ public sealed partial class RiskSummary
 | 2.5 | 2026-08-18 | 记录 `MI-0039` 新增 `AdminTabs`/`AdminLocations`(+`.razor.css`)/`AdminUsers` 三个 `[Authorize(Policy="Administrator")]` + `InteractiveServer` 页面组件；`Operations.razor` 顶部挂 `AdminTabs`；`AdminLocations` 复用 `wwwroot/js/dashboard-map.js` 天地图选点（`EnsureMap`/`SelectMapPoint`）并注入 `IConfiguration` 取 `Map:Tianditu:Key`；`AccountNav.razor` 新增管理员可见「后台管理」入口 |
 | 2.6 | 2026-08-19 | 记录 `MI-0040`：`DashboardQuerySession` 新增 `SelectHomeDefaultAsync`（无查询参数时预选首页默认地点，缺省地图收起）、`SetMapError`（可恢复地图提示，不标记永久不可用）；`Dashboard.razor` 「查找地点」/候选点击改为 `SearchLocationsAsync`/`SelectLocationAsync`（命中即打开地图并更新标记跟随显示），`SelectMapPointFromJs` 变 `async` 并注入 `ReverseGeocodeService` 反查最近地名填充 `MapPointName`（带会话选点竞态校验，失败保持空名称），新增 `[JSInvokable] HandleLocateUnavailableFromJs`；`dashboard-map.js` 新增 `addLocateControl`（缩放控件附近的定位十字准星，`getCurrentPosition` 成功后 `map.setView` + 调 `SelectMapPointFromJs`，失败映射中文提示）；`AdminLocations.razor` 表单新增「设为首页默认地点」复选框（经 `CreateLocationCommand.IsHomeDefault` 落库） |
 | 2.7 | 2026-08-19 | 记录 `MI-0040` 跟进：逆地理编码从 `TiandituOptions.Key` 拆出独立 `ServerKey`（`Map:Tianditu:ServerKey`），`TiandituReverseGeocoder` 改用服务端权限 Key；浏览器端瓦片仍读取 `Key` |
+| 2.8 | 2026-08-19 | 记录 `MI-0041` 品牌/SEO 组件边界：`App.razor` 维护默认搜索与社交元数据、图标和 manifest，各页面通过 `PageTitle` 输出唯一标题，`Dashboard.razor` 维护首页 canonical，`MainLayout.razor` 渲染 Marine AI 品牌组合；`wwwroot` 提供品牌 PNG、robots 与 sitemap |

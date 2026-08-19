@@ -62,6 +62,10 @@
     margin: 0;
 }
 
+.dashboard-header h1 {
+    font-size: 2rem;
+}
+
 .eyebrow {
     color: var(--accent);
     font-size: 0.82rem;
@@ -70,12 +74,19 @@
     text-transform: uppercase;
 }
 
+.dashboard-slogan,
 .dashboard-subtitle,
 .disclaimer,
 .empty-state p {
     color: var(--muted);
     line-height: 1.6;
     margin: 8px 0 0;
+}
+
+.dashboard-slogan {
+    color: var(--text);
+    font-size: 1.05rem;
+    font-weight: 700;
 }
 
 .disclaimer,

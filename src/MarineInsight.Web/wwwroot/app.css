@@ -43,21 +43,56 @@
     border-bottom: 1px solid #dce3e1;
     display: flex;
     justify-content: space-between;
-    min-height: 56px;
+    min-height: 68px;
     padding: 0 24px;
 }
 
 .app-brand {
-    color: #173a35;
-    font-size: 1rem;
-    font-weight: 700;
+    align-items: center;
+    color: #003656;
+    display: inline-flex;
+    flex: 0 0 auto;
+    gap: 9px;
     text-decoration: none;
+}
+
+.app-brand-mark {
+    border-radius: 50%;
+    display: block;
+    flex: 0 0 42px;
+    height: 42px;
+    width: 42px;
+}
+
+.app-brand-copy {
+    display: grid;
+    line-height: 1.1;
+}
+
+.app-brand-name {
+    align-items: baseline;
+    display: flex;
+    font-size: 1.12rem;
+    font-weight: 800;
+}
+
+.app-brand-name em {
+    color: #00aeea;
+    font-style: normal;
+}
+
+.app-brand-copy small {
+    color: #526a73;
+    font-size: 0.67rem;
+    font-weight: 600;
+    margin-top: 3px;
+    white-space: nowrap;
 }
 
 .app-header-brand {
     align-items: center;
     display: flex;
-    gap: 16px;
+    gap: 20px;
 }
 
 .main-nav {
@@ -509,6 +544,21 @@
 
     .app-header-brand {
         flex-wrap: wrap;
+        gap: 8px 12px;
+    }
+
+    .app-brand-mark {
+        flex-basis: 36px;
+        height: 36px;
+        width: 36px;
+    }
+
+    .app-brand-name {
+        font-size: 1rem;
+    }
+
+    .app-brand-copy small {
+        display: none;
     }
 
     .account-links,
