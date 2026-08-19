@@ -130,13 +130,13 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 当前任务 ID | `MI-0044` |
-| 当前状态 | `IN_PROGRESS` |
+| 当前状态 | `DONE` |
 | 当前目标 | 将 `MI-0043` 的全站 UI 重构标准提交并推送到 `origin/main`，安全部署至腾讯云生产环境，并完成备份、健康检查、线上视觉/功能冒烟和 Docker 清理 |
-| 最后完成动作 | 已读取生产部署手册与本机运维记忆，确认生产使用 tar+ssh 同步 `/opt/marine-insight`，Compose 需叠加 production/ai/tianditu overlay，发布前必须执行 PostgreSQL custom-format 备份 |
-| 下一步动作 | 执行本地 Release 构建、全量测试、Playwright 与差异检查，随后标准提交并推送，再进行生产备份和重建 |
+| 最后完成动作 | 已将 UI 重构提交 `d9b67bc` 推送 `origin/main`；发布包本地/远端 SHA-256 一致，生产备份非空后叠加 production/ai/tianditu overlay 重建成功；迁移退出 0、Web healthy，公网与线上 Playwright 验收通过并完成 Docker 清理 |
+| 下一步动作 | 发布已完成；后续 UI 迭代继续从新的生产视觉基线开展 |
 | 涉及文件 | `MI-0043` 的 13 个 UI/文档/测试文件及 `docs/AGENT-GUIDE.md` 发布记录；生产 `/opt/marine-insight/src/`、`deploy/postgresql-migrations.sql`、`deploy/docker-cleanup.sh` |
-| 验证结果 | 发布前基线为 Release 构建 0 警告/0 错误、全量测试 230/230、Playwright 2/2；本轮部署验证尚未执行 |
-| 阻塞/待确认 | 无；生产 Secret 与 `.env` 不进入 Git、终端回显或同步包 |
+| 验证结果 | 本地 Release 构建 0 警告/0 错误、230/230 测试、Playwright 2/2、format/diff 通过；生产备份 `marine-insight-20260819-085836.dump` 为 59,567 字节；migrate exit 0、Web healthy；公网首页/live/ready/login/about 200；5 个预置地点完整，搜索与逆地理编码正常，HSTS/nosniff 正常，样式标识生效，线上桌面/移动 Playwright 2/2，关键错误日志为空，Docker 清理完成 |
+| 阻塞/待确认 | 业务提交 `d9b67bc` 已推送；发布记录提交因 GitHub HTTPS 连接重置暂未同步，网络恢复后推送即可。生产 Secret 与 `.env` 未进入 Git、终端回显或同步包 |
 | 最后更新 | 2026-08-19 |
 
 <!-- agent-state:end -->
@@ -148,7 +148,6 @@
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
 | [ ] | `MI-0027` | P0 | `BLOCKED` | 连续完成阶段 3 剩余产品闭环与阶段 4 可部署基线 | 注册用户可收藏/再次查询并查看历史与单位设置；移动端、键盘和管理员运维入口可用；WorldTides 可配置且凭据安全维护；Docker、代理、迁移、备份恢复、安全与 E2E 验证具备可执行交付物 |
-| [ ] | `MI-0044` | P0 | `IN_PROGRESS` | 提交并部署 `MI-0043` 全站 UI 重构 | 提交推送成功；生产数据库备份非空；migrate 成功、Web healthy；公网健康、首页/账户视觉、静态资源与核心查询入口通过；Docker 清理完成 |
 用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
 ### 8.2 暂停/阻塞任务恢复详情
@@ -184,6 +183,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0044` | 2026-08-19 | 提交并部署 `MI-0043` 全站 UI 重构 | 提交 `d9b67bc` 已推送 `origin/main`；发布包 SHA-256 本地/远端一致；生产备份 59,567 字节；完整 overlay 重建后 migrate exit 0、Web healthy；公网 5 个核心页面/健康端点均 200，地点、逆地理编码、安全头、CSS 标识和线上双视口 Playwright 通过，关键错误日志为空并完成 Docker 清理 |
 | [x] | `MI-0043` | 2026-08-19 | 依据持续迭代 UI 设计原型大改网站视觉与交互 | 全站切换为深海暗色设计系统，Dashboard 重组为搜索优先的决策工作台并强化逐小时趋势、风险、来源和指标读数；Header、账户、功能介绍、工作区、地图与后台同步统一，移动端新增底部导航并修复账户表单溢出；Release 构建 0 警告/0 错误、230/230 测试、format、Playwright 桌面/移动 2/2 通过 |
 | [x] | `MI-0042` | 2026-08-19 | 发布 Marine AI 品牌与 SEO 改动到腾讯云生产环境 | 提交 `f0f8ff0` 已通过 tar+ssh 发布；升级前备份 `marine-insight-20260819-065535.dump`（59,567 字节）；production/ai/tianditu overlay 重建成功，迁移退出码 0、Web healthy；公网健康、品牌与 SEO、7 个静态资源、地点搜索、逆地理编码、5 个预置地点和天地图双瓦片均通过；最近关键错误日志为空，Docker 清理完成；当前环境无内置浏览器，桌面/移动截图待补 |
 | [x] | `MI-0041` | 2026-08-19 | Marine AI 品牌与 SEO 视觉落地 | 从需求设计图提取圆形海岛日落/海浪图标并派生 Header、favicon、Apple Touch 与 manifest 资产；全站统一 Marine AI 品牌，首页使用指定 Title/H1/Slogan；补齐 Description、社交卡片、canonical、robots 与 sitemap；SSR 保证唯一 Title。Release 构建 0 警告/0 错误、全量测试 230/230、格式/差异和 HTTP 资源验收通过；当前环境无可用内置浏览器，1440×900 与 390×844 截图待补 |
@@ -234,6 +234,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-19 | `MI-0044` | 将 `MI-0043` 全站 UI 重构提交并部署生产：提交 `d9b67bc` 推送 `origin/main`；生成 803,103 字节发布包并与远端校验 SHA-256 一致；升级前创建 PostgreSQL custom-format 备份；同步源码与部署资产后以 production/ai/tianditu 完整 overlay 构建重建；完成远端临时包、退出容器与构建缓存清理 | 本地 Release 构建 0 警告/0 错误、全量测试 230/230、format/diff、Playwright 2/2；生产备份 `marine-insight-20260819-085836.dump` 非空（59,567 字节）；migrate exit 0、Web healthy；公网首页/live/ready/login/about 均 200；5 个预置地点完整，地点搜索返回普陀山，逆地理编码返回普陀山真实地址，HSTS/nosniff 正常，全局/Dashboard 新设计 CSS 标识生效；线上 1440×900 与 360×800 Playwright 2/2，最近关键错误日志为空；Docker 清理完成，磁盘占用约 38% | 发布完成；业务提交已推送，发布记录提交因 GitHub HTTPS 连接重置暂待网络恢复后同步 |
 | 2026-08-19 | `MI-0043` | 依据 `docs/持续迭代/UI设计` 全部资料完成网站设计大改：建立深海蓝/青色/珊瑚暗色设计系统，重做 Header、账户和工作区外壳；Dashboard 采用品牌结论、搜索优先查询工作台、半透明仪表面板、等宽数据读数、风险语义和高权重逐小时时间轴；功能介绍、用户地点/后台地图与后台 Tab 同步统一；移动端新增海况/地图/收藏/设置底部导航，并修复账户输入框横向溢出；保留现有查询、地图、收藏、AI、时区和数据来源事件链 | Release 构建 0 警告/0 错误；全量测试 230/230 通过（Domain 51、Application 69、Infrastructure 50、Web 60）；`dotnet format --verify-no-changes --no-restore` 通过；Playwright 1440×900 与 360×800 共 2/2 通过，Dashboard/账户页无横向溢出或区域重叠；设计、组件与测试文档已同步 | 本地改造完成，未提交、推送或部署；如需生产上线，另行按部署手册执行备份、迁移、健康检查和线上视觉冒烟 |
 | 2026-08-19 | `MI-0042` | 将提交 `f0f8ff0` 的 Marine AI 品牌与 SEO 改动发布到腾讯云生产：本地生成 802,629 字节发布包并与远端校验 SHA-256 一致；升级前执行 PostgreSQL custom-format 备份；同步源码与部署产物后叠加 production/ai/tianditu overlay 构建重建；清理临时发布包、悬空镜像、构建缓存、已退出容器和无用网络 | 本地 Release 0 警告/0 错误、230/230 测试、format/diff 通过；备份 `marine-insight-20260819-065535.dump` 非空（59,567 字节）；migrate exit 0，web healthy；公网首页/live/ready 200，HSTS/nosniff 正常；Title 唯一且精确，H1/Slogan/Logo/canonical/Description/OG/Twitter 与 robots/sitemap/manifest/4 个 PNG 全部通过；地点搜索返回普陀山，逆地理编码返回真实地址，5 个预置地点完整，浏览器请求语义下天地图 vec/cva 均 200 PNG；最近关键错误日志为空；清理后磁盘占用 37% | 发布完成；当前环境没有可用内置浏览器，后续可补做 1440×900、390×844 视觉截图复核 |
 | 2026-08-19 | `MI-0041` | 完成 Marine AI 品牌与 SEO 视觉落地：从两张需求设计图提取透明圆形品牌图标并派生 512/192/favicon/Apple Touch 资产；Header 展示图标、Marine AI 字标与「海岛海况智能决策平台」副标题，移动端隐藏副标题；首页展示指定 H1 与「为海钓、露营、摄影和航海而生。」；全站 `PageTitle` 更新为 Marine AI；补齐 Description、Open Graph/Twitter、canonical、manifest、robots、sitemap；实测并修复首页重复 Title，404 页面补品牌标题 | Release 构建 0 警告、0 错误；全量测试 230/230 通过（Domain 51、Application 69、Infrastructure 50、Web 60）；`dotnet format --verify-no-changes --no-restore`、`git diff --check` 通过；真实 HTTP 首页 200、唯一精确 Title、canonical/H1/Slogan/Description/Logo 均存在，7 个品牌/SEO 静态资源全部 200；改动文本文件 UTF-8 BOM/CRLF 已统一；当前会话无可用内置浏览器，未生成 1440×900、390×844 截图 | 实现提交 `f0f8ff0` 已推送 `origin/main`；浏览器环境可用时补做桌面/移动截图复核；用户本轮未要求部署，不执行生产发布 |
