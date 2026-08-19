@@ -226,7 +226,8 @@ public sealed class AuthenticationTests
                     ["Database:Provider"] = "Sqlite",
                     ["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}",
                     ["Identity:RequireConfirmedEmail"] = "false",
-                    ["Captcha:Enabled"] = _enableCaptcha ? "true" : "false"
+                    ["Captcha:Enabled"] = _enableCaptcha ? "true" : "false",
+                    ["AI:Enabled"] = "false"
                 });
             });
             builder.ConfigureServices(services =>

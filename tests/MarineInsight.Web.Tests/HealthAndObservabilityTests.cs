@@ -202,6 +202,7 @@ public sealed class HealthAndObservabilityTests
 
                 values["Database:Provider"] = "Sqlite";
                 values["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}";
+                values["AI:Enabled"] = "false";
 
                 configuration.AddInMemoryCollection(values);
             });

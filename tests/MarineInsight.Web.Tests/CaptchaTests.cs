@@ -210,7 +210,8 @@ public sealed class CaptchaTests
                     ["Database:Provider"] = "Sqlite",
                     ["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}",
                     ["Identity:RequireConfirmedEmail"] = "false",
-                    ["Captcha:Enabled"] = "true"
+                    ["Captcha:Enabled"] = "true",
+                    ["AI:Enabled"] = "false"
                 });
             });
             builder.ConfigureServices(services =>

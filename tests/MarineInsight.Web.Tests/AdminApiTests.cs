@@ -243,6 +243,7 @@ public sealed class AdminApiTests
                     ["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}",
                     ["Identity:RequireConfirmedEmail"] = "false",
                     ["Captcha:Enabled"] = "false",
+                    ["AI:Enabled"] = "false",
                     ["Admin:Email"] = AdminEmail
                 });
             });

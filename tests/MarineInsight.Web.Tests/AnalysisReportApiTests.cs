@@ -154,7 +154,8 @@ public sealed class AnalysisReportApiTests
                     ["Database:Provider"] = "Sqlite",
                     ["ConnectionStrings:MarineInsight"] = $"Data Source={_databasePath}",
                     ["Identity:RequireConfirmedEmail"] = "false",
-                    ["Captcha:Enabled"] = "false"
+                    ["Captcha:Enabled"] = "false",
+                    ["AI:Enabled"] = "false"
                 });
             });
             builder.ConfigureServices(services =>
