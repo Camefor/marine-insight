@@ -168,6 +168,8 @@ public sealed partial class RiskSummary
 
 `MI-0045` 不新增日期时间状态或第三方组件：`Dashboard.razor` 继续以 `datetime-local` 和 `OnForecastStartChanged` 维护同一查询语义，仅增加 `.datetime-control` 展示容器、时区徽标和无交互 SVG 图标。Chromium 的原生 calendar indicator 透明扩展到右侧选择热区，SVG 使用 `pointer-events:none`，所以点击仍由原生输入处理；不需要 JS 互操作，也不改变时区转换或表单提交逻辑。
 
+`MI-0047` 继续复用同一日期时间状态：移动端增加由 `ForecastStartLocal` 派生的 `.datetime-display`，以 `yyyy-MM-dd HH:mm` 固定显示 24 小时制；原生 `datetime-local` 设为 `lang="zh-CN"` 并保持透明文字层，仅接收系统选择器与键盘输入，变更后由 Blazor 重渲染可视读数。样式通过 `.datetime-control` 外层单边框承载渐变、内描边和焦点状态，避免再次引入 JS 或重复业务状态。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |

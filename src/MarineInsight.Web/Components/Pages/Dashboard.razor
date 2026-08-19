@@ -157,9 +157,11 @@
                         <span>起报时间</span>
                         <small>@Session.DisplayTimeZoneLabel</small>
                     </span>
-                    <span class="datetime-control">
+                    <span class="datetime-control" lang="zh-CN">
+                        <span class="datetime-display" aria-hidden="true">@Session.ForecastStartLocal.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)</span>
                         <input type="datetime-local"
                                aria-label="起报时间"
+                               lang="zh-CN"
                                value="@Session.ForecastStartLocal.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)"
                                @onchange="OnForecastStartChanged" />
                         <span class="datetime-action" aria-hidden="true">

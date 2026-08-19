@@ -24,6 +24,7 @@ test('dashboard and account shell remain usable without layout overflow', async 
   const datetimeLayout = await page.evaluate(() => {
     const input = document.querySelector('.datetime-control input');
     const action = document.querySelector('.datetime-action');
+    const display = document.querySelector('.datetime-display');
     if (!input || !action) throw new Error('Date time control is missing.');
 
     const inputBox = input.getBoundingClientRect();
@@ -36,7 +37,10 @@ test('dashboard and account shell remain usable without layout overflow', async 
       actionHeight: actionBox.height,
       actionInsideInput: actionBox.right <= inputBox.right && actionBox.left >= inputBox.left,
       actionColor: actionStyle.color,
-      actionBorder: actionStyle.borderColor
+      actionBorder: actionStyle.borderColor,
+      displayText: display?.textContent?.trim() || '',
+      displayVisible: !!display && getComputedStyle(display).display !== 'none',
+      language: input.getAttribute('lang')
     };
   });
   expect(datetimeLayout.inputWidth).toBeGreaterThan(200);
@@ -46,6 +50,12 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(datetimeLayout.actionInsideInput).toBeTruthy();
   expect(datetimeLayout.actionColor).not.toBe('rgba(0, 0, 0, 0)');
   expect(datetimeLayout.actionBorder).not.toBe('rgba(0, 0, 0, 0)');
+  expect(datetimeLayout.language).toBe('zh-CN');
+  if (layoutViewportWidth(page) <= 680) {
+    expect(datetimeLayout.inputWidth).toBeGreaterThanOrEqual(300);
+    expect(datetimeLayout.displayVisible).toBeTruthy();
+    expect(datetimeLayout.displayText).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+  }
 
   const queryBand = page.locator('section[aria-labelledby="query-title"]');
   const initialState = page.getByRole('heading', { name: '等待查询' }).locator('..');
@@ -79,3 +89,7 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(consoleErrors).toEqual([]);
   expect(httpErrors).toEqual([]);
 });
+
+function layoutViewportWidth(page) {
+  return page.viewportSize()?.width ?? 0;
+}
