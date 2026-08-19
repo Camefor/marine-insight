@@ -164,6 +164,8 @@ public sealed partial class RiskSummary
 
 `MI-0041` 将品牌与 SEO 职责拆在既有组件边界内：`App.razor` 提供 SSR 可见的 Description、Open Graph/Twitter 元数据及 favicon/manifest；各路由使用唯一 `PageTitle`，根 `Dashboard.razor` 再通过 `HeadContent` 固化首页 canonical；`MainLayout.razor` 仅负责可见品牌组合和导航。静态 `robots.txt`、`sitemap.xml` 与品牌 PNG 位于 `wwwroot`，不引入运行时图片处理或额外 JS。
 
+`MI-0043` 保持既有业务组件和状态容器边界不变，只重构呈现层：`MainLayout.razor` 增加移动底部主导航，`app.css` 提供跨页面深海色板、Header、账户与用户工作区基础样式，`Dashboard.razor.css` 独立维护查询工作台、摘要、活动/风险、趋势、来源、指标和逐小时表格。地图选点、收藏、AI 解读、时区和查询事件仍由原组件与 `DashboardQuerySession` 处理，避免视觉改造引入重复状态；`About`、`UserLocations`、`AdminLocations` 和 `AdminTabs` 的 scoped CSS 仅覆盖自身视觉。E2E 同时验证地图辅助入口默认收起、1440×900 与 360×800 无横向溢出以及账户页响应式。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |
@@ -187,3 +189,4 @@ public sealed partial class RiskSummary
 | 2.6 | 2026-08-19 | 记录 `MI-0040`：`DashboardQuerySession` 新增 `SelectHomeDefaultAsync`（无查询参数时预选首页默认地点，缺省地图收起）、`SetMapError`（可恢复地图提示，不标记永久不可用）；`Dashboard.razor` 「查找地点」/候选点击改为 `SearchLocationsAsync`/`SelectLocationAsync`（命中即打开地图并更新标记跟随显示），`SelectMapPointFromJs` 变 `async` 并注入 `ReverseGeocodeService` 反查最近地名填充 `MapPointName`（带会话选点竞态校验，失败保持空名称），新增 `[JSInvokable] HandleLocateUnavailableFromJs`；`dashboard-map.js` 新增 `addLocateControl`（缩放控件附近的定位十字准星，`getCurrentPosition` 成功后 `map.setView` + 调 `SelectMapPointFromJs`，失败映射中文提示）；`AdminLocations.razor` 表单新增「设为首页默认地点」复选框（经 `CreateLocationCommand.IsHomeDefault` 落库） |
 | 2.7 | 2026-08-19 | 记录 `MI-0040` 跟进：逆地理编码从 `TiandituOptions.Key` 拆出独立 `ServerKey`（`Map:Tianditu:ServerKey`），`TiandituReverseGeocoder` 改用服务端权限 Key；浏览器端瓦片仍读取 `Key` |
 | 2.8 | 2026-08-19 | 记录 `MI-0041` 品牌/SEO 组件边界：`App.razor` 维护默认搜索与社交元数据、图标和 manifest，各页面通过 `PageTitle` 输出唯一标题，`Dashboard.razor` 维护首页 canonical，`MainLayout.razor` 渲染 Marine AI 品牌组合；`wwwroot` 提供品牌 PNG、robots 与 sitemap |
+| 2.9 | 2026-08-19 | 记录 `MI-0043` 呈现层重构：业务状态和事件链保持不变，`MainLayout`/`app.css` 负责全站设计系统与移动底部导航，`Dashboard.razor.css` 负责决策工作台和数据可视化，辅助页面通过 scoped CSS 对齐同一视觉语言 |

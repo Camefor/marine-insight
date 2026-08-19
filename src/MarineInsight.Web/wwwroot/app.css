@@ -637,3 +637,378 @@
         transform: rotate(360deg);
     }
 }
+
+/* Marine AI design system: the shell stays dark so every workflow feels like one
+   calm navigation instrument, while the dashboard adds local risk semantics. */
+:root {
+    --marine-ink: #061423;
+    --marine-deep: #091c31;
+    --marine-panel: rgba(13, 38, 62, 0.82);
+    --marine-panel-solid: #0e2a44;
+    --marine-line: rgba(151, 201, 222, 0.18);
+    --marine-line-strong: rgba(151, 201, 222, 0.3);
+    --marine-text: #edf8fb;
+    --marine-muted: #91b2c4;
+    --marine-accent: #48e0c0;
+    --marine-accent-strong: #00b995;
+    --marine-coral: #ff806d;
+    --marine-sand: #ffd475;
+    --focus-ring: rgba(72, 224, 192, 0.42);
+}
+
+html {
+    background: var(--marine-ink);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    background:
+        radial-gradient(circle at 8% 0%, rgba(0, 185, 149, 0.13), transparent 32rem),
+        radial-gradient(circle at 92% 18%, rgba(255, 128, 109, 0.08), transparent 28rem),
+        linear-gradient(145deg, #061423 0%, #092239 48%, #061423 100%);
+    color: var(--marine-text);
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+}
+
+body::selection {
+    background: var(--marine-accent);
+    color: var(--marine-ink);
+}
+
+button,
+a,
+input,
+select {
+    -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+    outline: 2px solid var(--marine-accent);
+    outline-offset: 3px;
+}
+
+.app-header {
+    align-items: center;
+    background: rgba(6, 20, 35, 0.84);
+    border-bottom: 1px solid var(--marine-line);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+    display: flex;
+    justify-content: space-between;
+    min-height: 72px;
+    padding: 0 clamp(16px, 4vw, 52px);
+    position: relative;
+    z-index: 10;
+}
+
+.app-header-brand,
+.app-brand {
+    align-items: center;
+    display: flex;
+}
+
+.app-header-brand {
+    gap: clamp(18px, 3vw, 42px);
+}
+
+.app-brand {
+    color: var(--marine-text);
+    gap: 11px;
+    text-decoration: none;
+}
+
+.app-brand-mark {
+    box-shadow: 0 0 0 4px rgba(72, 224, 192, 0.08), 0 8px 20px rgba(0, 0, 0, 0.26);
+    height: 42px;
+    width: 42px;
+}
+
+.app-brand-copy {
+    line-height: 1.08;
+}
+
+.app-brand-name {
+    color: var(--marine-text);
+    font-size: 1.2rem;
+    letter-spacing: -0.035em;
+}
+
+.app-brand-name span {
+    color: var(--marine-text);
+}
+
+.app-brand-name em {
+    color: var(--marine-accent);
+}
+
+.app-brand-copy small {
+    color: var(--marine-muted);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+}
+
+.main-nav,
+.account-links,
+.workspace-nav {
+    align-items: center;
+    display: flex;
+}
+
+.main-nav {
+    gap: 4px;
+}
+
+.account-links {
+    gap: 6px;
+}
+
+.account-link {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--marine-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 8px 12px;
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.account-link:hover,
+.account-link:focus-visible {
+    background: rgba(72, 224, 192, 0.08);
+    border-color: var(--marine-line);
+    color: var(--marine-text);
+}
+
+.account-link-primary {
+    background: var(--marine-accent);
+    border-color: var(--marine-accent);
+    color: var(--marine-ink);
+}
+
+.account-link-primary:hover,
+.account-link-primary:focus-visible {
+    background: #7aefda;
+    border-color: #7aefda;
+    color: var(--marine-ink);
+}
+
+.account-email {
+    color: var(--marine-muted);
+    font-size: 0.78rem;
+}
+
+.mobile-dock {
+    display: none;
+}
+
+.workspace-page,
+.account-page,
+.about-page {
+    background: transparent;
+    color: var(--marine-text);
+}
+
+.workspace-page {
+    max-width: 1240px;
+}
+
+.workspace-heading {
+    border-color: var(--marine-line);
+}
+
+.workspace-heading h1,
+.workspace-row h2,
+.workspace-empty h2,
+.account-panel h1,
+.about-hero h1,
+.about-section h2 {
+    color: var(--marine-text);
+}
+
+.workspace-eyebrow,
+.account-eyebrow,
+.about-eyebrow {
+    color: var(--marine-accent);
+}
+
+.workspace-row,
+.workspace-list,
+.workspace-form input,
+.workspace-form select,
+.admin-table-wrap,
+.admin-table-wrap th,
+.admin-table-wrap td {
+    border-color: var(--marine-line);
+}
+
+.workspace-row-main p,
+.workspace-empty p,
+.account-switch,
+.about-lead,
+.about-card p {
+    color: var(--marine-muted);
+}
+
+.workspace-form label,
+.account-form label > span {
+    color: var(--marine-muted);
+}
+
+.workspace-primary,
+.account-submit,
+.about-cta {
+    background: var(--marine-accent);
+    border-color: var(--marine-accent);
+    color: var(--marine-ink);
+}
+
+.workspace-primary:hover,
+.workspace-primary:focus-visible,
+.account-submit:hover,
+.account-submit:focus-visible,
+.about-cta:hover,
+.about-cta:focus-visible {
+    background: #7aefda;
+    color: var(--marine-ink);
+}
+
+.workspace-icon-button,
+.workspace-danger,
+.account-panel,
+.about-card,
+.about-trust-list li {
+    background: var(--marine-panel);
+    border-color: var(--marine-line);
+    color: var(--marine-text);
+}
+
+.workspace-form input,
+.workspace-form select,
+.account-form input[type="email"],
+.account-form input[type="password"],
+.account-captcha-input {
+    background: rgba(3, 14, 25, 0.68);
+    border-color: var(--marine-line-strong);
+    color: var(--marine-text);
+}
+
+.account-panel {
+    max-width: 440px;
+}
+
+.account-captcha {
+    min-width: 0;
+}
+
+.account-captcha-svg {
+    flex: 0 0 auto;
+}
+
+.account-switch a,
+.account-alert a,
+.account-captcha-refresh {
+    color: var(--marine-accent);
+}
+
+.admin-table-wrap th {
+    background: rgba(72, 224, 192, 0.08);
+    color: var(--marine-text);
+}
+
+@media (max-width: 720px) {
+    .app-header {
+        min-height: 64px;
+        padding: 8px 14px;
+    }
+
+    .app-brand-mark {
+        height: 36px;
+        width: 36px;
+    }
+
+    .app-brand-copy small,
+    .main-nav,
+    .workspace-nav,
+    .account-email {
+        display: none;
+    }
+
+    .account-links {
+        gap: 0;
+    }
+
+    .account-link {
+        min-height: 40px;
+        padding: 8px 9px;
+    }
+
+    .mobile-dock {
+        align-items: stretch;
+        background: rgba(6, 20, 35, 0.94);
+        border-top: 1px solid var(--marine-line);
+        bottom: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        left: 0;
+        padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+        position: fixed;
+        right: 0;
+        z-index: 50;
+    }
+
+    .mobile-dock-link {
+        align-items: center;
+        color: var(--marine-muted);
+        display: flex;
+        flex-direction: column;
+        font-size: 1.15rem;
+        gap: 1px;
+        min-height: 44px;
+        text-decoration: none;
+    }
+
+    .mobile-dock-link small {
+        font-size: 0.66rem;
+        font-weight: 700;
+    }
+
+    .mobile-dock-link:hover,
+    .mobile-dock-link:focus-visible,
+    .mobile-dock-link.is-active {
+        color: var(--marine-accent);
+    }
+
+    .workspace-page,
+    .account-page,
+    .about-page {
+        padding-bottom: 100px;
+    }
+
+    .account-page {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .account-panel {
+        max-width: 100%;
+        min-width: 0;
+        padding: 24px 20px;
+    }
+}
+
+@media (max-width: 380px) {
+    .account-captcha {
+        align-items: stretch;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .account-captcha-refresh {
+        grid-column: 1 / -1;
+    }
+}

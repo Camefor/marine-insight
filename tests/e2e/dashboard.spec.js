@@ -11,11 +11,11 @@ test('dashboard and account shell remain usable without layout overflow', async 
   });
 
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: '海况 Dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '海岛海况智能决策平台' })).toBeVisible();
   await expect(page.getByRole('button', { name: '查询海况' })).toBeVisible();
   await expect(page.getByText('地图选点', { exact: true })).toBeVisible();
-  await expect(page.getByLabel('纬度')).toBeVisible();
-  await expect(page.getByLabel('经度')).toBeVisible();
+  await expect(page.getByLabel('纬度')).toBeHidden();
+  await expect(page.getByLabel('经度')).toBeHidden();
 
   const queryBand = page.locator('section[aria-labelledby="query-title"]');
   const initialState = page.getByRole('heading', { name: '等待查询' }).locator('..');

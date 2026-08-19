@@ -24,3 +24,24 @@
     border-color: #255e57;
     color: #fff;
 }
+
+.admin-tabs {
+    border-bottom-color: rgba(151, 201, 222, 0.17);
+}
+
+.admin-tab {
+    border-color: rgba(151, 201, 222, 0.17);
+    border-radius: 999px;
+    color: #91b2c4;
+}
+
+.admin-tab:hover {
+    background: rgba(72, 224, 192, 0.08);
+    color: #edf8fb;
+}
+
+.admin-tab.active {
+    background: #48e0c0;
+    border-color: #48e0c0;
+    color: #061423;
+}

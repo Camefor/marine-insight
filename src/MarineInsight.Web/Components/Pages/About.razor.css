@@ -150,3 +150,51 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Align the supporting page with the dark marine instrument theme. */
+.about-page {
+    background: radial-gradient(circle at 15% 0%, rgba(72, 224, 192, 0.1), transparent 28rem);
+    color: #edf8fb;
+}
+
+.about-eyebrow {
+    color: #48e0c0;
+}
+
+.about-lead,
+.about-card p {
+    color: #91b2c4;
+}
+
+.about-cta {
+    background: #48e0c0;
+    border-color: #48e0c0;
+    color: #061423;
+}
+
+.about-cta:hover,
+.about-cta:focus-visible {
+    background: #7aefda;
+}
+
+.about-card,
+.about-trust-list li {
+    background: rgba(13, 38, 62, 0.78);
+    border-color: rgba(151, 201, 222, 0.17);
+    border-radius: 12px;
+}
+
+.about-trust-list li {
+    border-left-color: #48e0c0;
+}
+
+.about-trust-list strong {
+    color: #edf8fb;
+}
+
+.about-disclaimer {
+    background: rgba(255, 128, 109, 0.11);
+    border-color: rgba(255, 128, 109, 0.32);
+    border-left: 3px solid #ff806d;
+    color: #ffc1b6;
+}

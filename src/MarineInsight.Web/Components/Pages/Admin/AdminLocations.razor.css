@@ -46,3 +46,33 @@
     color: #1f6b5d;
     font-weight: 700;
 }
+
+.map-toggle {
+    background: rgba(72, 224, 192, 0.06);
+    border-color: rgba(151, 201, 222, 0.3);
+    color: #48e0c0;
+}
+
+.map-toggle:hover,
+.map-toggle:focus-visible {
+    background: rgba(72, 224, 192, 0.14);
+    border-color: #48e0c0;
+}
+
+.location-map-picker {
+    background: #0b263e;
+    border-color: rgba(151, 201, 222, 0.2);
+    border-radius: 10px;
+}
+
+.map-hint {
+    color: #91b2c4;
+}
+
+.map-error {
+    color: #ff806d;
+}
+
+.map-hint a {
+    color: #48e0c0;
+}

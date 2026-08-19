@@ -129,14 +129,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0042` |
-| 当前状态 | `DONE` |
-| 当前目标 | 将提交 `f0f8ff0` 的 Marine AI 品牌与 SEO 改动安全发布到腾讯云生产环境，并完成备份、健康检查和线上功能冒烟验证 |
-| 最后完成动作 | 已将提交 `f0f8ff0` 通过 tar+ssh 同步到 `/opt/marine-insight`，在备份数据库后以 production/ai/tianditu overlay 完成构建重建；迁移退出码 0，Web healthy；品牌、SEO、地点搜索、逆地理编码与天地图瓦片验收通过并完成 Docker 清理 |
-| 下一步动作 | 发布已完成；后续有可用浏览器时可补做 1440×900 与 390×844 视觉截图复核 |
-| 涉及文件 | `docs/AGENT-GUIDE.md`（任务与发布记录）；生产 `/opt/marine-insight/src/`、`deploy/postgresql-migrations.sql`、`deploy/docker-cleanup.sh`（tar+ssh 同步，不覆盖 `.env`、Secret 与备份） |
-| 验证结果 | 本地 Release 构建 0 警告/0 错误、全量测试 230/230、格式与差异检查通过；发布包 SHA-256 本地/远端一致；生产备份 `marine-insight-20260819-065535.dump` 非空（59,567 字节）；migrate exit 0，web healthy；公网 `/`、`/health/live`、`/health/ready` 均 200；唯一 Title、H1、Slogan、Logo、canonical、Description、Open Graph/Twitter 及 7 个品牌/SEO 资源通过；地点搜索返回普陀山，逆地理编码返回真实地点，5 个预置地点完整，天地图底图/注记瓦片均 200 PNG；最近关键错误日志为空，Docker 清理完成，磁盘占用 37% |
-| 阻塞/待确认 | 功能无阻塞；当前环境没有可用内置浏览器，未生成桌面/移动截图 |
+| 当前任务 ID | `MI-0044` |
+| 当前状态 | `IN_PROGRESS` |
+| 当前目标 | 将 `MI-0043` 的全站 UI 重构标准提交并推送到 `origin/main`，安全部署至腾讯云生产环境，并完成备份、健康检查、线上视觉/功能冒烟和 Docker 清理 |
+| 最后完成动作 | 已读取生产部署手册与本机运维记忆，确认生产使用 tar+ssh 同步 `/opt/marine-insight`，Compose 需叠加 production/ai/tianditu overlay，发布前必须执行 PostgreSQL custom-format 备份 |
+| 下一步动作 | 执行本地 Release 构建、全量测试、Playwright 与差异检查，随后标准提交并推送，再进行生产备份和重建 |
+| 涉及文件 | `MI-0043` 的 13 个 UI/文档/测试文件及 `docs/AGENT-GUIDE.md` 发布记录；生产 `/opt/marine-insight/src/`、`deploy/postgresql-migrations.sql`、`deploy/docker-cleanup.sh` |
+| 验证结果 | 发布前基线为 Release 构建 0 警告/0 错误、全量测试 230/230、Playwright 2/2；本轮部署验证尚未执行 |
+| 阻塞/待确认 | 无；生产 Secret 与 `.env` 不进入 Git、终端回显或同步包 |
 | 最后更新 | 2026-08-19 |
 
 <!-- agent-state:end -->
@@ -148,6 +148,7 @@
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
 | [ ] | `MI-0027` | P0 | `BLOCKED` | 连续完成阶段 3 剩余产品闭环与阶段 4 可部署基线 | 注册用户可收藏/再次查询并查看历史与单位设置；移动端、键盘和管理员运维入口可用；WorldTides 可配置且凭据安全维护；Docker、代理、迁移、备份恢复、安全与 E2E 验证具备可执行交付物 |
+| [ ] | `MI-0044` | P0 | `IN_PROGRESS` | 提交并部署 `MI-0043` 全站 UI 重构 | 提交推送成功；生产数据库备份非空；migrate 成功、Web healthy；公网健康、首页/账户视觉、静态资源与核心查询入口通过；Docker 清理完成 |
 用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
 ### 8.2 暂停/阻塞任务恢复详情
@@ -183,6 +184,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0043` | 2026-08-19 | 依据持续迭代 UI 设计原型大改网站视觉与交互 | 全站切换为深海暗色设计系统，Dashboard 重组为搜索优先的决策工作台并强化逐小时趋势、风险、来源和指标读数；Header、账户、功能介绍、工作区、地图与后台同步统一，移动端新增底部导航并修复账户表单溢出；Release 构建 0 警告/0 错误、230/230 测试、format、Playwright 桌面/移动 2/2 通过 |
 | [x] | `MI-0042` | 2026-08-19 | 发布 Marine AI 品牌与 SEO 改动到腾讯云生产环境 | 提交 `f0f8ff0` 已通过 tar+ssh 发布；升级前备份 `marine-insight-20260819-065535.dump`（59,567 字节）；production/ai/tianditu overlay 重建成功，迁移退出码 0、Web healthy；公网健康、品牌与 SEO、7 个静态资源、地点搜索、逆地理编码、5 个预置地点和天地图双瓦片均通过；最近关键错误日志为空，Docker 清理完成；当前环境无内置浏览器，桌面/移动截图待补 |
 | [x] | `MI-0041` | 2026-08-19 | Marine AI 品牌与 SEO 视觉落地 | 从需求设计图提取圆形海岛日落/海浪图标并派生 Header、favicon、Apple Touch 与 manifest 资产；全站统一 Marine AI 品牌，首页使用指定 Title/H1/Slogan；补齐 Description、社交卡片、canonical、robots 与 sitemap；SSR 保证唯一 Title。Release 构建 0 警告/0 错误、全量测试 230/230、格式/差异和 HTTP 资源验收通过；当前环境无可用内置浏览器，1440×900 与 390×844 截图待补 |
 | [x] | `MI-0001` | 2026-07-13 | 建立 Agent 主引导、任务状态与跨会话恢复机制 | 根目录自动入口和 docs 主台账已建立；本地链接、Git 差异、UTF-8 BOM 与 CRLF 已验证 |
@@ -232,6 +234,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-19 | `MI-0043` | 依据 `docs/持续迭代/UI设计` 全部资料完成网站设计大改：建立深海蓝/青色/珊瑚暗色设计系统，重做 Header、账户和工作区外壳；Dashboard 采用品牌结论、搜索优先查询工作台、半透明仪表面板、等宽数据读数、风险语义和高权重逐小时时间轴；功能介绍、用户地点/后台地图与后台 Tab 同步统一；移动端新增海况/地图/收藏/设置底部导航，并修复账户输入框横向溢出；保留现有查询、地图、收藏、AI、时区和数据来源事件链 | Release 构建 0 警告/0 错误；全量测试 230/230 通过（Domain 51、Application 69、Infrastructure 50、Web 60）；`dotnet format --verify-no-changes --no-restore` 通过；Playwright 1440×900 与 360×800 共 2/2 通过，Dashboard/账户页无横向溢出或区域重叠；设计、组件与测试文档已同步 | 本地改造完成，未提交、推送或部署；如需生产上线，另行按部署手册执行备份、迁移、健康检查和线上视觉冒烟 |
 | 2026-08-19 | `MI-0042` | 将提交 `f0f8ff0` 的 Marine AI 品牌与 SEO 改动发布到腾讯云生产：本地生成 802,629 字节发布包并与远端校验 SHA-256 一致；升级前执行 PostgreSQL custom-format 备份；同步源码与部署产物后叠加 production/ai/tianditu overlay 构建重建；清理临时发布包、悬空镜像、构建缓存、已退出容器和无用网络 | 本地 Release 0 警告/0 错误、230/230 测试、format/diff 通过；备份 `marine-insight-20260819-065535.dump` 非空（59,567 字节）；migrate exit 0，web healthy；公网首页/live/ready 200，HSTS/nosniff 正常；Title 唯一且精确，H1/Slogan/Logo/canonical/Description/OG/Twitter 与 robots/sitemap/manifest/4 个 PNG 全部通过；地点搜索返回普陀山，逆地理编码返回真实地址，5 个预置地点完整，浏览器请求语义下天地图 vec/cva 均 200 PNG；最近关键错误日志为空；清理后磁盘占用 37% | 发布完成；当前环境没有可用内置浏览器，后续可补做 1440×900、390×844 视觉截图复核 |
 | 2026-08-19 | `MI-0041` | 完成 Marine AI 品牌与 SEO 视觉落地：从两张需求设计图提取透明圆形品牌图标并派生 512/192/favicon/Apple Touch 资产；Header 展示图标、Marine AI 字标与「海岛海况智能决策平台」副标题，移动端隐藏副标题；首页展示指定 H1 与「为海钓、露营、摄影和航海而生。」；全站 `PageTitle` 更新为 Marine AI；补齐 Description、Open Graph/Twitter、canonical、manifest、robots、sitemap；实测并修复首页重复 Title，404 页面补品牌标题 | Release 构建 0 警告、0 错误；全量测试 230/230 通过（Domain 51、Application 69、Infrastructure 50、Web 60）；`dotnet format --verify-no-changes --no-restore`、`git diff --check` 通过；真实 HTTP 首页 200、唯一精确 Title、canonical/H1/Slogan/Description/Logo 均存在，7 个品牌/SEO 静态资源全部 200；改动文本文件 UTF-8 BOM/CRLF 已统一；当前会话无可用内置浏览器，未生成 1440×900、390×844 截图 | 实现提交 `f0f8ff0` 已推送 `origin/main`；浏览器环境可用时补做桌面/移动截图复核；用户本轮未要求部署，不执行生产发布 |
 | 2026-08-19 | `MI-0040` | 首页查询交互优化 + 天地图逆地理编码 + AI 时区统一（需求 1-5）：`DashboardQuerySession` 新增 `SelectHomeDefaultAsync`（无查询参数预选首页默认地点，缺省地图收起）、`SetMapError`（可恢复地图提示）、`ToggleMapPicker`；`Dashboard.razor` 「查找地点」/候选点击改走 `SearchLocationsAsync`/`SelectLocationAsync`（命中即打开地图并 `UpdateMapSelectionAsync` 标记跟随显示，未命中提示走地图选点），地图默认收起（`IsMapPickerOpen` 默认 false）；`dashboard-map.js` 新增 `addLocateControl` 定位十字准星（缩放控件附近，首次加载不请求权限，用户主动点击才 `getCurrentPosition`，成功 `map.setView` + `SelectMapPointFromJs` 标点跟随显示，失败经 `HandleLocateUnavailableFromJs`→`SetMapError` 中文可恢复提示）；新增 `IReverseGeocoder`/`TiandituReverseGeocoder`（逆地理编码用独立服务端 Key `Map:Tianditu:ServerKey`，key-per-file Secret；浏览器瓦片仍用 `Map:Tianditu:Key`）/`ReverseGeocodeService` + `GET /api/v1/locations/reverse-geocode`，`SelectMapPointFromJs` 变 async 反查最近地名填充「地点名称（可选）」（Best-effort 失败留空，附提示仅作地点备注）；预置地点后台新增「设为首页默认地点」（`locations.is_home_default` SQLite/PostgreSQL 双迁移 `AddHomeDefaultLocation`，默认 false、设新默认自动清旧默认）；AI 时区统一：`MarineAnalysisRequest.TimeZone` 可选（IANA），`ExplanationFactsBuilder.ResolveTimeZoneId` 校验并回退地点时区，SystemPrompt 规则 5 强制 AI/降级模板按该时区换算当地时间输出，`PromptVersion=explanation-prompt.v2`、解释缓存键纳入时区，逐小时趋势/推荐时间窗/逐小时指标显示时区均与用户一致 | Release 构建 0 警告、0 错误；全量测试 229/229 通过（Domain 51、Application 69、Infrastructure 50、Web 59，新增 `TiandituReverseGeocoderTests` 及首页默认地点、时区统一用例，更新 `DashboardQuerySessionTests`/`AuthenticationTests` 适配地图默认收起）；`dotnet format --verify-no-changes`、`git diff --check` 通过，改动文本文件 BOM/CRLF 已统一 | 已标准提交 `afaecdf`；git 推送 `origin` 因 `github.com:443` 不可达待用户补齐；2026-08-19 生产部署上线并冒烟验证通过（源码 tar+ssh 同步、pg_dump 备份 `marine-insight-20260819-041231.dump`、`AddHomeDefaultLocation` 迁移应用且 5 条预置地点 `is_home_default=f` 完好、migrate exit 0、web healthy、HTTPS `/health/live`/`/health/ready`/`/` 均 200、`/locations/search` 正常、磁盘清理完成）；双 Key 拆分已上线（`fdb84b5`，提交并推送 `origin` 成功）：服务器写入 `/etc/marine-insight/secrets/tianditu_server_key`（644）+ `.env` 加 `MARINE_INSIGHT_TIANDITU_SERVER_SECRET_FILE`，重建后 `GET /locations/reverse-geocode` 返回真实地名（普陀山/上海）、浏览器瓦片仍 200 PNG、live/ready 200、磁盘清理完成）；待用户浏览器人工验证 5 项需求交互 |
