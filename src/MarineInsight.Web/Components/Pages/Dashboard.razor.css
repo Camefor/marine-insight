@@ -74,11 +74,20 @@
 }
 
 .dashboard-header h1 {
+    color: var(--dash-text);
     font-size: clamp(2rem, 4vw, 3.45rem);
     letter-spacing: -0.055em;
     line-height: 1.02;
     margin: 0;
     max-width: 720px;
+}
+
+.dashboard-shell h2,
+.dashboard-shell h3,
+.dashboard-shell h4,
+.dashboard-shell h5,
+.dashboard-shell h6 {
+    color: var(--dash-text);
 }
 
 .dashboard-slogan {
@@ -274,11 +283,15 @@
 .datetime-parts input {
     border-radius: 10px 0 0 10px;
     padding-right: 12px;
+    position: relative;
+    z-index: 1;
 }
 
 .forecast-time-picker-shell {
     display: block;
     min-width: 0;
+    position: relative;
+    z-index: 2;
 }
 
 .datetime-control input:focus {

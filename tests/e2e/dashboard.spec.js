@@ -31,9 +31,11 @@ test('dashboard and account shell remain usable without layout overflow', async 
   await expect(forecastDate).toBeVisible();
   await expect(forecastHour).toBeVisible();
   await expect(datetimeHint).toBeVisible();
-  await forecastHour.click();
+  // The first InteractiveServer circuit can take a few seconds to attach on a cold start.
+  await page.waitForTimeout(5000);
+  await page.locator('.forecast-time-picker').click();
   const hourCells = page.locator('.ant-picker-dropdown .ant-picker-time-panel-cell:not(.ant-picker-time-panel-cell-disabled)');
-  await expect(hourCells).toHaveCount(24);
+  await expect(hourCells).toHaveCount(24, { timeout: 15_000 });
   await expect(page.locator('.ant-picker-dropdown .ant-picker-time-panel-column')).toHaveCount(1);
   await page.keyboard.press('Escape');
   const datetimeLayout = await page.evaluate(() => {
