@@ -256,6 +256,35 @@ public sealed class AdminApiTests
     }
 
     [Fact]
+    public async Task AdminCannotAddDuplicateCredentialKey()
+    {
+        using var factory = new AdminApplicationFactory();
+        await factory.MigrateDatabaseAsync();
+        using var client = factory.CreateHttpsClient();
+        await AdminApplicationFactory.RegisterAsync(client, AdminEmail, Password);
+        var token = await AdminApplicationFactory.GetAuthenticatedAntiforgeryTokenAsync(client);
+
+        // 本测试 2 个 admin 请求，在限流内。
+        using var addFirst = await SendJsonAsync(
+            client,
+            HttpMethod.Post,
+            "/api/v1/admin/providers/worldtides/credentials",
+            new { apiKey = "0123456789abcdef" },
+            token);
+        Assert.Equal(HttpStatusCode.OK, addFirst.StatusCode);
+
+        using var duplicate = await SendJsonAsync(
+            client,
+            HttpMethod.Post,
+            "/api/v1/admin/providers/worldtides/credentials",
+            new { apiKey = "0123456789abcdef" },
+            token);
+        Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
+        var problem = JsonDocument.Parse(await duplicate.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal("PROVIDER_CREDENTIAL_CONFLICT", problem.GetProperty("code").GetString());
+    }
+
+    [Fact]
     public async Task AdminCanTestWorldTidesKeyWithoutNetwork()
     {
         using var factory = new AdminApplicationFactory();

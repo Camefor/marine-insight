@@ -38,6 +38,23 @@ public sealed class ProviderCredentialStoreTests
     }
 
     [Fact]
+    public async Task AddDuplicateKeyHintThrowsConflict()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var dbContext = CreateDbContext(connection);
+        await dbContext.Database.MigrateAsync();
+        var store = CreateStore(dbContext);
+        await store.AddAsync(ActorUserId, ProviderName, ApiKey);
+
+        var exception = await Assert.ThrowsAsync<ProviderCredentialConflictException>(() =>
+            store.AddAsync(ActorUserId, ProviderName, ApiKey));
+
+        Assert.Contains("cdef", exception.Message, StringComparison.Ordinal);
+        Assert.Single(await dbContext.ProviderCredentials.ToListAsync());
+    }
+
+    [Fact]
     public async Task SetActiveMakesTargetActiveAndClearsOthers()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");

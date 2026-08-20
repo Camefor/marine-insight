@@ -52,6 +52,16 @@ public sealed class ProviderCredentialStore : IProviderCredentialStore
         CancellationToken cancellationToken = default)
     {
         var now = _timeProvider.GetUtcNow();
+        var keyHint = KeyHint(apiKey);
+        // 唯一索引 (ProviderName, KeyHint) 会拦截重复添加，但 SQL 抛 DbUpdateException 会让
+        // Blazor 管理页电路直接崩溃；这里先行预检并以业务异常提示，避免未处理异常冒泡。
+        if (await _dbContext.ProviderCredentials.AnyAsync(
+            credential => credential.ProviderName == providerName && credential.KeyHint == keyHint,
+            cancellationToken))
+        {
+            throw new ProviderCredentialConflictException($"该密钥已存在（末四位 {keyHint}），请勿重复添加。");
+        }
+
         var isFirst = !await _dbContext.ProviderCredentials.AnyAsync(
             credential => credential.ProviderName == providerName,
             cancellationToken);
@@ -59,7 +69,7 @@ public sealed class ProviderCredentialStore : IProviderCredentialStore
         {
             Id = Guid.NewGuid(),
             ProviderName = providerName,
-            KeyHint = KeyHint(apiKey),
+            KeyHint = keyHint,
             EncryptedValue = _protector.Protect(apiKey),
             IsActive = isFirst,
             Health = nameof(ProviderCredentialHealth.Untested),

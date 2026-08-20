@@ -36,3 +36,12 @@ public sealed class ProviderCredentialInUseException : MarineInsightException
     {
     }
 }
+
+/// <summary>添加末四位相同的重复密钥时抛出，避免同一 Key 多次入库。</summary>
+public sealed class ProviderCredentialConflictException : MarineInsightException
+{
+    public ProviderCredentialConflictException(string message)
+        : base(MarineInsightErrorCodes.ProviderCredentialConflict, message)
+    {
+    }
+}

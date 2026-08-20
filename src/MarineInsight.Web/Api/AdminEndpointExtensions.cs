@@ -50,6 +50,14 @@ public static class AdminEndpointExtensions
             await service.AddAsync(GetUserId(user), WorldTidesProviderName, request.ApiKey, cancellationToken);
             return Results.Ok((await service.ListAsync(WorldTidesProviderName, cancellationToken)).Select(Project).ToArray());
         }
+        catch (ProviderCredentialConflictException exception)
+        {
+            return Results.Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Credential already exists.",
+                detail: exception.Message,
+                extensions: new Dictionary<string, object?> { ["code"] = exception.ErrorCode });
+        }
         catch (ArgumentException exception)
         {
             return Validation(exception.Message);

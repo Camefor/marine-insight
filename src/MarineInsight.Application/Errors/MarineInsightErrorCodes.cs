@@ -29,4 +29,6 @@ public static class MarineInsightErrorCodes
     public const string LocationInUse = "LOCATION_IN_USE";
 
     public const string ProviderCredentialInUse = "PROVIDER_CREDENTIAL_IN_USE";
+
+    public const string ProviderCredentialConflict = "PROVIDER_CREDENTIAL_CONFLICT";
 }
