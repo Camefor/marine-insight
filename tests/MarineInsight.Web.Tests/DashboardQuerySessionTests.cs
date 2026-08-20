@@ -98,6 +98,21 @@ public sealed class DashboardQuerySessionTests
     }
 
     [Fact]
+    public async Task SubmitWithNonUtcBoundaryTimeReturnsActionableMinuteHint()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 8, 30, 0);
+
+        Assert.True(await session.SelectCatalogLocationAsync(Guid.Parse("8a477d67-73fa-4f43-b954-cd29d238a89d")));
+        await session.SubmitAnalysisAsync();
+
+        Assert.Null(session.Result);
+        Assert.Equal("起报时间需选择整点（分钟 00），才能查询 UTC 整点预报。", session.AnalysisError);
+    }
+
+    [Fact]
     public async Task ProviderFailureLeavesActionableDashboardError()
     {
         using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();

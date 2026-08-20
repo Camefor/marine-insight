@@ -161,7 +161,9 @@
                         <span class="datetime-display" aria-hidden="true">@Session.ForecastStartLocal.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)</span>
                         <input type="datetime-local"
                                aria-label="起报时间"
+                               aria-describedby="forecast-time-hint"
                                lang="zh-CN"
+                               step="3600"
                                value="@Session.ForecastStartLocal.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)"
                                @onchange="OnForecastStartChanged" />
                         <span class="datetime-action" aria-hidden="true">
@@ -171,6 +173,7 @@
                             </svg>
                         </span>
                     </span>
+                    <small id="forecast-time-hint" class="datetime-hint">@Session.ForecastStartHint</small>
                 </label>
 
                 <fieldset class="segmented-group">

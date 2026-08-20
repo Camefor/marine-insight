@@ -19,8 +19,10 @@ test('dashboard and account shell remain usable without layout overflow', async 
 
   const forecastStart = page.getByLabel('起报时间', { exact: true });
   const datetimeAction = page.locator('.datetime-action');
+  const datetimeHint = page.locator('#forecast-time-hint');
   await expect(forecastStart).toBeVisible();
   await expect(datetimeAction).toBeVisible();
+  await expect(datetimeHint).toBeVisible();
   const datetimeLayout = await page.evaluate(() => {
     const input = document.querySelector('.datetime-control input');
     const action = document.querySelector('.datetime-action');
@@ -40,7 +42,9 @@ test('dashboard and account shell remain usable without layout overflow', async 
       actionBorder: actionStyle.borderColor,
       displayText: display?.textContent?.trim() || '',
       displayVisible: !!display && getComputedStyle(display).display !== 'none',
-      language: input.getAttribute('lang')
+      language: input.getAttribute('lang'),
+      step: input.getAttribute('step'),
+      hint: document.querySelector('#forecast-time-hint')?.textContent?.trim() || ''
     };
   });
   expect(datetimeLayout.inputWidth).toBeGreaterThan(200);
@@ -51,6 +55,8 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(datetimeLayout.actionColor).not.toBe('rgba(0, 0, 0, 0)');
   expect(datetimeLayout.actionBorder).not.toBe('rgba(0, 0, 0, 0)');
   expect(datetimeLayout.language).toBe('zh-CN');
+  expect(datetimeLayout.step).toBe('3600');
+  expect(datetimeLayout.hint).toContain('UTC');
   if (layoutViewportWidth(page) <= 680) {
     expect(datetimeLayout.inputWidth).toBeGreaterThanOrEqual(300);
     expect(datetimeLayout.displayVisible).toBeTruthy();

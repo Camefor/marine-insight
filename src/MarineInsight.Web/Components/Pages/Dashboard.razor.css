@@ -238,6 +238,12 @@
     white-space: nowrap;
 }
 
+.datetime-hint {
+    color: var(--dash-muted);
+    font-size: 0.66rem;
+    line-height: 1.35;
+}
+
 .datetime-control {
     background: linear-gradient(135deg, rgba(72, 224, 192, 0.22), rgba(72, 224, 192, 0.04) 48%, rgba(255, 157, 92, 0.16));
     border: 1px solid rgba(111, 145, 164, 0.42);

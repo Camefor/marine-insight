@@ -170,6 +170,8 @@ public sealed partial class RiskSummary
 
 `MI-0047` 继续复用同一日期时间状态：移动端增加由 `ForecastStartLocal` 派生的 `.datetime-display`，以 `yyyy-MM-dd HH:mm` 固定显示 24 小时制；原生 `datetime-local` 设为 `lang="zh-CN"` 并保持透明文字层，仅接收系统选择器与键盘输入，变更后由 Blazor 重渲染可视读数。样式通过 `.datetime-control` 外层单边框承载渐变、内描边和焦点状态，避免再次引入 JS 或重复业务状态。
 
+`MI-0049` 在 `DashboardQuerySession.CreateAnalysisQueryAsync` 创建 `ForecastRange` 前，将本地起报时间转换为 UTC 并校验分钟/秒/毫秒均为零；不满足时设置可操作的中文 `AnalysisError` 并终止请求。`ForecastStartHint` 与 `step=3600` 让控件提前表达当前时区的有效分钟，保留原生日期时间输入和缓存 UTC 整点不变量。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |

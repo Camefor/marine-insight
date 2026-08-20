@@ -64,6 +64,17 @@ public sealed class DashboardQuerySession : IDisposable
 
     public string DisplayTimeZoneLabel => ClientTimeZone.BuildDisplayLabel(_displayZone);
 
+    public string ForecastStartHint
+    {
+        get
+        {
+            var requiredMinute = GetUtcBoundaryMinute();
+            return requiredMinute == 0
+                ? "请选择整点（分钟 00），以匹配 UTC 预报数据。"
+                : $"当前时区请选 {requiredMinute:00} 分，才能对应 UTC 整点。";
+        }
+    }
+
     public string FormatDisplay(DateTimeOffset utc) => ClientTimeZone.FormatLocal(utc, _displayZone);
 
     public string FormatDisplayTime(DateTimeOffset utc) => ClientTimeZone.FormatLocalTime(utc, _displayZone);
@@ -404,9 +415,22 @@ public sealed class DashboardQuerySession : IDisposable
     private DateTimeOffset GetForecastStartOffset() =>
         ClientTimeZone.ToUtc(ForecastStartLocal, _displayZone);
 
+    private int GetUtcBoundaryMinute() =>
+        ClientTimeZone.ToUtc(ForecastStartLocal, _displayZone).Offset.Duration().Minutes;
+
     private async Task<MarineAnalysisQuery?> CreateAnalysisQueryAsync(CancellationToken cancellationToken)
     {
-        var range = new ForecastRange(GetForecastStartOffset(), Hours);
+        var startUtc = GetForecastStartOffset();
+        if (startUtc.Minute != 0 || startUtc.Second != 0 || startUtc.Millisecond != 0)
+        {
+            var requiredMinute = startUtc.Offset.Duration().Minutes;
+            AnalysisError = requiredMinute == 0
+                ? "起报时间需选择整点（分钟 00），才能查询 UTC 整点预报。"
+                : $"起报时间需将分钟调整为 {requiredMinute:00} 分，才能对应 UTC 整点预报。";
+            return null;
+        }
+
+        var range = new ForecastRange(startUtc, Hours);
         if (SelectedLocation is not null)
         {
             var location = await _locationQueryService.GetByIdAsync(
