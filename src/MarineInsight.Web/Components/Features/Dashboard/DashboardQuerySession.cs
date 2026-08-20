@@ -488,6 +488,10 @@ public sealed class DashboardQuerySession : IDisposable
             [result.Weather.Batch.BatchId] = ToCacheStatus(result.Weather.Kind),
             [result.Marine.Batch.BatchId] = ToCacheStatus(result.Marine.Kind)
         };
+        if (result.Tide.Result is { } tideResult)
+        {
+            cacheStatusByBatchId[tideResult.Batch.BatchId] = result.Tide.CacheStatus;
+        }
 
         var sources = result.Snapshot.SourceBatches
             .OrderBy(source => source.DataDomain)
@@ -574,6 +578,7 @@ public sealed class DashboardQuerySession : IDisposable
             metricCards,
             CreateTrendTabs(result, timelineWindows, settings).ToArray(),
             timelineWindows,
+            ToTideResult(result),
             hourlyDetails,
             hourlyRows,
             new DashboardExplanation(
@@ -832,7 +837,82 @@ public sealed class DashboardQuerySession : IDisposable
         yield return new DashboardDetailMetric("CAPE", FormatMetric(metrics.CapeJkg, "0"), "J/kg");
         yield return new DashboardDetailMetric("雷暴", metrics.Thunderstorm is null ? "暂无数据" : metrics.Thunderstorm.Value ? "是" : "否", string.Empty);
         yield return new DashboardDetailMetric("气温", temperature.Value, temperature.Unit);
+        if (metrics.TideHeightM.HasValue)
+        {
+            yield return new DashboardDetailMetric("潮位", FormatMetric(metrics.TideHeightM, "0.00"), "m");
+            yield return new DashboardDetailMetric("潮汐阶段", ToTideTypeText(metrics.TideType), string.Empty);
+        }
     }
+
+    private static DashboardTideResult ToTideResult(MarineAnalysisQueryResult result)
+    {
+        // 潮汐当前仅作为海钓辅助参考，不参与确定性风险评分；单独投影可避免可选 Provider 降级污染基础结论。
+        var sourcePoints = result.Snapshot.Points
+            .Where(point => point.Metrics.TideHeightM.HasValue)
+            .OrderBy(point => point.ForecastTimeUtc)
+            .ToArray();
+        var points = sourcePoints
+            .Select((point, index) =>
+            {
+                var previousHeight = index == 0 ? point.Metrics.TideHeightM : sourcePoints[index - 1].Metrics.TideHeightM;
+                var nextHeight = index + 1 < sourcePoints.Length ? sourcePoints[index + 1].Metrics.TideHeightM : point.Metrics.TideHeightM;
+                var delta = index == 0
+                    ? nextHeight!.Value - point.Metrics.TideHeightM!.Value
+                    : point.Metrics.TideHeightM!.Value - previousHeight!.Value;
+                var trend = delta > 0.005 ? "rising" : delta < -0.005 ? "falling" : "steady";
+
+                return new DashboardTidePoint(
+                    point.ForecastTimeUtc,
+                    point.Metrics.TideHeightM.Value,
+                    point.Metrics.TideType.HasValue ? ToApiName(point.Metrics.TideType.Value) : "normal",
+                    trend,
+                    trend switch { "rising" => "涨潮", "falling" => "退潮", _ => "平潮" });
+            })
+            .ToArray();
+        var extremes = points
+            .Where(point => point.Type is "high" or "low")
+            .ToArray();
+        var currentHeight = points.FirstOrDefault()?.HeightM;
+        double? minimumHeight = points.Length == 0 ? null : points.Min(point => point.HeightM);
+        double? maximumHeight = points.Length == 0 ? null : points.Max(point => point.HeightM);
+
+        return new DashboardTideResult(
+            result.Tide.Status,
+            result.Tide.Status switch
+            {
+                "available" => "潮汐可用",
+                "degraded" => "额度预警",
+                "unavailable" => "潮汐暂不可用",
+                _ => "潮汐未启用"
+            },
+            result.Tide.CacheStatus,
+            result.Tide.RemainingCredits,
+            result.Tide.ErrorCode,
+            result.Tide.Status switch
+            {
+                "degraded" => "潮汐额度偏低，本次结果仍可参考；基础海况分析不受影响。",
+                "unavailable" => "潮汐服务暂时不可用，基础海况分析仍可正常使用。",
+                "disabled" => "当前环境未启用潮汐数据，基础海况分析仍可正常使用。",
+                _ when points.Length == 0 => "当前查询时段没有可展示的潮位点。",
+                _ => "潮汐曲线用于叠加判断海钓时段，尚未计入综合评分。"
+            },
+            currentHeight,
+            minimumHeight,
+            maximumHeight,
+            points.FirstOrDefault()?.TrendText,
+            extremes.FirstOrDefault(point => point.Type == "high"),
+            extremes.FirstOrDefault(point => point.Type == "low"),
+            points);
+    }
+
+    private static string ToTideTypeText(TideType? tideType) => tideType switch
+    {
+        TideType.High => "高潮",
+        TideType.Low => "低潮",
+        TideType.Rising => "涨潮",
+        TideType.Falling => "退潮",
+        _ => "常态"
+    };
 
     private static int ToPercent(double? value, double scale) =>
         value.HasValue
@@ -964,10 +1044,33 @@ public sealed record DashboardAnalysisResult(
     IReadOnlyList<DashboardMetricCard> MetricCards,
     IReadOnlyList<DashboardTrendTab> TrendTabs,
     IReadOnlyList<DashboardTimelineWindow> TimelineWindows,
+    DashboardTideResult Tide,
     IReadOnlyList<DashboardHourlyDetail> HourlyDetails,
     IReadOnlyList<DashboardHourlyRow> HourlyRows,
     DashboardExplanation Explanation,
     string Disclaimer);
+
+public sealed record DashboardTideResult(
+    string Status,
+    string StatusText,
+    string CacheStatus,
+    int? RemainingCredits,
+    string? ErrorCode,
+    string Message,
+    double? CurrentHeightM,
+    double? MinimumHeightM,
+    double? MaximumHeightM,
+    string? CurrentTrendText,
+    DashboardTidePoint? NextHigh,
+    DashboardTidePoint? NextLow,
+    IReadOnlyList<DashboardTidePoint> Points);
+
+public sealed record DashboardTidePoint(
+    DateTimeOffset ForecastTimeUtc,
+    double HeightM,
+    string Type,
+    string Trend,
+    string TrendText);
 
 public sealed record DashboardExplanation(
     string Source,

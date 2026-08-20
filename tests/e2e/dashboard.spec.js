@@ -128,9 +128,132 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth + 1);
   expect(layout.regionsOverlap).toBeFalsy();
 
+  const loadingLayout = await page.evaluate(() => {
+    const query = document.querySelector('section[aria-labelledby="query-title"]');
+    const header = document.querySelector('.app-header');
+    const result = Array.from(document.querySelectorAll('section'))
+      .find(section => section.querySelector('h2')?.textContent?.trim() === '等待查询');
+    const scopeAttribute = Array.from(query?.attributes ?? [])
+      .find(attribute => attribute.name.startsWith('b-'))?.name;
+    if (!query || !header || !result || !scopeAttribute) throw new Error('Dashboard loading test regions are missing.');
+
+    const loading = document.createElement('div');
+    loading.className = 'query-loading';
+    loading.setAttribute('role', 'status');
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    const copy = document.createElement('span');
+    copy.className = 'query-loading-copy';
+    const title = document.createElement('strong');
+    title.textContent = '正在查询海况';
+    const detail = document.createElement('span');
+    detail.textContent = '正在汇总天气、海浪与潮汐数据，完成后将在下方更新结果。';
+    const badge = document.createElement('span');
+    badge.className = 'query-loading-badge';
+    badge.textContent = '数据汇总中';
+    for (const element of [loading, spinner, copy, title, detail, badge]) element.setAttribute(scopeAttribute, '');
+    copy.append(title, detail);
+    loading.append(spinner, copy, badge);
+    query.appendChild(loading);
+
+    const loadingBox = loading.getBoundingClientRect();
+    const queryBox = query.getBoundingClientRect();
+    const headerBox = header.getBoundingClientRect();
+    const resultBox = result.getBoundingClientRect();
+    const overlaps = (first, second) =>
+      first.bottom > second.top && first.top < second.bottom && first.right > second.left && first.left < second.right;
+    return {
+      position: getComputedStyle(loading).position,
+      insideQuery:
+        loadingBox.left >= queryBox.left &&
+        loadingBox.right <= queryBox.right + 1 &&
+        loadingBox.top >= queryBox.top &&
+        loadingBox.bottom <= queryBox.bottom + 1,
+      overlapsHeader: overlaps(loadingBox, headerBox),
+      overlapsResult: overlaps(loadingBox, resultBox),
+      badgeDisplay: getComputedStyle(badge).display,
+      viewportWidth: document.documentElement.clientWidth,
+      documentWidth: document.documentElement.scrollWidth
+    };
+  });
+  expect(loadingLayout.position).not.toBe('fixed');
+  expect(loadingLayout.insideQuery).toBeTruthy();
+  expect(loadingLayout.overlapsHeader).toBeFalsy();
+  expect(loadingLayout.overlapsResult).toBeFalsy();
+  expect(loadingLayout.documentWidth).toBeLessThanOrEqual(loadingLayout.viewportWidth + 1);
+  expect(loadingLayout.badgeDisplay === 'none').toBe(layoutViewportWidth(page) <= 680);
+
   await page.goto('/account/login');
   await expect(page.getByRole('heading', { name: '登录' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBeTruthy();
+  expect(consoleErrors).toEqual([]);
+  expect(httpErrors).toEqual([]);
+});
+
+test('tide chart renders inside its responsive panel', async ({ page }) => {
+  const consoleErrors = [];
+  const httpErrors = [];
+  page.on('console', message => {
+    if (message.type() === 'error') consoleErrors.push(`${message.text()} (${message.location().url || 'inline'})`);
+  });
+  page.on('response', response => {
+    if (response.status() >= 400) httpErrors.push(`${response.status()} ${response.url()}`);
+  });
+
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: '海岛海况智能决策平台' })).toBeVisible();
+
+  const rendered = await page.evaluate(async () => {
+    const scopeAttribute = Array.from(document.querySelector('.query-band')?.attributes ?? [])
+      .find(attribute => attribute.name.startsWith('b-'))?.name;
+    if (!scopeAttribute) throw new Error('Dashboard scoped CSS attribute is missing.');
+
+    const section = document.createElement('section');
+    section.className = 'tide-section';
+    const heading = document.createElement('h2');
+    heading.textContent = '潮汐参考';
+    const shell = document.createElement('div');
+    shell.className = 'tide-chart-shell';
+    const chart = document.createElement('div');
+    chart.id = 'dashboard-tide-chart-test';
+    chart.className = 'tide-chart';
+    for (const element of [section, heading, shell, chart]) element.setAttribute(scopeAttribute, '');
+    shell.appendChild(chart);
+    section.append(heading, shell);
+    document.body.appendChild(section);
+
+    const points = Array.from({ length: 25 }, (_, index) => ({
+      label: `07-16 ${String(index).padStart(2, '0')}:00`,
+      fullLabel: `2026-07-16 ${String(index).padStart(2, '0')}:00`,
+      height: 1.2 + Math.sin((index - 3) * Math.PI / 6) * 0.8,
+      type: index % 12 === 0 ? 'low' : index % 12 === 6 ? 'high' : 'normal',
+      trendText: index < 6 || index >= 18 ? '涨潮' : '退潮'
+    }));
+    const module = await import('/js/tide-chart.js');
+    return module.render(chart.id, {
+      accessibleDescription: '固定样本未来二十四小时潮位变化曲线。',
+      points
+    });
+  });
+
+  expect(rendered).toBeTruthy();
+  const chart = page.locator('#dashboard-tide-chart-test');
+  await expect(chart.locator('canvas')).toBeVisible();
+  const layout = await chart.evaluate(element => {
+    const chartBox = element.getBoundingClientRect();
+    const shellBox = element.parentElement.getBoundingClientRect();
+    return {
+      chartWidth: chartBox.width,
+      chartHeight: chartBox.height,
+      insideShell: chartBox.left >= shellBox.left && chartBox.right <= shellBox.right + 1,
+      viewportWidth: document.documentElement.clientWidth,
+      documentWidth: document.documentElement.scrollWidth
+    };
+  });
+  expect(layout.chartWidth).toBeGreaterThan(250);
+  expect(layout.chartHeight).toBeGreaterThanOrEqual(layoutViewportWidth(page) <= 680 ? 280 : 320);
+  expect(layout.insideShell).toBeTruthy();
+  expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth + 1);
   expect(consoleErrors).toEqual([]);
   expect(httpErrors).toEqual([]);
 });

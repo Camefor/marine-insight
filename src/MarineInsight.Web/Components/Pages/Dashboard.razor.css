@@ -123,6 +123,7 @@
 .risk-section,
 .trend-section,
 .recommendation-section,
+.tide-section,
 .source-section,
 .metric-section,
 .hourly-section {
@@ -137,6 +138,7 @@
 .query-band {
     background: linear-gradient(145deg, rgba(16, 51, 78, 0.9), rgba(7, 27, 45, 0.9));
     border-color: var(--dash-line-strong);
+    overflow: hidden;
 }
 
 .query-band h2,
@@ -145,6 +147,7 @@
 .recommendation-section h2,
 .risk-section h2,
 .trend-section h2,
+.tide-section h2,
 .metric-section h2,
 .hourly-section h2,
 .explanation-section h2,
@@ -160,6 +163,7 @@
 .activity-section h2::before,
 .recommendation-section h2::before,
 .risk-section h2::before,
+.tide-section h2::before,
 .metric-section h2::before,
 .hourly-section h2::before {
     color: var(--dash-accent);
@@ -1087,6 +1091,131 @@ dd {
     margin: 0;
 }
 
+.tide-section {
+    background:
+        radial-gradient(circle at 88% 8%, rgba(72, 224, 192, 0.12), transparent 22rem),
+        var(--dash-panel);
+    overflow: hidden;
+}
+
+.tide-heading {
+    align-items: start;
+}
+
+.tide-heading p {
+    color: var(--dash-muted);
+    line-height: 1.6;
+    margin: 8px 0 0;
+}
+
+.tide-status {
+    border: 1px solid var(--dash-line-strong);
+    border-radius: 999px;
+    flex: 0 0 auto;
+    font-family: "DM Mono", Consolas, monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 6px 10px;
+}
+
+.tide-status.status-available {
+    background: rgba(72, 224, 192, 0.1);
+    color: var(--dash-accent);
+}
+
+.tide-status.status-degraded {
+    background: rgba(255, 212, 117, 0.11);
+    color: var(--dash-yellow);
+}
+
+.tide-status.status-unavailable,
+.tide-status.status-disabled {
+    background: rgba(145, 178, 196, 0.09);
+    color: var(--dash-muted);
+}
+
+.tide-overview {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 18px;
+}
+
+.tide-overview article {
+    background: rgba(3, 14, 25, 0.42);
+    border: 1px solid var(--dash-line);
+    border-radius: 10px;
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+    padding: 14px;
+}
+
+.tide-overview span,
+.tide-overview em {
+    color: var(--dash-muted);
+    font-size: 0.76rem;
+    font-style: normal;
+    overflow-wrap: anywhere;
+}
+
+.tide-overview strong {
+    color: var(--dash-text);
+    font-family: "DM Mono", Consolas, monospace;
+    font-size: clamp(1rem, 2vw, 1.28rem);
+}
+
+.tide-overview small {
+    color: var(--dash-muted);
+    font-size: 0.7em;
+}
+
+.tide-chart-shell {
+    background: rgba(3, 14, 25, 0.42);
+    border: 1px solid var(--dash-line);
+    border-radius: 10px;
+    contain: layout paint;
+    margin-top: 12px;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.tide-chart {
+    height: 320px;
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+}
+
+.tide-chart-fallback {
+    align-items: center;
+    background: rgba(6, 20, 35, 0.92);
+    color: var(--dash-muted);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    margin: 0;
+    padding: 20px;
+    position: absolute;
+    text-align: center;
+}
+
+.tide-guidance {
+    border-left: 3px solid var(--dash-accent);
+    color: var(--dash-muted);
+    line-height: 1.65;
+    margin: 14px 0 0;
+    padding-left: 12px;
+}
+
+.tide-guidance.unavailable {
+    border: 1px dashed var(--dash-line-strong);
+    border-radius: 8px;
+    padding: 14px;
+}
+
 .source-list {
     display: grid;
     gap: 10px;
@@ -1220,32 +1349,59 @@ td {
     margin: 0;
 }
 
-.loading-overlay {
+.query-loading {
     align-items: center;
-    background: rgba(6, 20, 35, 0.86);
-    backdrop-filter: blur(8px);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    inset: 0;
-    justify-content: center;
-    position: fixed;
-    z-index: 1000;
+    background:
+        linear-gradient(90deg, rgba(72, 224, 192, 0.1), rgba(10, 31, 50, 0.68) 45%, rgba(255, 157, 92, 0.08)),
+        rgba(3, 14, 25, 0.64);
+    border: 1px solid rgba(72, 224, 192, 0.24);
+    border-radius: 10px;
+    box-shadow: inset 3px 0 0 var(--dash-accent);
+    display: grid;
+    gap: 13px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    margin-top: 16px;
+    min-width: 0;
+    padding: 13px 15px;
 }
 
-.loading-overlay span {
+.query-loading-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.query-loading-copy strong {
+    color: var(--dash-text);
+    font-size: 0.88rem;
+}
+
+.query-loading-copy span {
     color: var(--dash-muted);
+    font-size: 0.76rem;
+    line-height: 1.5;
+}
+
+.query-loading-badge {
+    background: rgba(72, 224, 192, 0.08);
+    border: 1px solid rgba(72, 224, 192, 0.18);
+    border-radius: 999px;
+    color: var(--dash-accent);
     font-family: "DM Mono", Consolas, monospace;
-    font-size: 0.82rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 6px 9px;
+    white-space: nowrap;
 }
 
 .spinner {
     animation: spin 0.9s linear infinite;
-    border: 3px solid rgba(72, 224, 192, 0.18);
+    border: 2px solid rgba(72, 224, 192, 0.18);
     border-radius: 50%;
     border-top-color: var(--dash-accent);
-    height: 44px;
-    width: 44px;
+    height: 32px;
+    width: 32px;
 }
 
 @keyframes spin {
@@ -1300,6 +1456,7 @@ td {
     .risk-section,
     .trend-section,
     .recommendation-section,
+    .tide-section,
     .source-section,
     .metric-section,
     .hourly-section {
@@ -1309,6 +1466,24 @@ td {
     .activity-list,
     .metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tide-overview {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tide-chart {
+        height: 280px;
+    }
+
+    .query-loading {
+        gap: 11px;
+        grid-template-columns: auto minmax(0, 1fr);
+        padding: 12px;
+    }
+
+    .query-loading-badge {
+        display: none;
     }
 
     .map-picker-heading,

@@ -110,6 +110,34 @@ public sealed class DashboardQuerySessionTests
         Assert.NotEmpty(session.Result.TopRisks);
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "风速" && metric.Value == "4.0");
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "有效波高" && metric.Value == "0.8");
+        Assert.Equal("disabled", session.Result.Tide.Status);
+        Assert.Empty(session.Result.Tide.Points);
+    }
+
+    [Fact]
+    public async Task TideProjectionIncludesChartPointsExtremesAndTrend()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        factory.Tide.IsEnabled = true;
+        await factory.MigrateDatabaseAsync();
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 0, 0, 0);
+        session.Hours = 24;
+
+        Assert.True(await session.SelectCatalogLocationAsync(Guid.Parse("8a477d67-73fa-4f43-b954-cd29d238a89d")));
+        await session.SubmitAnalysisAsync();
+
+        var tide = Assert.IsType<DashboardTideResult>(session.Result?.Tide);
+        Assert.Equal("available", tide.Status);
+        Assert.Equal("涨潮", tide.CurrentTrendText);
+        Assert.Equal(25, tide.Points.Count);
+        Assert.Equal("high", tide.NextHigh?.Type);
+        Assert.Equal("low", tide.NextLow?.Type);
+        Assert.True(tide.MinimumHeightM < tide.MaximumHeightM);
+        Assert.Contains(session.Result!.Sources, source => source.DataDomain == "tide" && source.CacheStatus == "miss");
+        Assert.Contains(session.Result.HourlyDetails.SelectMany(detail => detail.Metrics), metric => metric.Label == "潮位");
     }
 
     [Fact]

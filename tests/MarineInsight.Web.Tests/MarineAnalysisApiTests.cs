@@ -279,12 +279,15 @@ public sealed class MarineAnalysisApiTests
         {
             Weather = new FakeWeatherProvider();
             Marine = new FakeMarineProvider();
+            Tide = new FakeTideProvider();
             ExplanationProvider = new FakeExplanationProvider();
         }
 
         public FakeWeatherProvider Weather { get; }
 
         public FakeMarineProvider Marine { get; }
+
+        public FakeTideProvider Tide { get; }
 
         public FakeExplanationProvider ExplanationProvider { get; }
 
@@ -316,8 +319,10 @@ public sealed class MarineAnalysisApiTests
             {
                 services.RemoveAll<IWeatherForecastProvider>();
                 services.RemoveAll<IMarineForecastProvider>();
+                services.RemoveAll<ITideProvider>();
                 services.AddSingleton<IWeatherForecastProvider>(Weather);
                 services.AddSingleton<IMarineForecastProvider>(Marine);
+                services.AddSingleton<ITideProvider>(Tide);
                 if (EnableAiExplanation)
                 {
                     services.RemoveAll<IExplanationProvider>();
@@ -415,6 +420,60 @@ public sealed class MarineAnalysisApiTests
                 Summary = "风浪较小，适合安排乘船活动。",
                 ActivityNotes = [new ExplanationActivityNote { Activity = "boat", Text = "可以安排乘船活动。" }]
             });
+        }
+    }
+
+    public sealed class FakeTideProvider : ITideProvider
+    {
+        public string ProviderCode => "api-tide";
+
+        public bool IsEnabled { get; set; }
+
+        public Task<ProviderTideResult> GetTidesAsync(
+            GeoPoint location,
+            ForecastRange range,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var provider = new ProviderIdentity(ProviderCode, "configured-tide");
+            var batchId = Guid.NewGuid();
+            var points = Enumerable.Range(0, range.Hours + 1)
+                .Select(index =>
+                {
+                    var time = range.StartUtc.AddHours(index);
+                    var height = 1.2 + Math.Sin((index - 3) * Math.PI / 6) * 0.8;
+                    var tideType = (index % 12) switch
+                    {
+                        0 => TideType.Low,
+                        6 => TideType.High,
+                        _ => (TideType?)null
+                    };
+                    var metrics = ForecastMetricSet.Create(tideHeightM: height, tideType: tideType);
+                    var quality = DataQuality.Valid();
+                    var sources = metrics.GetPresentMetrics()
+                        .Select(metric => new MetricSource(
+                            metric,
+                            provider,
+                            batchId,
+                            time,
+                            quality.Status,
+                            quality.Freshness));
+                    return new ForecastPoint(time, metrics, quality, sources);
+                })
+                .ToArray();
+            var batch = new ForecastBatch(
+                batchId,
+                ForecastDataDomain.Tide,
+                provider,
+                location,
+                null,
+                range.StartUtc.AddHours(-1),
+                range.StartUtc.AddHours(-1),
+                range,
+                points,
+                DataQuality.Valid());
+
+            return Task.FromResult(new ProviderTideResult(batch, false, 500, false));
         }
     }
 

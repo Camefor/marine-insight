@@ -202,15 +202,19 @@
                 </button>
             </div>
         </form>
-    </section>
 
-    @if (Session.IsLoadingAnalysis)
-    {
-        <div class="loading-overlay" role="status" aria-live="polite">
-            <span class="spinner" aria-hidden="true"></span>
-            <span>正在查询海况，请稍候…</span>
-        </div>
-    }
+        @if (Session.IsLoadingAnalysis)
+        {
+            <div class="query-loading" role="status" aria-live="polite" aria-atomic="true">
+                <span class="spinner" aria-hidden="true"></span>
+                <span class="query-loading-copy">
+                    <strong>正在查询海况</strong>
+                    <span>正在汇总天气、海浪与潮汐数据，完成后将在下方更新结果。</span>
+                </span>
+                <span class="query-loading-badge" aria-hidden="true">数据汇总中</span>
+            </div>
+        }
+    </section>
 
     @if (!string.IsNullOrWhiteSpace(Session.AnalysisError))
     {
@@ -522,6 +526,57 @@
             </section>
         }
 
+        <section class="tide-section" aria-labelledby="tide-title">
+            <div class="section-heading tide-heading">
+                <div>
+                    <h2 id="tide-title">潮汐参考</h2>
+                    <p>结合涨退潮节奏与海况窗口，辅助安排海钓出发、转场和收竿时间。</p>
+                </div>
+                <span class="tide-status status-@result.Tide.Status">@result.Tide.StatusText</span>
+            </div>
+
+            @if (result.Tide.Points.Count > 0)
+            {
+                <div class="tide-overview" aria-label="潮汐摘要">
+                    <article>
+                        <span>当前潮位</span>
+                        <strong>@result.Tide.CurrentHeightM?.ToString("0.00") <small>m</small></strong>
+                        <em>@(result.Tide.CurrentTrendText ?? "趋势待确认")</em>
+                    </article>
+                    <article>
+                        <span>潮位范围</span>
+                        <strong>@result.Tide.MinimumHeightM?.ToString("0.00")–@result.Tide.MaximumHeightM?.ToString("0.00") <small>m</small></strong>
+                        <em>@result.Hours 小时预报范围</em>
+                    </article>
+                    <article>
+                        <span>最近高潮</span>
+                        <strong>@(result.Tide.NextHigh is null ? "暂无" : $"{result.Tide.NextHigh.HeightM:0.00} m")</strong>
+                        <em>@(result.Tide.NextHigh is null ? "当前范围未标记" : Session.FormatDisplay(result.Tide.NextHigh.ForecastTimeUtc))</em>
+                    </article>
+                    <article>
+                        <span>最近低潮</span>
+                        <strong>@(result.Tide.NextLow is null ? "暂无" : $"{result.Tide.NextLow.HeightM:0.00} m")</strong>
+                        <em>@(result.Tide.NextLow is null ? "当前范围未标记" : Session.FormatDisplay(result.Tide.NextLow.ForecastTimeUtc))</em>
+                    </article>
+                </div>
+
+                <div class="tide-chart-shell">
+                    <div id="dashboard-tide-chart"
+                         class="tide-chart"
+                         role="img"
+                         aria-label="@($"{result.DisplayName}未来{result.Hours}小时潮位变化曲线")"></div>
+                    @if (_tideChartUnavailable)
+                    {
+                        <p class="tide-chart-fallback" role="status">潮汐图表暂时无法加载，可继续参考上方高低潮摘要。</p>
+                    }
+                </div>
+            }
+
+            <p class="tide-guidance @(result.Tide.Points.Count == 0 ? "unavailable" : null)" role="status">
+                @result.Tide.Message
+            </p>
+        </section>
+
         @if (result.MissingMetrics.Count > 0 || result.MissingDomains.Count > 0 || result.Flags.Count > 0)
         {
             <section class="status-band warning" role="status">
@@ -630,9 +685,12 @@
 @code {
     private static readonly int[] HourOptions = [24, 72, 168];
     private IJSObjectReference? _mapModule;
+    private IJSObjectReference? _tideChartModule;
     private DotNetObjectReference<Dashboard>? _mapCallback;
     private bool _mapInitialized;
     private bool _mapInitializationAttempted;
+    private Guid? _renderedTideSnapshotId;
+    private bool _tideChartUnavailable;
     private Guid? _userId;
     private string? _workspaceStatus;
     private List<FavoriteLocation> _favorites = [];
@@ -872,6 +930,63 @@
         {
             await EnsureMapAsync();
         }
+
+        await EnsureTideChartAsync();
+    }
+
+    private async Task EnsureTideChartAsync()
+    {
+        if (Session.Result is not { Tide.Points.Count: > 0 } result)
+        {
+            if (_renderedTideSnapshotId.HasValue && _tideChartModule is not null)
+            {
+                await _tideChartModule.InvokeVoidAsync("dispose", "dashboard-tide-chart");
+            }
+
+            _renderedTideSnapshotId = null;
+            _tideChartUnavailable = false;
+            return;
+        }
+
+        if (_renderedTideSnapshotId == result.SnapshotId)
+        {
+            return;
+        }
+
+        _renderedTideSnapshotId = result.SnapshotId;
+        try
+        {
+            _tideChartModule ??= await Js.InvokeAsync<IJSObjectReference>("import", "./js/tide-chart.js");
+            var rendered = await _tideChartModule.InvokeAsync<bool>(
+                "render",
+                "dashboard-tide-chart",
+                new
+                {
+                    accessibleDescription = $"{result.DisplayName}未来{result.Hours}小时潮位曲线，最低{result.Tide.MinimumHeightM:0.00}米，最高{result.Tide.MaximumHeightM:0.00}米。",
+                    points = result.Tide.Points.Select(point => new
+                    {
+                        label = Session.FormatDisplay(point.ForecastTimeUtc),
+                        fullLabel = Session.FormatDisplay(point.ForecastTimeUtc),
+                        height = point.HeightM,
+                        type = point.Type,
+                        trendText = point.TrendText
+                    })
+                });
+            _tideChartUnavailable = !rendered;
+        }
+        catch (JSException)
+        {
+            _tideChartUnavailable = true;
+        }
+        catch (InvalidOperationException)
+        {
+            _tideChartUnavailable = true;
+        }
+
+        if (_tideChartUnavailable)
+        {
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task DetectClientTimeZoneAsync()
@@ -1032,6 +1147,19 @@
     public async ValueTask DisposeAsync()
     {
         await DisposeMapAsync();
+        if (_tideChartModule is not null)
+        {
+            try
+            {
+                await _tideChartModule.InvokeVoidAsync("dispose", "dashboard-tide-chart");
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+
+            await _tideChartModule.DisposeAsync();
+        }
+
         if (_mapModule is not null)
         {
             await _mapModule.DisposeAsync();
