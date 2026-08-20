@@ -42,12 +42,16 @@ test('dashboard and account shell remain usable without layout overflow', async 
     const input = document.querySelector('.datetime-control input[type="date"]');
     const hour = document.querySelector('.datetime-control .forecast-time-picker input');
     const suffix = document.querySelector('.datetime-control .forecast-time-picker .ant-picker-suffix');
+    const segment = document.querySelector('.range-controls .segmented-group .segment');
+    const queryButton = document.querySelector('.range-controls > .primary-button');
     if (!input || !hour || !suffix) throw new Error('Date time control is missing.');
 
     const inputBox = input.getBoundingClientRect();
     const controlBox = input.closest('.datetime-control').getBoundingClientRect();
     const hourBox = hour.getBoundingClientRect();
     const suffixBox = suffix.getBoundingClientRect();
+    const segmentBox = segment?.getBoundingClientRect();
+    const queryButtonBox = queryButton?.getBoundingClientRect();
     const suffixStyle = getComputedStyle(suffix);
     return {
       inputWidth: inputBox.width,
@@ -57,6 +61,9 @@ test('dashboard and account shell remain usable without layout overflow', async 
       suffixWidth: suffixBox.width,
       suffixInsideControl: suffixBox.right <= controlBox.right && suffixBox.left >= controlBox.left,
       suffixColor: suffixStyle.color,
+      controlTop: controlBox.top,
+      segmentTop: segmentBox?.top ?? 0,
+      queryButtonTop: queryButtonBox?.top ?? 0,
       language: input.getAttribute('lang'),
       selectedHour: hour.value,
       hint: document.querySelector('#forecast-time-hint')?.textContent?.trim() || ''
@@ -68,9 +75,16 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(datetimeLayout.suffixWidth).toBeGreaterThanOrEqual(14);
   expect(datetimeLayout.suffixInsideControl).toBeTruthy();
   expect(datetimeLayout.suffixColor).not.toBe('rgba(0, 0, 0, 0)');
+  if (layoutViewportWidth(page) > 680) {
+    expect(Math.abs(datetimeLayout.controlTop - datetimeLayout.segmentTop)).toBeLessThanOrEqual(1);
+    expect(Math.abs(datetimeLayout.controlTop - datetimeLayout.queryButtonTop)).toBeLessThanOrEqual(1);
+  }
   expect(datetimeLayout.language).toBe('zh-CN');
   expect(datetimeLayout.selectedHour).toMatch(/^\d{2}:00$/);
   expect(datetimeLayout.hint).toContain('分钟固定为 00');
+  await forecastDate.fill('2026-08-21');
+  await forecastDate.blur();
+  await expect(forecastDate).toHaveValue('2026-08-21');
   if (layoutViewportWidth(page) <= 680) {
     expect(datetimeLayout.controlWidth).toBeGreaterThanOrEqual(300);
   }

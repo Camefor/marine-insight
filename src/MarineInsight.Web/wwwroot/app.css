@@ -38,6 +38,36 @@
     color: #48e0c0;
 }
 
+.forecast-time-dropdown,
+.forecast-time-dropdown .ant-picker-panel,
+.forecast-time-dropdown .ant-picker-panel-container,
+.forecast-time-dropdown .ant-picker-time-panel,
+.forecast-time-dropdown .ant-picker-content {
+    background: #071b2d !important;
+    color: #dcecf3 !important;
+    opacity: 1 !important;
+}
+
+.forecast-time-dropdown .ant-picker-time-panel-cell-inner {
+    color: #dcecf3 !important;
+}
+
+.forecast-time-dropdown .ant-picker-time-panel-column {
+    background: #071b2d !important;
+    border-color: rgba(111, 145, 164, 0.28) !important;
+}
+
+.forecast-time-dropdown .ant-picker-time-panel-cell-disabled .ant-picker-time-panel-cell-inner {
+    background: transparent !important;
+    color: #7896a6 !important;
+    opacity: 1 !important;
+}
+
+.forecast-time-dropdown .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+    background: #48e0c0 !important;
+    color: #03101c !important;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

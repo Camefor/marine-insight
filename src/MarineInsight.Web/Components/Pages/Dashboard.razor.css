@@ -185,6 +185,7 @@
 }
 
 .range-controls {
+    align-items: start;
     grid-template-columns: minmax(220px, 0.75fr) minmax(230px, 0.9fr) auto;
 }
 
@@ -294,6 +295,16 @@
     z-index: 2;
 }
 
+.range-controls > .primary-button {
+    margin-top: 30px;
+}
+
+.range-controls > .segmented-group {
+    margin-top: -17px;
+    position: relative;
+    top: 24px;
+}
+
 .datetime-control input:focus {
     border-color: transparent;
     box-shadow: none;
@@ -306,13 +317,12 @@
 
 .datetime-control input::-webkit-calendar-picker-indicator {
     cursor: pointer;
-    height: 100%;
-    inset: 0 0 0 auto;
+    height: auto;
     margin: 0;
-    opacity: 0;
+    opacity: 1;
     padding: 0;
-    position: absolute;
-    width: 52px;
+    position: static;
+    width: auto;
 }
 
 .datetime-control input::-webkit-datetime-edit,
@@ -1317,6 +1327,12 @@ td {
 
     .datetime-parts {
         grid-template-columns: minmax(0, 1fr) 120px;
+    }
+
+    .range-controls > .segmented-group,
+    .range-controls > .primary-button {
+        margin-top: 0;
+        top: auto;
     }
 
     .trend-point {
