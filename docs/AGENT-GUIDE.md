@@ -129,14 +129,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0057` |
+| 当前任务 ID | `MI-0058` |
 | 当前状态 | `DONE` |
-| 当前目标 | 提交并推送潮汐图表与查询 Loading 优化，按生产手册完成腾讯云备份、部署、冒烟验证和清理 |
-| 最后完成动作 | 提交 `0b79737` 已推送并发布生产；源码包双端 SHA-256 一致，备份非空，完整 overlay 重建后 migrate 退出 0、Web healthy，公网健康/资源/API/双视口回归和 Docker 清理通过；冒烟脚本旧标题断言已同步修正 |
-| 下一步动作 | 无；如需线上真实潮汐数据，提供生产 WorldTides Key 后叠加 `compose.worldtides.yaml` 并执行一次受控 Credit 验收 |
-| 涉及文件 | `MI-0055`/`MI-0056` 全部改动、`docs/AGENT-GUIDE.md` 与生产发布记录 |
-| 验证结果 | Release 构建 0 警告/0 错误；全量 .NET 232/232；本地与生产 Playwright 桌面/360px 各 4/4；live/ready/核心页面/ECharts 资源 200；分析 API 返回 analyzed；关键日志 0 |
-| 阻塞/待确认 | 部署本身无阻塞；生产未配置 WorldTides Secret，当前潮汐状态为 disabled，真实数据启用需生产 Key |
+| 当前目标 | 使用仓库外 WorldTides Secret 完成本地真实潮汐验证，并按生产手册备份、部署和线上验收 |
+| 最后完成动作 | 本地真实潮汐请求成功；生产 Secret 已配置并完成非空 PostgreSQL 备份、完整 overlay 重建和 Docker 清理 |
+| 下一步动作 | 生产 WorldTides 已启用；网络恢复后重试推送本次台账提交 `453ecb6` |
+| 涉及文件 | `docs/AGENT-GUIDE.md`、仓库外 User Secrets、服务器 `/etc/marine-insight/secrets/worldtides_api_key`、服务器 `.env` |
+| 验证结果 | 本地/生产分析均 `analyzed`，潮汐 `available` 且各有 49 个潮位点；生产 migrate 退出 0、Web healthy、live/ready 200、双视口 E2E 4/4、静态资源 200、近 5 分钟错误日志 0 |
+| 阻塞/待确认 | 无；API Key 仅存于本地 User Secrets 与服务器 `/etc/marine-insight/secrets/worldtides_api_key`，未进入 Git、源码、日志或回复 |
 | 最后更新 | 2026-08-20 |
 
 <!-- agent-state:end -->
@@ -188,6 +188,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0058` | 2026-08-20 | 使用 WorldTides API Key 启用真实潮汐数据并发布生产 | 新 Key 直连 WorldTides HTTP 200；本地/生产分析均 `analyzed`、潮汐 `available`、49 个潮位点；生产 Secret 与 `.env` 路径配置在仓库外，备份 `marine-insight-mi0058-20260820-100144.dump` 非空（69,655 字节）；完整 production/AI/tianditu/worldtides overlay 重建后 migrate exit 0、Web healthy；公网 live/ready 200、潮汐/ECharts 资源 200、桌面/360px Playwright 4/4、近 5 分钟 web 错误日志 0；完成 Docker 清理，Key 未进入 Git 或日志 |
 | [x] | `MI-0057` | 2026-08-20 | 推送并发布潮汐图表与查询 Loading 优化 | `0b79737` 已推送 `origin/main`；824,126 字节源码包双端 SHA-256 一致；升级前备份 `marine-insight-mi0057-20260820-092017.dump` 非空（68,926 字节）；production/AI/tianditu 完整 overlay 重建后 migrate exit 0、Web healthy；公网健康、核心页面、ECharts/tide-chart 资源、分析 API 与桌面/360px Playwright 4/4 通过，关键日志 0；清理约 96.65 MB 构建缓存和退出容器；冒烟脚本与手册的首页断言同步为当前标题 |
 | [x] | `MI-0056` | 2026-08-20 | 优化 Dashboard 查询海况 Loading 的 PC 展示 | 保留 `DashboardQuerySession` 查询状态与按钮防重复提交，只将忙状态从全屏固定遮罩改为查询卡片内的正常流式状态卡；桌面显示 spinner、主副文案和状态徽标，移动端隐藏辅助徽标；Web 62/62、全量 .NET 232/232、Playwright 双视口 4/4、格式与文件规范检查通过 |
 | [x] | `MI-0055` | 2026-08-20 | 接入潮汐数据并使用 ECharts 绘制海钓参考图 | 复用 WorldTides 与独立降级链路，Dashboard 增加潮位/涨退潮/高低潮摘要和按需加载 ECharts 6 曲线；深海主题、容器内 Tooltip、长范围缩放、ResizeObserver、双视口无溢出及脚本失败文本兜底完成；潮汐明确不计入综合评分；Release 构建 0 警告/0 错误、232/232 .NET、Playwright 4/4、格式/审计/BOM/CRLF 通过 |
@@ -251,6 +252,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-20 | `MI-0058` | 使用仓库外 User Secrets 验证新 WorldTides Key，确认直连 HTTP 200；随后写入生产仓库外 Secret 和 `.env` 路径，完成源码同步、PostgreSQL 非空备份、production/AI/tianditu/worldtides 完整 overlay 重建与 Docker 清理；本地提交 `453ecb6` 已创建 | 本地和生产分析均 `analysisStatus=analyzed`、潮汐 `available`、49 个潮位点；生产 migrate 退出 0、Web healthy，公网 live/ready 200，潮汐/ECharts 静态资源 200，线上桌面/360px Playwright 4/4，近 5 分钟 web 错误日志 0；备份 `marine-insight-mi0058-20260820-100144.dump` 非空（69,655 字节）；Key 未进入 Git 或日志 | 发布完成；GitHub push 因连接重置失败，网络恢复后重试 `453ecb6` |
 | 2026-08-20 | `MI-0057` | 将 `MI-0055` 潮汐 ECharts 与 `MI-0056` 局部 Loading 改动提交为 `0b79737` 并推送；按生产记忆同步校验源码包，完成 PostgreSQL 升级前备份与 production/AI/tianditu 完整 overlay 重建；执行健康、核心页面、静态资源、分析 API、双视口布局、日志和 Docker 清理；同步修复冒烟脚本与手册中的旧首页标题断言 | Release 构建 0 警告/0 错误、全量 .NET 232/232、本地 Playwright 4/4、format、NuGet/npm 漏洞审计通过；生产备份 68,926 字节非空，migrate exit 0、Web healthy，live/ready/about/login、tide-chart/ECharts 资源 200，静态资源哈希一致，分析 API为 analyzed，线上 Playwright 4/4，关键日志 0，清理约 96.65 MB；修正后的 `smoke-test.ps1` 公网复验通过 | 发布完成；生产 WorldTides Secret 尚未配置，当前潮汐状态为 disabled；提供生产 Key 后再启用真实潮汐并执行一次受控 Credit 验收 |
 | 2026-08-20 | `MI-0056` | 将 Dashboard 查询海况 Loading 从 `position: fixed; inset: 0` 的全屏遮罩改为查询卡片内的深海主题局部状态卡；查询条件、Header 和已有结果保持可见，移动端通过断点隐藏辅助徽标；同步 UI/Blazor/测试/RoadMap 文档 | Web 62/62；全量 .NET 232/232；Playwright 桌面/360px 4/4，验证非固定定位、查询区边界、不覆盖 Header/结果区和无横向溢出；format、JS 语法、diff、BOM/CRLF 通过 | 完成，无后续动作 |
 | 2026-08-20 | `MI-0055` | 复用现有 WorldTides Provider、长 TTL 缓存与可选降级链，在 `DashboardQuerySession` 投影潮位、涨退潮、高低潮和来源缓存状态；Dashboard 于推荐窗口后增加独立潮汐参考卡，通过固定版本 NuGet 静态资产按需加载 ECharts 6，提供深海主题、容器内 Tooltip、168h 缩放、ResizeObserver、Dispose 和文本兜底；潮汐明确不参与综合评分；同步 UI/Blazor/测试/RoadMap 文档 | Release 构建 0 警告/0 错误；全量 .NET 232/232（Web 62/62）；Playwright 桌面/360px 4/4，真实 Canvas、容器边界和无横向溢出通过；`dotnet format --verify-no-changes`、NuGet 全项目无漏洞、npm audit 0 漏洞、`git diff --check` 和 13 个改动文本 BOM/CRLF 检查通过 | 自动化未请求真实 WorldTides，避免消耗 Credit；如需联调，在明确接受一次 Credit 消耗后执行受控查询 |
