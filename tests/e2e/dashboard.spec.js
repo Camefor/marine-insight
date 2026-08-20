@@ -33,13 +33,22 @@ test('dashboard and account shell remain usable without layout overflow', async 
   await expect(datetimeHint).toBeVisible();
   // The first InteractiveServer circuit can take a few seconds to attach on a cold start.
   await page.waitForTimeout(5000);
+  await page.getByPlaceholder('输入海岛或码头名称').fill('东极岛');
+  await page.getByRole('button', { name: '查找地点' }).click();
+  await expect(page.locator('#map-picker-title')).toBeHidden();
+  await page.locator('.forecast-date-picker').click();
+  const dateCells = page.locator('.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-in-view:not(.ant-picker-cell-disabled)');
+  await expect(dateCells.first()).toBeVisible();
+  await dateCells.first().click();
+  await expect(forecastDate).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
+  await page.keyboard.press('Escape');
   await page.locator('.forecast-time-picker').click();
   const hourCells = page.locator('.ant-picker-dropdown .ant-picker-time-panel-cell:not(.ant-picker-time-panel-cell-disabled)');
   await expect(hourCells).toHaveCount(24, { timeout: 15_000 });
   await expect(page.locator('.ant-picker-dropdown .ant-picker-time-panel-column')).toHaveCount(1);
   await page.keyboard.press('Escape');
   const datetimeLayout = await page.evaluate(() => {
-    const input = document.querySelector('.datetime-control input[type="date"]');
+    const input = document.querySelector('.datetime-control .forecast-date-picker input');
     const hour = document.querySelector('.datetime-control .forecast-time-picker input');
     const suffix = document.querySelector('.datetime-control .forecast-time-picker .ant-picker-suffix');
     const segment = document.querySelector('.range-controls .segmented-group .segment');
@@ -48,6 +57,7 @@ test('dashboard and account shell remain usable without layout overflow', async 
 
     const inputBox = input.getBoundingClientRect();
     const controlBox = input.closest('.datetime-control').getBoundingClientRect();
+    const datePickerBox = input.closest('.forecast-date-picker.ant-picker')?.getBoundingClientRect();
     const hourBox = hour.getBoundingClientRect();
     const suffixBox = suffix.getBoundingClientRect();
     const segmentBox = segment?.getBoundingClientRect();
@@ -57,6 +67,8 @@ test('dashboard and account shell remain usable without layout overflow', async 
       inputWidth: inputBox.width,
       controlWidth: controlBox.width,
       inputHeight: inputBox.height,
+      datePickerWidth: datePickerBox?.width ?? 0,
+      datePickerHeight: datePickerBox?.height ?? 0,
       hourHeight: hourBox.height,
       suffixWidth: suffixBox.width,
       suffixInsideControl: suffixBox.right <= controlBox.right && suffixBox.left >= controlBox.left,
@@ -64,13 +76,16 @@ test('dashboard and account shell remain usable without layout overflow', async 
       controlTop: controlBox.top,
       segmentTop: segmentBox?.top ?? 0,
       queryButtonTop: queryButtonBox?.top ?? 0,
-      language: input.getAttribute('lang'),
+      language: input.closest('.forecast-date-picker-shell')?.getAttribute('lang'),
+      selectedDate: input.value,
       selectedHour: hour.value,
       hint: document.querySelector('#forecast-time-hint')?.textContent?.trim() || ''
     };
   });
-  expect(datetimeLayout.inputWidth).toBeGreaterThan(200);
-  expect(datetimeLayout.inputHeight).toBeGreaterThanOrEqual(46);
+  expect(datetimeLayout.inputWidth).toBeGreaterThan(100);
+  expect(datetimeLayout.datePickerWidth).toBeGreaterThan(200);
+  expect(datetimeLayout.inputHeight).toBeGreaterThanOrEqual(20);
+  expect(datetimeLayout.datePickerHeight).toBeGreaterThanOrEqual(46);
   expect(datetimeLayout.hourHeight).toBeGreaterThanOrEqual(20);
   expect(datetimeLayout.suffixWidth).toBeGreaterThanOrEqual(14);
   expect(datetimeLayout.suffixInsideControl).toBeTruthy();
@@ -82,9 +97,7 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(datetimeLayout.language).toBe('zh-CN');
   expect(datetimeLayout.selectedHour).toMatch(/^\d{2}:00$/);
   expect(datetimeLayout.hint).toContain('分钟固定为 00');
-  await forecastDate.fill('2026-08-21');
-  await forecastDate.blur();
-  await expect(forecastDate).toHaveValue('2026-08-21');
+  expect(datetimeLayout.selectedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   if (layoutViewportWidth(page) <= 680) {
     expect(datetimeLayout.controlWidth).toBeGreaterThanOrEqual(300);
   }

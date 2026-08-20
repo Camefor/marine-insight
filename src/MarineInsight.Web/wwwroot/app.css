@@ -68,6 +68,129 @@
     color: #03101c !important;
 }
 
+.forecast-date-dropdown,
+.forecast-date-dropdown .ant-picker-panel,
+.forecast-date-dropdown .ant-picker-panel-container,
+.forecast-date-dropdown .ant-picker-date-panel,
+.forecast-date-dropdown .ant-picker-content,
+.forecast-date-dropdown .ant-picker-header,
+.forecast-date-dropdown .ant-picker-footer {
+    background: #071b2d !important;
+    color: #dcecf3 !important;
+    opacity: 1 !important;
+}
+
+.forecast-date-dropdown .ant-picker-header,
+.forecast-date-dropdown .ant-picker-footer {
+    border-color: rgba(111, 145, 164, 0.28) !important;
+}
+
+.forecast-date-dropdown .ant-picker-header button,
+.forecast-date-dropdown .ant-picker-header-view,
+.forecast-date-dropdown .ant-picker-content th,
+.forecast-date-dropdown .ant-picker-cell-in-view .ant-picker-cell-inner,
+.forecast-date-dropdown .ant-picker-today-btn {
+    color: #dcecf3 !important;
+}
+
+.forecast-date-dropdown .ant-picker-cell-inner {
+    color: #7896a6 !important;
+}
+
+.forecast-date-dropdown .ant-picker-cell:hover .ant-picker-cell-inner,
+.forecast-date-dropdown .ant-picker-cell-in-view:hover .ant-picker-cell-inner {
+    background: rgba(72, 224, 192, 0.16) !important;
+    color: #edf8fb !important;
+}
+
+.forecast-date-dropdown .ant-picker-cell-selected .ant-picker-cell-inner,
+.forecast-date-dropdown .ant-picker-cell-selected:hover .ant-picker-cell-inner {
+    background: #48e0c0 !important;
+    color: #03101c !important;
+}
+
+.forecast-date-dropdown .ant-picker-cell-disabled .ant-picker-cell-inner {
+    background: transparent !important;
+    color: #527080 !important;
+    opacity: 1 !important;
+}
+
+.ant-picker-dropdown .ant-picker-date-panel,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-content,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-header,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-footer {
+    background: #071b2d !important;
+    color: #dcecf3 !important;
+    opacity: 1 !important;
+}
+
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-header,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-footer {
+    border-color: rgba(111, 145, 164, 0.28) !important;
+}
+
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-header button,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-header-view,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-content th,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-in-view .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-today-btn {
+    color: #dcecf3 !important;
+}
+
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-inner {
+    color: #7896a6 !important;
+}
+
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell:hover .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-in-view:hover .ant-picker-cell-inner {
+    background: rgba(72, 224, 192, 0.16) !important;
+    color: #edf8fb !important;
+}
+
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-selected .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-selected:hover .ant-picker-cell-inner {
+    background: #48e0c0 !important;
+    color: #03101c !important;
+}
+
+.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-disabled .ant-picker-cell-inner {
+    background: transparent !important;
+    color: #527080 !important;
+    opacity: 1 !important;
+}
+
+.ant-picker-dropdown .ant-picker-time-panel,
+.ant-picker-dropdown .ant-picker-time-panel .ant-picker-content,
+.ant-picker-dropdown .ant-picker-time-panel-column {
+    background: #071b2d !important;
+    opacity: 1 !important;
+}
+
+.ant-picker-dropdown .ant-picker-time-panel-column {
+    border-color: rgba(111, 145, 164, 0.28) !important;
+}
+
+.ant-picker-dropdown .ant-picker-time-panel-column > li.ant-picker-time-panel-cell .ant-picker-time-panel-cell-inner {
+    background: transparent !important;
+    color: #dcecf3 !important;
+}
+
+.ant-picker-dropdown .ant-picker-time-panel-column > li.ant-picker-time-panel-cell .ant-picker-time-panel-cell-inner:hover {
+    background: rgba(72, 224, 192, 0.16) !important;
+    color: #edf8fb !important;
+}
+
+.ant-picker-dropdown .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+    background: #48e0c0 !important;
+    color: #03101c !important;
+}
+
+.ant-picker-dropdown .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-disabled .ant-picker-time-panel-cell-inner {
+    background: transparent !important;
+    color: #7896a6 !important;
+    opacity: 1 !important;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

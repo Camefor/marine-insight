@@ -288,11 +288,49 @@
     z-index: 1;
 }
 
+.datetime-control ::deep .forecast-date-picker.ant-picker {
+    background: rgba(3, 14, 25, 0.88);
+    border: 0;
+    border-radius: 10px 0 0 10px;
+    min-height: 46px;
+    padding: 10px 12px 10px 13px;
+    width: 100%;
+}
+
+.datetime-control ::deep .forecast-date-picker.ant-picker-focused {
+    box-shadow: none;
+}
+
+.datetime-control ::deep .forecast-date-picker .ant-picker-input > input {
+    background: transparent;
+    border: 0;
+    color: var(--dash-text);
+    cursor: pointer;
+    font-family: "DM Mono", Consolas, monospace;
+    font-size: 0.86rem;
+    font-variant-numeric: tabular-nums;
+    min-height: 0;
+    padding: 0;
+}
+
+.datetime-control ::deep .forecast-date-picker .ant-picker-suffix {
+    color: var(--dash-accent);
+    font-size: 18px;
+    margin-left: 6px;
+}
+
 .forecast-time-picker-shell {
     display: block;
     min-width: 0;
     position: relative;
     z-index: 2;
+}
+
+.forecast-date-picker-shell {
+    display: block;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .range-controls > .primary-button {
@@ -313,21 +351,6 @@
 .datetime-control:focus-within {
     border-color: var(--dash-accent);
     box-shadow: 0 0 0 3px rgba(72, 224, 192, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.datetime-control input::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    height: auto;
-    margin: 0;
-    opacity: 1;
-    padding: 0;
-    position: static;
-    width: auto;
-}
-
-.datetime-control input::-webkit-datetime-edit,
-.datetime-control input::-webkit-datetime-edit-fields-wrapper {
-    padding: 0;
 }
 
 .datetime-display {
@@ -1311,11 +1334,13 @@ td {
     }
 
     .datetime-control input,
+    .datetime-control ::deep .forecast-date-picker .ant-picker-input > input,
     .datetime-control ::deep .forecast-time-picker .ant-picker-input > input {
         font-size: 16px;
     }
 
     .datetime-control input,
+    .datetime-control ::deep .forecast-date-picker.ant-picker,
     .datetime-control ::deep .forecast-time-picker.ant-picker {
         min-height: 50px;
     }

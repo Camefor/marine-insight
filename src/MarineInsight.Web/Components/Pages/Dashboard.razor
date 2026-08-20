@@ -158,12 +158,18 @@
                         <small>@Session.DisplayTimeZoneLabel</small>
                     </span>
                     <span class="datetime-control datetime-parts" lang="zh-CN">
-                        <input type="date"
-                               aria-label="起报日期"
-                               aria-describedby="forecast-time-hint"
-                               lang="zh-CN"
-                               value="@Session.ForecastStartLocal.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
-                               @onchange="OnForecastDateChanged" />
+                        <span class="forecast-date-picker-shell" lang="zh-CN" role="group" aria-label="起报日期" aria-describedby="forecast-time-hint">
+                            <DatePicker TValue="DateTime?"
+                                        ClassName="forecast-date-picker"
+                                        DropdownClassName="forecast-date-dropdown"
+                                        Value="@Session.ForecastStartLocal"
+                                        OnChange="OnForecastDateChanged"
+                                        Format="yyyy-MM-dd"
+                                        CultureInfo="@ChineseCulture"
+                                        InputReadOnly="true"
+                                        AllowClear="false"
+                                        lang="zh-CN" />
+                        </span>
                         <span class="forecast-time-picker-shell" role="group" aria-label="起报小时" aria-describedby="forecast-time-hint">
                             <TimePicker TValue="TimeOnly?"
                                         ClassName="forecast-time-picker"
@@ -714,10 +720,9 @@
         await UpdateMapSelectionAsync();
     }
 
-    private Task OnForecastDateChanged(ChangeEventArgs e)
+    private Task OnForecastDateChanged(DateTimeChangedEventArgs<DateTime?> e)
     {
-        if (e.Value is string text &&
-            DateTime.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+        if (e.Date is { } parsed)
         {
             Session.ForecastStartLocal = new DateTime(
                 parsed.Year,

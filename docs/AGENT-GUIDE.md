@@ -130,12 +130,12 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 当前任务 ID | `MI-0054` |
-| 当前状态 | `DONE` |
-| 当前目标 | 修复起报时间控件弹层文字被 Ant Design 默认透明度遮挡、日期输入点击与桌面端范围/查询按钮垂直未对齐问题 |
-| 最后完成动作 | 将桌面端范围按钮与查询按钮对齐；覆盖 TimePicker 弹层 `opacity: .3` 和禁用单元格颜色；补充日期变更 E2E 断言 |
-| 下一步动作 | 无；`21c8c65` 已推送并发布生产 |
-| 涉及文件 | `Dashboard.razor.css`、`wwwroot/app.css`、`tests/e2e/dashboard.spec.js` |
-| 验证结果 | Release 构建 0 警告/0 错误；全量测试 231/231；本地与生产 Playwright 桌面/360px 均 2/2；公网 live/ready/home/login/AntDesign CSS 200；Web healthy；备份 `marine-insight-mi0054-followup.dump` 非空；Docker 清理回收约 96.58 MB |
+| 当前状态 | `IN_PROGRESS` |
+| 当前目标 | 日期和时间均使用 Ant Design 选择器，深色弹层未选择项清晰可读，并避免首次搜索地点自动触发地图瓦片错误 |
+| 最后完成动作 | 原生日期输入替换为 Ant `DatePicker<DateTime?>`；补齐日期/时间弹层不透明深色背景与未选项浅色文字；搜索命中预置地点时不再自动初始化地图 |
+| 下一步动作 | 提交、推送并按生产 overlay 流程部署，完成线上回归 |
+| 涉及文件 | `Dashboard.razor`、`Dashboard.razor.css`、`wwwroot/app.css`、`DashboardQuerySession.cs`、`tests/e2e/dashboard.spec.js` |
+| 验证结果 | Release 构建 0 警告/0 错误；全量测试 231/231；本地桌面/360px Playwright 均 2/2，新增日期点击和首次地点搜索回归通过 |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-08-20 |
 
@@ -148,7 +148,7 @@
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
 | [x] | `MI-0053` | P0 | `DONE` | 使用 Ant Design Blazor TimePicker 优化起报时间选择框 | 保留日期输入，以官方 TimePicker 替换小时下拉；支持中文 24 小时整点选择、暗色主题、键盘和移动端；值回传 `ForecastStartLocal` 且分钟秒归零，UTC 整点保护不变；Release 构建、全量测试和双视口浏览器回归通过 |
-| [x] | `MI-0054` | P0 | `DONE` | 修复 Ant Design TimePicker 引入的 Dashboard 显示与点击回归 | 标题与区块标题保持深色主题可读；日期输入可选；时间弹层文字清晰；范围按钮与查询按钮和日期控件水平对齐；Release 构建、全量测试和双视口浏览器回归通过 |
+| [ ] | `MI-0054` | P0 | `IN_PROGRESS` | 修复 Ant Design TimePicker 引入的 Dashboard 显示与点击回归 | 日期和时间均使用 Ant 组件；未选时间清晰；日期每个区域可点击；首次地点搜索不误触发地图瓦片错误；Release 构建、全量测试和双视口浏览器回归通过 |
 | [ ] | `MI-0027` | P0 | `BLOCKED` | 连续完成阶段 3 剩余产品闭环与阶段 4 可部署基线 | 注册用户可收藏/再次查询并查看历史与单位设置；移动端、键盘和管理员运维入口可用；WorldTides 可配置且凭据安全维护；Docker、代理、迁移、备份恢复、安全与 E2E 验证具备可执行交付物 |
 用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
@@ -245,6 +245,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-20 | `MI-0054` | 将日期原生输入替换为 Ant `DatePicker<DateTime?>`，统一日期/时间弹层深色背景、未选择项浅色文字和选中态；首次地点搜索命中预置地点时不再自动打开地图，避免无地图 Key 或首个瓦片失败阻断搜索 | Release 构建 0 警告/0 错误；全量 .NET 测试 231/231；本地桌面/360px Playwright 2/2，日期点击、未选时间可读和首次查找地点回归通过 | 提交并推送，按生产手册备份、重建完整 overlay、执行公网回归 |
 | 2026-08-20 | `MI-0054` | 根据用户复测反馈继续修复 TimePicker：桌面端范围按钮和查询按钮与日期控件统一顶边；覆盖 Ant Design 时间面板默认 `opacity: .3`、列背景和禁用项颜色，避免深色主题下文字被遮挡；E2E 增加日期输入实际变更断言；提交 `21c8c65` 并完成生产发布 | Release 构建 0 警告/0 错误；全量 .NET 测试 231/231；本地与生产桌面/360px Playwright 均 2/2；公网 live/ready/home/login/AntDesign CSS 200；生产备份 `marine-insight-mi0054-followup.dump`（66,272 字节）非空，Web healthy；Docker 清理回收约 96.58 MB | 发布完成；时间弹层、日期输入及查询控件对齐问题已闭环 |
 | 2026-08-20 | `MI-0054` | 修复 Ant Design TimePicker 回归：显式恢复 Dashboard 标题/区块标题颜色；将日期输入和时间弹层分离为独立层级，避免日历热区覆盖时间控件；E2E 等待冷启动 InteractiveServer 电路完成后再验证弹层；推送 `135314e` 并完成生产备份、完整 overlay 重建、健康检查和 Docker 清理 | Release 构建 0 警告/0 错误；全量测试 231/231；`git diff --check`、BOM/CRLF 通过；本地与生产桌面/360px Playwright 4/4；生产备份 `marine-insight-mi0054.dump` 非空（66,272 字节），live/ready/home/login/AntDesign CSS 200，Web healthy；Docker 清理回收约 96.6 MB | 发布完成；生产页面已恢复可读与可操作 |
 | 2026-08-20 | `MI-0053` | 使用 Ant Design Blazor `TimePicker` 替换起报小时原生下拉；保留日期输入、本地显示时区和 UTC 整点保护；接入 AntDesign 资源与暗色样式，补充 SSR/Web/E2E 与设计文档；按生产记忆完成备份、源码包同步、完整 overlay 重建和 Docker 清理 | Release 构建 0 警告/0 错误；全量测试 231/231；`dotnet format --verify-no-changes --no-restore`、`git diff --check`、BOM/CRLF 通过；本地 Playwright 2/2；生产 HTTPS live/ready/home/login/about/AntDesign CSS 200，桌面/360px TimePicker 24 个小时单列、`HH:00`、无横向溢出；备份非空、Web healthy、关键错误日志 0；构建缓存清理约 77 MB | GitHub push 因网络不可达待恢复后同步 `baf2d41` |
