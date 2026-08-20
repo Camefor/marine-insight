@@ -130,13 +130,13 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 当前任务 ID | `MI-0057` |
-| 当前状态 | `IN_PROGRESS` |
+| 当前状态 | `DONE` |
 | 当前目标 | 提交并推送潮汐图表与查询 Loading 优化，按生产手册完成腾讯云备份、部署、冒烟验证和清理 |
-| 最后完成动作 | 发布前 Release 构建、全量测试、双视口 E2E、格式、NuGet/npm 漏洞审计和服务器只读预检均通过；确认生产现有容器健康、备份目录可用 |
-| 下一步动作 | 提交并推送 `MI-0055`/`MI-0056` 改动，随后同步源码、生成非空数据库备份并使用完整生产 overlay 重建 |
+| 最后完成动作 | 提交 `0b79737` 已推送并发布生产；源码包双端 SHA-256 一致，备份非空，完整 overlay 重建后 migrate 退出 0、Web healthy，公网健康/资源/API/双视口回归和 Docker 清理通过；冒烟脚本旧标题断言已同步修正 |
+| 下一步动作 | 无；如需线上真实潮汐数据，提供生产 WorldTides Key 后叠加 `compose.worldtides.yaml` 并执行一次受控 Credit 验收 |
 | 涉及文件 | `MI-0055`/`MI-0056` 全部改动、`docs/AGENT-GUIDE.md` 与生产发布记录 |
-| 验证结果 | Release 构建 0 警告/0 错误；全量 .NET 232/232；Playwright 桌面/360px 4/4；format、NuGet/npm 漏洞审计通过 |
-| 阻塞/待确认 | 生产未配置 WorldTides Secret，本次按现有配置发布且潮汐区走明确降级，不消耗 Credit；真实潮汐数据启用需另行提供生产 Key |
+| 验证结果 | Release 构建 0 警告/0 错误；全量 .NET 232/232；本地与生产 Playwright 桌面/360px 各 4/4；live/ready/核心页面/ECharts 资源 200；分析 API 返回 analyzed；关键日志 0 |
+| 阻塞/待确认 | 部署本身无阻塞；生产未配置 WorldTides Secret，当前潮汐状态为 disabled，真实数据启用需生产 Key |
 | 最后更新 | 2026-08-20 |
 
 <!-- agent-state:end -->
@@ -147,7 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0057` | P0 | `IN_PROGRESS` | 推送并发布潮汐图表与查询 Loading 优化 | 仅提交 `MI-0055`/`MI-0056` 相关代码和文档；推送 `origin/main`；生产升级前完成非空 PostgreSQL 备份，使用 production/AI/tianditu 完整 overlay 重建；live/ready、核心页面、潮汐静态资源、双视口布局、关键日志和 Docker 清理通过 |
+| [x] | `MI-0057` | P0 | `DONE` | 推送并发布潮汐图表与查询 Loading 优化 | 仅提交 `MI-0055`/`MI-0056` 相关代码和文档；推送 `origin/main`；生产升级前完成非空 PostgreSQL 备份，使用 production/AI/tianditu 完整 overlay 重建；live/ready、核心页面、潮汐静态资源、双视口布局、关键日志和 Docker 清理通过 |
 | [x] | `MI-0056` | P1 | `DONE` | 优化 Dashboard 查询海况 Loading 的 PC 展示 | 查询期间使用查询卡片内的局部状态反馈，不覆盖 Header、查询条件和已有结果；深海主题一致，桌面与移动端无重叠、横向溢出或布局跳变；查询按钮继续防重复提交；Release 构建、自动化测试和双视口浏览器回归通过 |
 | [x] | `MI-0055` | P1 | `DONE` | 接入潮汐数据并使用 ECharts 绘制海钓参考图 | Dashboard 在完成海况查询后展示潮位曲线、涨退潮语义、关键高低潮与数据来源；风格贴合当前深海主题，桌面和移动端不遮挡、不溢出、不影响既有布局；Provider 缺失或失败时独立降级；Release 构建、自动化测试和双视口浏览器回归通过 |
 | [x] | `MI-0053` | P0 | `DONE` | 使用 Ant Design Blazor TimePicker 优化起报时间选择框 | 保留日期输入，以官方 TimePicker 替换小时下拉；支持中文 24 小时整点选择、暗色主题、键盘和移动端；值回传 `ForecastStartLocal` 且分钟秒归零，UTC 整点保护不变；Release 构建、全量测试和双视口浏览器回归通过 |
@@ -188,6 +188,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0057` | 2026-08-20 | 推送并发布潮汐图表与查询 Loading 优化 | `0b79737` 已推送 `origin/main`；824,126 字节源码包双端 SHA-256 一致；升级前备份 `marine-insight-mi0057-20260820-092017.dump` 非空（68,926 字节）；production/AI/tianditu 完整 overlay 重建后 migrate exit 0、Web healthy；公网健康、核心页面、ECharts/tide-chart 资源、分析 API 与桌面/360px Playwright 4/4 通过，关键日志 0；清理约 96.65 MB 构建缓存和退出容器；冒烟脚本与手册的首页断言同步为当前标题 |
 | [x] | `MI-0056` | 2026-08-20 | 优化 Dashboard 查询海况 Loading 的 PC 展示 | 保留 `DashboardQuerySession` 查询状态与按钮防重复提交，只将忙状态从全屏固定遮罩改为查询卡片内的正常流式状态卡；桌面显示 spinner、主副文案和状态徽标，移动端隐藏辅助徽标；Web 62/62、全量 .NET 232/232、Playwright 双视口 4/4、格式与文件规范检查通过 |
 | [x] | `MI-0055` | 2026-08-20 | 接入潮汐数据并使用 ECharts 绘制海钓参考图 | 复用 WorldTides 与独立降级链路，Dashboard 增加潮位/涨退潮/高低潮摘要和按需加载 ECharts 6 曲线；深海主题、容器内 Tooltip、长范围缩放、ResizeObserver、双视口无溢出及脚本失败文本兜底完成；潮汐明确不计入综合评分；Release 构建 0 警告/0 错误、232/232 .NET、Playwright 4/4、格式/审计/BOM/CRLF 通过 |
 | [x] | `MI-0053` | 2026-08-20 | 使用 Ant Design Blazor TimePicker 优化起报时间选择框并发布 | `baf2d41` 已本地提交；GitHub push 因网络无法连接暂未同步；生产升级前备份 `marine-insight-mi0053.dump` 非空，源码包 818,907 字节已同步，完整 AI/tianditu overlay 重建后 migrate 成功、Web healthy；HTTPS 页面/AntDesign 资源 200，真实生产桌面/360px TimePicker 24 个整点小时单列、`HH:00`、无横向溢出；Docker 清理完成 |
@@ -250,6 +251,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-20 | `MI-0057` | 将 `MI-0055` 潮汐 ECharts 与 `MI-0056` 局部 Loading 改动提交为 `0b79737` 并推送；按生产记忆同步校验源码包，完成 PostgreSQL 升级前备份与 production/AI/tianditu 完整 overlay 重建；执行健康、核心页面、静态资源、分析 API、双视口布局、日志和 Docker 清理；同步修复冒烟脚本与手册中的旧首页标题断言 | Release 构建 0 警告/0 错误、全量 .NET 232/232、本地 Playwright 4/4、format、NuGet/npm 漏洞审计通过；生产备份 68,926 字节非空，migrate exit 0、Web healthy，live/ready/about/login、tide-chart/ECharts 资源 200，静态资源哈希一致，分析 API为 analyzed，线上 Playwright 4/4，关键日志 0，清理约 96.65 MB；修正后的 `smoke-test.ps1` 公网复验通过 | 发布完成；生产 WorldTides Secret 尚未配置，当前潮汐状态为 disabled；提供生产 Key 后再启用真实潮汐并执行一次受控 Credit 验收 |
 | 2026-08-20 | `MI-0056` | 将 Dashboard 查询海况 Loading 从 `position: fixed; inset: 0` 的全屏遮罩改为查询卡片内的深海主题局部状态卡；查询条件、Header 和已有结果保持可见，移动端通过断点隐藏辅助徽标；同步 UI/Blazor/测试/RoadMap 文档 | Web 62/62；全量 .NET 232/232；Playwright 桌面/360px 4/4，验证非固定定位、查询区边界、不覆盖 Header/结果区和无横向溢出；format、JS 语法、diff、BOM/CRLF 通过 | 完成，无后续动作 |
 | 2026-08-20 | `MI-0055` | 复用现有 WorldTides Provider、长 TTL 缓存与可选降级链，在 `DashboardQuerySession` 投影潮位、涨退潮、高低潮和来源缓存状态；Dashboard 于推荐窗口后增加独立潮汐参考卡，通过固定版本 NuGet 静态资产按需加载 ECharts 6，提供深海主题、容器内 Tooltip、168h 缩放、ResizeObserver、Dispose 和文本兜底；潮汐明确不参与综合评分；同步 UI/Blazor/测试/RoadMap 文档 | Release 构建 0 警告/0 错误；全量 .NET 232/232（Web 62/62）；Playwright 桌面/360px 4/4，真实 Canvas、容器边界和无横向溢出通过；`dotnet format --verify-no-changes`、NuGet 全项目无漏洞、npm audit 0 漏洞、`git diff --check` 和 13 个改动文本 BOM/CRLF 检查通过 | 自动化未请求真实 WorldTides，避免消耗 Credit；如需联调，在明确接受一次 Credit 消耗后执行受控查询 |
 | 2026-08-20 | `MI-0054` | 将日期原生输入替换为 Ant `DatePicker<DateTime?>`，统一日期/时间弹层深色背景、未选择项浅色文字和选中态；首次地点搜索命中预置地点时不再自动打开地图，避免无地图 Key 或首个瓦片失败阻断搜索；提交 `e4eb881` 并直接完成生产发布 | Release 构建 0 警告/0 错误；全量 .NET 测试 231/231；本地与生产桌面/360px Playwright 均 2/2；公网 live/ready/home/login/AntDesign CSS 200；备份 `marine-insight-mi0054-date-picker.dump`（66,272 字节）非空，Web healthy；Docker 清理回收约 96.6 MB | 发布完成；GitHub push 因网络重置待恢复后同步 |

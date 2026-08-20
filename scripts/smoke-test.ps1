@@ -16,7 +16,7 @@ $login = Invoke-WebRequest -Uri ([Uri]::new($baseUri, "/account/login")) -UseBas
 if ($live.StatusCode -ne 200 -or $ready.StatusCode -ne 200) {
     throw "Health checks did not return HTTP 200."
 }
-if ($dashboard.Content -notmatch "海况 Dashboard" -or $login.Content -notmatch "登录") {
+if ($dashboard.Content -notmatch "海岛海况智能决策平台" -or $login.Content -notmatch "登录") {
     throw "Dashboard or login smoke content is missing."
 }
 if ($dashboard.Headers["X-Content-Type-Options"] -ne "nosniff") {
