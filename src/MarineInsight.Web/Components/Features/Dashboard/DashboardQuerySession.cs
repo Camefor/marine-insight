@@ -70,8 +70,8 @@ public sealed class DashboardQuerySession : IDisposable
         {
             var requiredMinute = GetUtcBoundaryMinute();
             return requiredMinute == 0
-                ? "请选择整点（分钟 00），以匹配 UTC 预报数据。"
-                : $"当前时区请选 {requiredMinute:00} 分，才能对应 UTC 整点。";
+                ? "分钟固定为 00，以匹配 UTC 整点预报。"
+                : "当前时区包含非整小时 UTC 偏移，请切换整小时偏移时区后查询。";
         }
     }
 

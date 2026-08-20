@@ -17,33 +17,36 @@ test('dashboard and account shell remain usable without layout overflow', async 
   await expect(page.getByLabel('纬度')).toBeHidden();
   await expect(page.getByLabel('经度')).toBeHidden();
 
-  const forecastStart = page.getByLabel('起报时间', { exact: true });
+  const forecastDate = page.getByLabel('起报日期', { exact: true });
+  const forecastHour = page.getByLabel('起报小时', { exact: true });
   const datetimeAction = page.locator('.datetime-action');
   const datetimeHint = page.locator('#forecast-time-hint');
-  await expect(forecastStart).toBeVisible();
+  await expect(forecastDate).toBeVisible();
+  await expect(forecastHour).toBeVisible();
   await expect(datetimeAction).toBeVisible();
   await expect(datetimeHint).toBeVisible();
   const datetimeLayout = await page.evaluate(() => {
-    const input = document.querySelector('.datetime-control input');
+    const input = document.querySelector('.datetime-control input[type="date"]');
+    const hour = document.querySelector('.datetime-control select');
     const action = document.querySelector('.datetime-action');
-    const display = document.querySelector('.datetime-display');
-    if (!input || !action) throw new Error('Date time control is missing.');
+    if (!input || !hour || !action) throw new Error('Date time control is missing.');
 
     const inputBox = input.getBoundingClientRect();
+    const controlBox = input.closest('.datetime-control').getBoundingClientRect();
     const actionBox = action.getBoundingClientRect();
     const actionStyle = getComputedStyle(action);
     return {
       inputWidth: inputBox.width,
+      controlWidth: controlBox.width,
       inputHeight: inputBox.height,
       actionWidth: actionBox.width,
       actionHeight: actionBox.height,
-      actionInsideInput: actionBox.right <= inputBox.right && actionBox.left >= inputBox.left,
+      actionInsideInput: actionBox.right <= controlBox.right && actionBox.left >= controlBox.left,
       actionColor: actionStyle.color,
       actionBorder: actionStyle.borderColor,
-      displayText: display?.textContent?.trim() || '',
-      displayVisible: !!display && getComputedStyle(display).display !== 'none',
       language: input.getAttribute('lang'),
-      step: input.getAttribute('step'),
+      hourOptions: hour.querySelectorAll('option').length,
+      selectedHour: hour.options[hour.selectedIndex]?.textContent?.trim() || '',
       hint: document.querySelector('#forecast-time-hint')?.textContent?.trim() || ''
     };
   });
@@ -55,12 +58,11 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(datetimeLayout.actionColor).not.toBe('rgba(0, 0, 0, 0)');
   expect(datetimeLayout.actionBorder).not.toBe('rgba(0, 0, 0, 0)');
   expect(datetimeLayout.language).toBe('zh-CN');
-  expect(datetimeLayout.step).toBe('3600');
-  expect(datetimeLayout.hint).toContain('UTC');
+  expect(datetimeLayout.hourOptions).toBe(24);
+  expect(datetimeLayout.selectedHour).toMatch(/^\d{2}:00$/);
+  expect(datetimeLayout.hint).toContain('分钟固定为 00');
   if (layoutViewportWidth(page) <= 680) {
-    expect(datetimeLayout.inputWidth).toBeGreaterThanOrEqual(300);
-    expect(datetimeLayout.displayVisible).toBeTruthy();
-    expect(datetimeLayout.displayText).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+    expect(datetimeLayout.controlWidth).toBeGreaterThanOrEqual(300);
   }
 
   const queryBand = page.locator('section[aria-labelledby="query-title"]');

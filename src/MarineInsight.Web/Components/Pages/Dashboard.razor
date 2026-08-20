@@ -157,15 +157,22 @@
                         <span>起报时间</span>
                         <small>@Session.DisplayTimeZoneLabel</small>
                     </span>
-                    <span class="datetime-control" lang="zh-CN">
-                        <span class="datetime-display" aria-hidden="true">@Session.ForecastStartLocal.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)</span>
-                        <input type="datetime-local"
-                               aria-label="起报时间"
+                    <span class="datetime-control datetime-parts" lang="zh-CN">
+                        <input type="date"
+                               aria-label="起报日期"
                                aria-describedby="forecast-time-hint"
                                lang="zh-CN"
-                               step="3600"
-                               value="@Session.ForecastStartLocal.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)"
-                               @onchange="OnForecastStartChanged" />
+                               value="@Session.ForecastStartLocal.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                               @onchange="OnForecastDateChanged" />
+                        <select aria-label="起报小时"
+                                aria-describedby="forecast-time-hint"
+                                value="@Session.ForecastStartLocal.Hour"
+                                @onchange="OnForecastHourChanged">
+                            @for (var hour = 0; hour < 24; hour++)
+                            {
+                                <option value="@hour">@hour.ToString("00", CultureInfo.InvariantCulture):00</option>
+                            }
+                        </select>
                         <span class="datetime-action" aria-hidden="true">
                             <svg viewBox="0 0 24 24" focusable="false">
                                 <path d="M7 3v3M17 3v3M4.5 9h15M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
@@ -711,12 +718,39 @@
         await UpdateMapSelectionAsync();
     }
 
-    private Task OnForecastStartChanged(ChangeEventArgs e)
+    private Task OnForecastDateChanged(ChangeEventArgs e)
     {
         if (e.Value is string text &&
-            DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            DateTime.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
         {
-            Session.ForecastStartLocal = parsed;
+            Session.ForecastStartLocal = new DateTime(
+                parsed.Year,
+                parsed.Month,
+                parsed.Day,
+                Session.ForecastStartLocal.Hour,
+                0,
+                0,
+                DateTimeKind.Unspecified);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnForecastHourChanged(ChangeEventArgs e)
+    {
+        if (e.Value is string text &&
+            int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var hour) &&
+            hour is >= 0 and <= 23)
+        {
+            var current = Session.ForecastStartLocal;
+            Session.ForecastStartLocal = new DateTime(
+                current.Year,
+                current.Month,
+                current.Day,
+                hour,
+                0,
+                0,
+                DateTimeKind.Unspecified);
         }
 
         return Task.CompletedTask;

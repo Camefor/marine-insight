@@ -172,6 +172,8 @@ public sealed partial class RiskSummary
 
 `MI-0049` 在 `DashboardQuerySession.CreateAnalysisQueryAsync` 创建 `ForecastRange` 前，将本地起报时间转换为 UTC 并校验分钟/秒/毫秒均为零；不满足时设置可操作的中文 `AnalysisError` 并终止请求。`ForecastStartHint` 与 `step=3600` 让控件提前表达当前时区的有效分钟，保留原生日期时间输入和缓存 UTC 整点不变量。
 
+`MI-0050` 不再依赖各平台对 `datetime-local step=3600` 的实现差异：`Dashboard.razor` 使用 `input[type=date]` 与 24 个整点 `select` 选项，`OnForecastDateChanged`/`OnForecastHourChanged` 合并当前日期或小时并显式把分钟、秒设为零。`DashboardQuerySession` 和 UTC 缓存边界不变量保持不变。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |
