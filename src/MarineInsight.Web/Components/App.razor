@@ -24,6 +24,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="@Assets["images/brand/apple-touch-icon.png"]" />
     <link rel="manifest" href="@Assets["site.webmanifest"]" />
     <ResourcePreloader />
+    <link rel="stylesheet" href="_content/AntDesign/css/ant-design-blazor.css" />
     <link rel="stylesheet" href="@Assets["lib/leaflet/leaflet.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["MarineInsight.Web.styles.css"]" />
@@ -33,8 +34,10 @@
 
 <body>
     <Routes />
+    <AntContainer />
     <ReconnectModal />
     <script src="@Assets["lib/leaflet/leaflet.js"]"></script>
+    <script src="_content/AntDesign/js/ant-design-blazor.js"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 

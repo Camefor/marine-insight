@@ -268,7 +268,7 @@
 
 .datetime-parts {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 96px;
+    grid-template-columns: minmax(0, 1fr) 112px;
 }
 
 .datetime-parts input {
@@ -276,23 +276,9 @@
     padding-right: 12px;
 }
 
-.datetime-parts select {
-    appearance: none;
-    background: rgba(3, 14, 25, 0.88);
-    border: 0;
-    border-left: 1px solid rgba(111, 145, 164, 0.3);
-    border-radius: 0 10px 10px 0;
-    color: var(--dash-text);
-    font-family: "DM Mono", Consolas, monospace;
-    font-size: 0.86rem;
-    font-variant-numeric: tabular-nums;
-    min-height: 46px;
-    padding: 10px 52px 10px 12px;
-    width: 100%;
-}
-
-.datetime-parts select:focus {
-    outline: none;
+.forecast-time-picker-shell {
+    display: block;
+    min-width: 0;
 }
 
 .datetime-control input:focus {
@@ -325,39 +311,36 @@
     display: none;
 }
 
-.datetime-control:focus-within .datetime-action {
-    background: var(--dash-accent);
-    border-color: var(--dash-accent);
-    color: var(--dash-bg);
-    box-shadow: 0 0 0 3px rgba(72, 224, 192, 0.12);
+.datetime-control ::deep .forecast-time-picker.ant-picker {
+    background: rgba(3, 14, 25, 0.88);
+    border: 0;
+    border-left: 1px solid rgba(111, 145, 164, 0.3);
+    border-radius: 0 10px 10px 0;
+    min-height: 46px;
+    padding: 10px 10px 10px 12px;
+    width: 100%;
 }
 
-.datetime-action {
-    align-items: center;
-    background: rgba(72, 224, 192, 0.11);
-    border: 1px solid rgba(72, 224, 192, 0.3);
-    border-radius: 7px;
+.datetime-control ::deep .forecast-time-picker.ant-picker-focused {
+    box-shadow: none;
+}
+
+.datetime-control ::deep .forecast-time-picker .ant-picker-input > input {
+    background: transparent;
+    border: 0;
+    color: var(--dash-text);
+    cursor: pointer;
+    font-family: "DM Mono", Consolas, monospace;
+    font-size: 0.86rem;
+    font-variant-numeric: tabular-nums;
+    min-height: 0;
+    padding: 0;
+}
+
+.datetime-control ::deep .forecast-time-picker .ant-picker-suffix {
     color: var(--dash-accent);
-    display: flex;
-    height: 36px;
-    justify-content: center;
-    pointer-events: none;
-    position: absolute;
-    right: 5px;
-    top: 50%;
-    transform: translateY(-50%);
-    transition: background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
-    width: 42px;
-}
-
-.datetime-action svg {
-    fill: none;
-    height: 20px;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.7;
-    width: 20px;
+    font-size: 18px;
+    margin-left: 6px;
 }
 
 .primary-button,
@@ -1305,8 +1288,12 @@ td {
     }
 
     .datetime-control input,
-    .datetime-parts select {
+    .datetime-control ::deep .forecast-time-picker .ant-picker-input > input {
         font-size: 16px;
+    }
+
+    .datetime-control input,
+    .datetime-control ::deep .forecast-time-picker.ant-picker {
         min-height: 50px;
     }
 
@@ -1316,12 +1303,7 @@ td {
     }
 
     .datetime-parts {
-        grid-template-columns: minmax(0, 1fr) 104px;
-    }
-
-    .datetime-action {
-        height: 40px;
-        width: 46px;
+        grid-template-columns: minmax(0, 1fr) 120px;
     }
 
     .trend-point {

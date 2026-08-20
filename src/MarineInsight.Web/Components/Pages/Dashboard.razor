@@ -164,17 +164,16 @@
                                lang="zh-CN"
                                value="@Session.ForecastStartLocal.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)"
                                @onchange="OnForecastDateChanged" />
-                        <select aria-label="起报小时"
-                                aria-describedby="forecast-time-hint"
-                                value="@Session.ForecastStartLocal.Hour"
-                                @onchange="OnForecastHourChanged">
-                            @for (var hour = 0; hour < 24; hour++)
-                            {
-                                <option value="@hour">@hour.ToString("00", CultureInfo.InvariantCulture):00</option>
-                            }
-                        </select>
-                        <span class="datetime-action" aria-hidden="true">
-                            <UiIcon Name="CalendarClock" />
+                        <span class="forecast-time-picker-shell" role="group" aria-label="起报小时" aria-describedby="forecast-time-hint">
+                            <TimePicker TValue="TimeOnly?"
+                                        ClassName="forecast-time-picker"
+                                        DropdownClassName="forecast-time-dropdown"
+                                        Value="@TimeOnly.FromDateTime(Session.ForecastStartLocal)"
+                                        OnChange="OnForecastTimeChanged"
+                                        Format="HH:00"
+                                        CultureInfo="@ChineseCulture"
+                                        InputReadOnly="true"
+                                        AllowClear="false" />
                         </span>
                     </span>
                     <small id="forecast-time-hint" class="datetime-hint">@Session.ForecastStartHint</small>
@@ -733,24 +732,20 @@
         return Task.CompletedTask;
     }
 
-    private Task OnForecastHourChanged(ChangeEventArgs e)
+    private void OnForecastTimeChanged(DateTimeChangedEventArgs<TimeOnly?> e)
     {
-        if (e.Value is string text &&
-            int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var hour) &&
-            hour is >= 0 and <= 23)
+        if (e.Date is { } time)
         {
             var current = Session.ForecastStartLocal;
             Session.ForecastStartLocal = new DateTime(
                 current.Year,
                 current.Month,
                 current.Day,
-                hour,
+                time.Hour,
                 0,
                 0,
                 DateTimeKind.Unspecified);
         }
-
-        return Task.CompletedTask;
     }
 
     private async Task SubmitAsync()
@@ -858,6 +853,8 @@
         DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed)
             ? parsed.ToUniversalTime()
             : null;
+
+    private static CultureInfo ChineseCulture { get; } = CultureInfo.GetCultureInfo("zh-CN");
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

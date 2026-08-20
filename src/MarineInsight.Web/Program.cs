@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using AntDesign;
 using MarineInsight.Application.Admin;
 using MarineInsight.Application.Analysis;
 using MarineInsight.Application.Forecast;
@@ -95,6 +96,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     }
 });
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAntDesign();
 builder.Services.AddRateLimiter(options =>
 {
     options.AddPolicy("account", context =>

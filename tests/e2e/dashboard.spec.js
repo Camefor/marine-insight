@@ -26,47 +26,47 @@ test('dashboard and account shell remain usable without layout overflow', async 
   }
 
   const forecastDate = page.getByLabel('起报日期', { exact: true });
-  const forecastHour = page.getByLabel('起报小时', { exact: true });
-  const datetimeAction = page.locator('.datetime-action');
+  const forecastHour = page.locator('.forecast-time-picker input');
   const datetimeHint = page.locator('#forecast-time-hint');
   await expect(forecastDate).toBeVisible();
   await expect(forecastHour).toBeVisible();
-  await expect(datetimeAction).toBeVisible();
   await expect(datetimeHint).toBeVisible();
+  await forecastHour.click();
+  const hourCells = page.locator('.ant-picker-dropdown .ant-picker-time-panel-cell:not(.ant-picker-time-panel-cell-disabled)');
+  await expect(hourCells).toHaveCount(24);
+  await expect(page.locator('.ant-picker-dropdown .ant-picker-time-panel-column')).toHaveCount(1);
+  await page.keyboard.press('Escape');
   const datetimeLayout = await page.evaluate(() => {
     const input = document.querySelector('.datetime-control input[type="date"]');
-    const hour = document.querySelector('.datetime-control select');
-    const action = document.querySelector('.datetime-action');
-    if (!input || !hour || !action) throw new Error('Date time control is missing.');
+    const hour = document.querySelector('.datetime-control .forecast-time-picker input');
+    const suffix = document.querySelector('.datetime-control .forecast-time-picker .ant-picker-suffix');
+    if (!input || !hour || !suffix) throw new Error('Date time control is missing.');
 
     const inputBox = input.getBoundingClientRect();
     const controlBox = input.closest('.datetime-control').getBoundingClientRect();
-    const actionBox = action.getBoundingClientRect();
-    const actionStyle = getComputedStyle(action);
+    const hourBox = hour.getBoundingClientRect();
+    const suffixBox = suffix.getBoundingClientRect();
+    const suffixStyle = getComputedStyle(suffix);
     return {
       inputWidth: inputBox.width,
       controlWidth: controlBox.width,
       inputHeight: inputBox.height,
-      actionWidth: actionBox.width,
-      actionHeight: actionBox.height,
-      actionInsideInput: actionBox.right <= controlBox.right && actionBox.left >= controlBox.left,
-      actionColor: actionStyle.color,
-      actionBorder: actionStyle.borderColor,
+      hourHeight: hourBox.height,
+      suffixWidth: suffixBox.width,
+      suffixInsideControl: suffixBox.right <= controlBox.right && suffixBox.left >= controlBox.left,
+      suffixColor: suffixStyle.color,
       language: input.getAttribute('lang'),
-      hourOptions: hour.querySelectorAll('option').length,
-      selectedHour: hour.options[hour.selectedIndex]?.textContent?.trim() || '',
+      selectedHour: hour.value,
       hint: document.querySelector('#forecast-time-hint')?.textContent?.trim() || ''
     };
   });
   expect(datetimeLayout.inputWidth).toBeGreaterThan(200);
   expect(datetimeLayout.inputHeight).toBeGreaterThanOrEqual(46);
-  expect(datetimeLayout.actionWidth).toBeGreaterThanOrEqual(42);
-  expect(datetimeLayout.actionHeight).toBeGreaterThanOrEqual(36);
-  expect(datetimeLayout.actionInsideInput).toBeTruthy();
-  expect(datetimeLayout.actionColor).not.toBe('rgba(0, 0, 0, 0)');
-  expect(datetimeLayout.actionBorder).not.toBe('rgba(0, 0, 0, 0)');
+  expect(datetimeLayout.hourHeight).toBeGreaterThanOrEqual(20);
+  expect(datetimeLayout.suffixWidth).toBeGreaterThanOrEqual(14);
+  expect(datetimeLayout.suffixInsideControl).toBeTruthy();
+  expect(datetimeLayout.suffixColor).not.toBe('rgba(0, 0, 0, 0)');
   expect(datetimeLayout.language).toBe('zh-CN');
-  expect(datetimeLayout.hourOptions).toBe(24);
   expect(datetimeLayout.selectedHour).toMatch(/^\d{2}:00$/);
   expect(datetimeLayout.hint).toContain('分钟固定为 00');
   if (layoutViewportWidth(page) <= 680) {

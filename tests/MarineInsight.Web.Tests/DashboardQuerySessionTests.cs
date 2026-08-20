@@ -29,6 +29,8 @@ public sealed class DashboardQuerySessionTests
         Assert.Contains("class=\"ui-icon\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">⌂<", html, StringComparison.Ordinal);
         Assert.Contains("地点搜索", html, StringComparison.Ordinal);
+        Assert.Contains("forecast-time-picker", html, StringComparison.Ordinal);
+        Assert.Contains("_content/AntDesign/css/ant-design-blazor.css", html, StringComparison.Ordinal);
         Assert.Contains("等待查询", html, StringComparison.Ordinal);
         Assert.Contains("Open-Meteo.com", html, StringComparison.Ordinal);
         // 需求1：地图默认收起，选点面板内容（含“地图选点/天地图/纬度/经度”）不预渲染。

@@ -2,6 +2,42 @@
     outline: none;
 }
 
+.ant-picker-dropdown .ant-picker-panel-container,
+.ant-picker-dropdown .ant-picker-time-panel,
+.ant-picker-dropdown .ant-picker-content {
+    background: #071b2d;
+}
+
+.ant-picker-dropdown .ant-picker-time-panel-column {
+    min-width: 112px;
+    width: 112px;
+}
+
+.ant-picker-dropdown .ant-picker-time-panel-cell-inner {
+    color: #dcecf3;
+    font-family: "DM Mono", Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+.ant-picker-dropdown .ant-picker-time-panel-cell:hover .ant-picker-time-panel-cell-inner {
+    background: rgba(72, 224, 192, 0.12);
+}
+
+.ant-picker-dropdown .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+    background: #48e0c0;
+    color: #03101c;
+}
+
+.ant-picker-dropdown .ant-picker-footer,
+.ant-picker-dropdown .ant-picker-ranges {
+    background: #071b2d;
+    border-color: rgba(111, 145, 164, 0.28);
+}
+
+.ant-picker-dropdown .ant-picker-now-btn {
+    color: #48e0c0;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

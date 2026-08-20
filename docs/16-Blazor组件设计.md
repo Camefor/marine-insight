@@ -174,6 +174,8 @@ public sealed partial class RiskSummary
 
 `MI-0050` 不再依赖各平台对 `datetime-local step=3600` 的实现差异：`Dashboard.razor` 使用 `input[type=date]` 与 24 个整点 `select` 选项，`OnForecastDateChanged`/`OnForecastHourChanged` 合并当前日期或小时并显式把分钟、秒设为零。`DashboardQuerySession` 和 UTC 缓存边界不变量保持不变。
 
+`MI-0053` 保留日期输入与 `ForecastStartLocal` 状态，将小时选择替换为 Ant Design Blazor `TimePicker<TValue="TimeOnly?">`。组件使用 `Format="HH:00"` 和 `InputReadOnly`，因此弹层只生成 24 个整点小时单列；`OnForecastTimeChanged` 只读取所选小时并重建 `DateTimeKind.Unspecified` 的本地时间，分钟和秒继续显式归零，不引入新的时间状态或 JS 互操作。
+
 `MI-0051` 新增无状态共享组件 `UiIcon.razor`，集中承载本项目使用的 Lucide 路径、`currentColor` 描边和统一 `24×24` 视口；布局、Dashboard 与工作区页面只传入图标名称和样式类，按钮继续由外层元素提供 `title`、`aria-label` 或可见文字。品牌 PNG 仍由 `App.razor`、`MainLayout.razor` 和 manifest 的既有引用消费，替换二进制资产即可同步 Header、SEO、PWA 与设备图标，不引入运行时图片处理。
 
 ## 13. 变更记录
