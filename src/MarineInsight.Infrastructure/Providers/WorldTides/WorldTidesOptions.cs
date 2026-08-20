@@ -23,10 +23,8 @@ public sealed class WorldTidesOptions
             throw new InvalidOperationException("WorldTides base URL must be an absolute HTTPS URL.");
         }
 
-        if (Enabled && string.IsNullOrWhiteSpace(ApiKey))
-        {
-            throw new InvalidOperationException("WorldTides API key is required when the provider is enabled.");
-        }
+        // ApiKey 由密钥池（数据库加密凭证）优先解析，配置仅作启动兜底，因此不在启动时强制必填；
+        // 缺少有效 Key 的失败延后到请求期（WorldTidesProvider.FetchWithFailoverAsync）。
 
         if (Timeout < TimeSpan.FromSeconds(1) || Timeout > TimeSpan.FromMinutes(2))
         {

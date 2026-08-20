@@ -354,6 +354,22 @@
 
 `GET /api/v1/admin/users` 返回只读用户摘要数组（`email`/`emailConfirmed`/`lockoutEnabled`/`lockoutEnd`/`accessFailedCount`），不暴露密码哈希。
 
+### 8.3 WorldTides 密钥池管理（`MI-0059`）
+
+端点统一挂 `/api/v1/admin/providers/worldtides/credentials`，要求 `Administrator` + 防伪头 + `admin` 限流。响应**永不返回明文或密文 Key**，仅返回末四位 `keyHint`。
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/credentials` | Key 列表（每项含 `id`/`keyHint`/`isActive`/`health`/`remainingCredits`/`creditWarning`/`lastCheckedAtUtc`/`lastFailureReason`/`createdAtUtc`/`updatedAtUtc`），按激活优先、创建时间排序 |
+| POST | `/credentials` | `{ "apiKey": "..." }` 添加新 Key；首个自动激活，返回新列表；成功 `200`，输入非法 `400 VALIDATION_FAILED`，重复添加视 KeyHint 冲突 `409` |
+| PUT | `/credentials/{id}/activate` | 设为激活（先清他者再置目标），返回 `200`；Key 不存在 `404` |
+| DELETE | `/credentials/{id}` | 删除 Key；激活 Key 且仍存在其他 Key 返回 `409 PROVIDER_CREDENTIAL_IN_USE`，最后一个激活 Key 允许删除（清空密钥池） |
+| POST | `/credentials/test` | `{ "apiKey": "..." }` 真实调用 WorldTides 验证，返回 `{ "success": bool, "message": string, "remainingCredits": int? }`；空白 Key 本地短路返回 `success=false, message="API key 不能为空。"` |
+
+- 写操作落 `audit_logs`（`provider.credential.added/activated/deleted`）。
+- Key 校验：非空、去首尾空格、长度 8–256、不含控制字符。
+- 现有配置兜底 Key（User Secrets / key-per-file）不在列表中展示，作为请求期最后候选。
+
 ## 9. 错误响应
 
 ```json
@@ -376,6 +392,7 @@
 | `FAVORITE_ALREADY_EXISTS` | 409 | 重复收藏 |
 | `LOCATION_CONFLICT` | 409 | 预置地点名称 + 经纬度重复 |
 | `LOCATION_IN_USE` | 409 | 预置地点已被预报批次引用，禁止删除 |
+| `PROVIDER_CREDENTIAL_IN_USE` | 409 | 激活的 Provider 密钥且仍存在其他密钥，禁止删除 |
 | `RATE_LIMITED` | 429 | 请求超过配额 |
 | `PROVIDER_UNAVAILABLE` | 503 | 外部数据源且缓存均不可用 |
 | `AI_EXPLANATION_UNAVAILABLE` | 200/降级标记 | AI 失败但规则结果仍可返回 |
@@ -429,3 +446,4 @@
 | 2.0 | 2026-08-17 | 收藏请求体支持地图坐标点（`MI-0038`）：`POST/PUT /api/v1/favorites` 的 `locationId` 改为可空，新增 `displayName`/`latitude`/`longitude` 字段；`locationId` 非空为预置地点收藏，为空为地图坐标点收藏（冗余名称/坐标，服务端校验纬度 `[-90,90]`、经度 `[-180,180]`、名称 ≤200，按 `(用户, 坐标)` 去重） |
 | 2.1 | 2026-08-18 | 增加 `MI-0039` 后台管理端点：`GET/POST/PUT/DELETE /api/v1/admin/locations[/{id}]` 与 `GET /api/v1/admin/users`（均要求 `Administrator` 角色 + `admin` 限流，写操作带防伪头），新增 `LOCATION_CONFLICT`/`LOCATION_IN_USE` 错误码，删除返回级联收藏引用数 |
 | 2.2 | 2026-08-19 | 增加 `MI-0040`：`GET /api/v1/locations/reverse-geocode?lat=&lon=` 逆地理编码端点（天地图服务端反查最近地名，返回 `{ name }`，失败返回 `null`，Best-effort 不阻塞主流程）；`POST /api/v1/marine-analyses` 请求体新增可选 `timeZone`（IANA），AI 解读与解释事实按该时区换算显示时间，缺省回退地点时区 |
+| 2.3 | 2026-08-20 | 增加 `MI-0059` WorldTides 密钥池管理端点：`GET/POST /api/v1/admin/providers/worldtides/credentials`、`PUT .../credentials/{id}/activate`、`DELETE .../credentials/{id}`、`POST .../credentials/test`（均要求 `Administrator` + 防伪 + `admin` 限流；响应不含明文/密文 Key），新增 `PROVIDER_CREDENTIAL_IN_USE` 错误码 |

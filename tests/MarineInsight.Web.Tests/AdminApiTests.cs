@@ -60,11 +60,14 @@ public sealed class AdminApiTests
         // Cookie 认证在授权失败时按 AccessDeniedPath 重定向（Program.cs），而非直接返回 403。
         using var locationsResponse = await client.GetAsync("/api/v1/admin/locations");
         using var usersResponse = await client.GetAsync("/api/v1/admin/users");
+        using var credentialsResponse = await client.GetAsync("/api/v1/admin/providers/worldtides/credentials");
 
         Assert.Equal(HttpStatusCode.Redirect, locationsResponse.StatusCode);
         Assert.Equal("/account/access-denied", new Uri(locationsResponse.Headers.Location!.OriginalString).AbsolutePath);
         Assert.Equal(HttpStatusCode.Redirect, usersResponse.StatusCode);
         Assert.Equal("/account/access-denied", new Uri(usersResponse.Headers.Location!.OriginalString).AbsolutePath);
+        Assert.Equal(HttpStatusCode.Redirect, credentialsResponse.StatusCode);
+        Assert.Equal("/account/access-denied", new Uri(credentialsResponse.Headers.Location!.OriginalString).AbsolutePath);
     }
 
     [Fact]
@@ -144,6 +147,135 @@ public sealed class AdminApiTests
         Assert.Equal(2, users.GetArrayLength());
         Assert.Equal("member@example.com", users[0].GetProperty("email").GetString());
         Assert.Equal(AdminEmail, users[1].GetProperty("email").GetString());
+    }
+
+    [Fact]
+    public async Task AdminCanManageWorldTidesCredentialPool()
+    {
+        using var factory = new AdminApplicationFactory();
+        await factory.MigrateDatabaseAsync();
+        using var client = factory.CreateHttpsClient();
+        await AdminApplicationFactory.RegisterAsync(client, AdminEmail, Password);
+        var token = await AdminApplicationFactory.GetAuthenticatedAntiforgeryTokenAsync(client);
+
+        // 本测试 5 个 admin 请求，恰在 admin 限流(5/min) 内。
+
+        // 添加首个 Key：自动激活；响应不含任何明文或密文字段。
+        using var addFirst = await SendJsonAsync(
+            client,
+            HttpMethod.Post,
+            "/api/v1/admin/providers/worldtides/credentials",
+            new { apiKey = "0123456789abcdef" },
+            token);
+        Assert.Equal(HttpStatusCode.OK, addFirst.StatusCode);
+        var firstList = JsonDocument.Parse(await addFirst.Content.ReadAsStringAsync()).RootElement;
+        var firstKey = firstList.EnumerateArray().First();
+        Assert.True(firstKey.GetProperty("isActive").GetBoolean());
+        Assert.Equal("••••cdef", firstKey.GetProperty("keyHint").GetString());
+        Assert.Equal("untested", firstKey.GetProperty("health").GetString());
+        Assert.False(firstKey.TryGetProperty("encryptedValue", out _));
+        Assert.False(firstKey.TryGetProperty("apiKey", out _));
+
+        using var addSecond = await SendJsonAsync(
+            client,
+            HttpMethod.Post,
+            "/api/v1/admin/providers/worldtides/credentials",
+            new { apiKey = "fedcba9876543210" },
+            token);
+        Assert.Equal(HttpStatusCode.OK, addSecond.StatusCode);
+        var secondList = JsonDocument.Parse(await addSecond.Content.ReadAsStringAsync()).RootElement;
+        var secondKey = secondList.EnumerateArray().Single(item => item.GetProperty("keyHint").GetString() == "••••3210");
+        Assert.False(secondKey.GetProperty("isActive").GetBoolean());
+        var firstId = Guid.Parse(firstKey.GetProperty("id").GetString()!);
+        var secondId = Guid.Parse(secondKey.GetProperty("id").GetString()!);
+
+        // 激活第二个 Key 后切换生效。
+        using var activate = await SendJsonAsync(
+            client,
+            HttpMethod.Put,
+            $"/api/v1/admin/providers/worldtides/credentials/{secondId}/activate",
+            null,
+            token);
+        Assert.Equal(HttpStatusCode.OK, activate.StatusCode);
+
+        // 删除非激活 Key（firstId）成功；激活的 secondId 成为唯一 Key，删除允许（清空密钥池）。
+        using var deleteInactive = await SendJsonAsync(
+            client,
+            HttpMethod.Delete,
+            $"/api/v1/admin/providers/worldtides/credentials/{firstId}",
+            null,
+            token);
+        Assert.Equal(HttpStatusCode.OK, deleteInactive.StatusCode);
+        using var deleteLastActive = await SendJsonAsync(
+            client,
+            HttpMethod.Delete,
+            $"/api/v1/admin/providers/worldtides/credentials/{secondId}",
+            null,
+            token);
+        Assert.Equal(HttpStatusCode.OK, deleteLastActive.StatusCode);
+    }
+
+    [Fact]
+    public async Task AdminCannotDeleteActiveCredentialWhileOthersExist()
+    {
+        using var factory = new AdminApplicationFactory();
+        await factory.MigrateDatabaseAsync();
+        using var client = factory.CreateHttpsClient();
+        await AdminApplicationFactory.RegisterAsync(client, AdminEmail, Password);
+        var token = await AdminApplicationFactory.GetAuthenticatedAntiforgeryTokenAsync(client);
+
+        // 本测试 3 个 admin 请求，在限流内。
+        using var addFirst = await SendJsonAsync(
+            client,
+            HttpMethod.Post,
+            "/api/v1/admin/providers/worldtides/credentials",
+            new { apiKey = "0123456789abcdef" },
+            token);
+        Assert.Equal(HttpStatusCode.OK, addFirst.StatusCode);
+        var firstKey = JsonDocument.Parse(await addFirst.Content.ReadAsStringAsync()).RootElement.EnumerateArray().First();
+
+        using var addSecond = await SendJsonAsync(
+            client,
+            HttpMethod.Post,
+            "/api/v1/admin/providers/worldtides/credentials",
+            new { apiKey = "fedcba9876543210" },
+            token);
+        Assert.Equal(HttpStatusCode.OK, addSecond.StatusCode);
+
+        // 删除激活 Key（仍存在其他 Key）被拒，返回 409。
+        var firstId = Guid.Parse(firstKey.GetProperty("id").GetString()!);
+        using var deleteActive = await SendJsonAsync(
+            client,
+            HttpMethod.Delete,
+            $"/api/v1/admin/providers/worldtides/credentials/{firstId}",
+            null,
+            token);
+        Assert.Equal(HttpStatusCode.Conflict, deleteActive.StatusCode);
+        var conflict = JsonDocument.Parse(await deleteActive.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal("PROVIDER_CREDENTIAL_IN_USE", conflict.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task AdminCanTestWorldTidesKeyWithoutNetwork()
+    {
+        using var factory = new AdminApplicationFactory();
+        await factory.MigrateDatabaseAsync();
+        using var client = factory.CreateHttpsClient();
+        await AdminApplicationFactory.RegisterAsync(client, AdminEmail, Password);
+        var token = await AdminApplicationFactory.GetAuthenticatedAntiforgeryTokenAsync(client);
+
+        // 空 Key 在发请求前短路返回，测试不触网。
+        using var testResponse = await SendJsonAsync(
+            client,
+            HttpMethod.Post,
+            "/api/v1/admin/providers/worldtides/credentials/test",
+            new { apiKey = "   " },
+            token);
+        Assert.Equal(HttpStatusCode.OK, testResponse.StatusCode);
+        var result = JsonDocument.Parse(await testResponse.Content.ReadAsStringAsync()).RootElement;
+        Assert.False(result.GetProperty("success").GetBoolean());
+        Assert.Equal("API key 不能为空。", result.GetProperty("message").GetString());
+        Assert.Equal(JsonValueKind.Null, result.GetProperty("remainingCredits").ValueKind);
     }
 
     private static async Task<HttpResponseMessage> SendJsonAsync(

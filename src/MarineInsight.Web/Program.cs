@@ -4,6 +4,7 @@ using System.Threading.RateLimiting;
 using AntDesign;
 using MarineInsight.Application.Admin;
 using MarineInsight.Application.Analysis;
+using MarineInsight.Application.Credentials;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
 using MarineInsight.Application.Users;
@@ -182,6 +183,7 @@ builder.Services.AddScoped<UserWorkspaceService>();
 builder.Services.AddScoped<OperationsOverviewService>();
 builder.Services.AddScoped<AdminLocationService>();
 builder.Services.AddScoped<AdminUserService>();
+builder.Services.AddScoped<ProviderCredentialService>();
 builder.Services.AddScoped<DashboardQuerySession>();
 builder.Services.AddMarineInsightTelemetry(builder.Configuration);
 builder.Services

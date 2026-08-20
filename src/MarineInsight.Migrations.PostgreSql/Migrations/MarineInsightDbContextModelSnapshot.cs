@@ -713,6 +713,81 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.ProviderCredentialEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("CreditWarning")
+                        .HasColumnType("boolean")
+                        .HasColumnName("credit_warning");
+
+                    b.Property<string>("EncryptedValue")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("encrypted_value");
+
+                    b.Property<string>("Health")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("health");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("KeyHint")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("key_hint");
+
+                    b.Property<DateTimeOffset?>("LastCheckedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_checked_at");
+
+                    b.Property<string>("LastFailureReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("last_failure_reason");
+
+                    b.Property<string>("ProviderName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("provider_name");
+
+                    b.Property<int?>("RemainingCredits")
+                        .HasColumnType("integer")
+                        .HasColumnName("remaining_credits");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by_user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderName")
+                        .IsUnique()
+                        .HasFilter("\"is_active\"");
+
+                    b.HasIndex("ProviderName", "KeyHint")
+                        .IsUnique();
+
+                    b.ToTable("provider_credentials", (string)null);
+                });
+
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.QueryHistoryEntity", b =>
                 {
                     b.Property<Guid>("Id")

@@ -1,7 +1,9 @@
 ﻿using System.Security.Claims;
 using MarineInsight.Application.Admin;
+using MarineInsight.Application.Credentials;
 using MarineInsight.Application.Errors;
 using MarineInsight.Domain.Location;
+using MarineInsight.Infrastructure.Providers.WorldTides;
 using MarineInsight.Web.Admin;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.RateLimiting;
@@ -10,6 +12,8 @@ namespace MarineInsight.Web.Api;
 
 public static class AdminEndpointExtensions
 {
+    private const string WorldTidesProviderName = "worldtides";
+
     public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/v1/admin")
@@ -23,8 +27,84 @@ public static class AdminEndpointExtensions
         group.MapDelete("/locations/{id:guid}", DeleteLocationAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
         group.MapGet("/users", async (AdminUserService service, CancellationToken cancellationToken) =>
             Results.Ok(await service.ListUsersAsync(cancellationToken)));
+        group.MapGet("/providers/worldtides/credentials", ListCredentialsAsync);
+        group.MapPost("/providers/worldtides/credentials", AddCredentialAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
+        group.MapPut("/providers/worldtides/credentials/{id:guid}/activate", ActivateCredentialAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
+        group.MapDelete("/providers/worldtides/credentials/{id:guid}", DeleteCredentialAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
+        group.MapPost("/providers/worldtides/credentials/test", TestCredentialAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
 
         return endpoints;
+    }
+
+    private static async Task<IResult> ListCredentialsAsync(ProviderCredentialService service, CancellationToken cancellationToken) =>
+        Results.Ok((await service.ListAsync(WorldTidesProviderName, cancellationToken)).Select(Project).ToArray());
+
+    private static async Task<IResult> AddCredentialAsync(
+        ClaimsPrincipal user,
+        UpdateWorldTidesCredentialRequest request,
+        ProviderCredentialService service,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await service.AddAsync(GetUserId(user), WorldTidesProviderName, request.ApiKey, cancellationToken);
+            return Results.Ok((await service.ListAsync(WorldTidesProviderName, cancellationToken)).Select(Project).ToArray());
+        }
+        catch (ArgumentException exception)
+        {
+            return Validation(exception.Message);
+        }
+    }
+
+    private static async Task<IResult> ActivateCredentialAsync(
+        ClaimsPrincipal user,
+        Guid id,
+        ProviderCredentialService service,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await service.SetActiveAsync(GetUserId(user), WorldTidesProviderName, id, cancellationToken);
+            return Results.Ok();
+        }
+        catch (ArgumentException exception)
+        {
+            return Validation(exception.Message);
+        }
+    }
+
+    private static async Task<IResult> DeleteCredentialAsync(
+        ClaimsPrincipal user,
+        Guid id,
+        ProviderCredentialService service,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await service.DeleteAsync(GetUserId(user), WorldTidesProviderName, id, cancellationToken);
+            return Results.Ok();
+        }
+        catch (ProviderCredentialInUseException exception)
+        {
+            return Results.Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Credential is in use.",
+                detail: exception.Message,
+                extensions: new Dictionary<string, object?> { ["code"] = exception.ErrorCode });
+        }
+        catch (ArgumentException exception)
+        {
+            return Validation(exception.Message);
+        }
+    }
+
+    private static async Task<IResult> TestCredentialAsync(
+        UpdateWorldTidesCredentialRequest request,
+        WorldTidesProvider provider,
+        CancellationToken cancellationToken)
+    {
+        var result = await provider.ValidateKeyAsync(request.ApiKey, cancellationToken);
+        return Results.Ok(new WorldTidesKeyTestResponse(result.Success, result.Message, result.RemainingCredits));
     }
 
     private static async Task<IResult> CreateLocationAsync(
@@ -125,6 +205,17 @@ public static class AdminEndpointExtensions
         return type;
     }
 
+    private static WorldTidesCredentialResponse Project(ProviderCredentialSummary summary) => new(
+        summary.Id,
+        summary.KeyHint,
+        summary.IsActive,
+        ToApiName(summary.Health),
+        summary.RemainingCredits,
+        summary.CreditWarning,
+        summary.LastCheckedAtUtc,
+        summary.LastFailureReason,
+        summary.UpdatedAtUtc);
+
     private static AdminLocationResponse Project(Location location) => new(
         location.Id,
         location.DisplayName,
@@ -205,3 +296,22 @@ public sealed record AdminLocationResponse(
 public sealed record LocationDeleteResponse(
     bool Deleted,
     int CascadedFavoriteCount);
+
+public sealed record UpdateWorldTidesCredentialRequest(
+    string ApiKey);
+
+public sealed record WorldTidesCredentialResponse(
+    Guid Id,
+    string KeyHint,
+    bool IsActive,
+    string Health,
+    int? RemainingCredits,
+    bool CreditWarning,
+    DateTimeOffset? LastCheckedAtUtc,
+    string? LastFailureReason,
+    DateTimeOffset UpdatedAtUtc);
+
+public sealed record WorldTidesKeyTestResponse(
+    bool Success,
+    string Message,
+    int? RemainingCredits);

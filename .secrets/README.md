@@ -33,4 +33,6 @@ docker compose -f compose.yaml -f compose.production.yaml -f compose.tianditu.ya
 
 Even though the Tianditu key is a browser-side key that appears in tile URLs, it is still kept out of `appsettings.json` per the project secret convention; without it the map picker degrades to coordinate input.
 
+Since `MI-0059`, WorldTides API keys can be managed directly in the admin backend (`/admin/providers/worldtides`): add multiple candidate keys, test the connection, set the active key and delete keys. Keys are encrypted with ASP.NET Core DataProtection and stored in the database; only the last-4-digit hint is ever displayed, and plaintext never lands in the repo, `.secrets/`, or logs. The local/Compose secret files below remain only as the startup fallback when no database credential exists, and the fallback key never reports health. Keys saved via the backend take precedence over the file fallback and take effect at runtime without a restart.
+
 Prefer an external secret manager or a host file readable only by the deployment account in staging and production.

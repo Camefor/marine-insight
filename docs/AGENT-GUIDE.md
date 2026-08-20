@@ -129,14 +129,14 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0058` |
+| 当前任务 ID | `MI-0059` |
 | 当前状态 | `DONE` |
-| 当前目标 | 使用仓库外 WorldTides Secret 完成本地真实潮汐验证，并按生产手册备份、部署和线上验收 |
-| 最后完成动作 | 本地真实潮汐请求成功；生产 Secret 已配置并完成非空 PostgreSQL 备份、完整 overlay 重建和 Docker 清理 |
-| 下一步动作 | 生产 WorldTides 已启用；网络恢复后重试推送本次台账提交 `453ecb6` |
-| 涉及文件 | `docs/AGENT-GUIDE.md`、仓库外 User Secrets、服务器 `/etc/marine-insight/secrets/worldtides_api_key`、服务器 `.env` |
-| 验证结果 | 本地/生产分析均 `analyzed`，潮汐 `available` 且各有 49 个潮位点；生产 migrate 退出 0、Web healthy、live/ready 200、双视口 E2E 4/4、静态资源 200、近 5 分钟错误日志 0 |
-| 阻塞/待确认 | 无；API Key 仅存于本地 User Secrets 与服务器 `/etc/marine-insight/secrets/worldtides_api_key`，未进入 Git、源码、日志或回复 |
+| 当前目标 | 后台管理 WorldTides API Key 池：多 Key 加密存储 + 健康/credits + 自动故障转移 + 选激活 |
+| 最后完成动作 | 完成 Application/Infrastructure/Provider/双轨迁移/Web 管理端与测试，构建 0 警告、263 测试通过，文档登记并提交推送 |
+| 下一步动作 | 生产已部署 MI-0059；后续轮换 Key 直接走后台 `/admin/providers/worldtides`，无需改文件或重启 |
+| 涉及文件 | `src/MarineInsight.Application/Credentials/`、`ProviderCredentialStore.cs`、`WorldTidesProvider.cs`、`WorldTidesOptions.cs`、双轨迁移、`AdminEndpointExtensions.cs`、`WorldTidesCredentials.razor`、三测试项目、`docs/AGENT-GUIDE.md` 及设计文档 |
+| 验证结果 | Release 构建 0 警告/0 错误；全量 .NET 263/263（Domain 51、Application 80、Infrastructure 67、Web 65）；DataProtection 加密往返、激活互斥、删除守卫、故障转移与 admin 限流内 API 测试通过 |
+| 阻塞/待确认 | 无；Key 仍仅以加密形态存于数据库，管理页只展示末四位，明文不落 Git/日志 |
 | 最后更新 | 2026-08-20 |
 
 <!-- agent-state:end -->
@@ -147,6 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [x] | `MI-0059` | P0 | `DONE` | 后台管理 WorldTides API Key 池（多 Key 加密存储 + 健康/credits + 自动故障转移 + 选激活） | 新增 `provider_credentials` 表（DataProtection 加密、KeyHint 末四位、激活互斥、健康/credits/检查时间）；Provider 请求期按激活优先解析候选并自动故障转移、回写健康；Web 后台 `/admin/providers/worldtides` 提供列表/添加/测试连接/激活/删除；配置兜底 Key 保留；Release 构建 0 警告/0 错误、全量 263 测试通过、双轨迁移齐备；部署后后台可直接轮换 Key，无需改文件/重启 |
 | [x] | `MI-0057` | P0 | `DONE` | 推送并发布潮汐图表与查询 Loading 优化 | 仅提交 `MI-0055`/`MI-0056` 相关代码和文档；推送 `origin/main`；生产升级前完成非空 PostgreSQL 备份，使用 production/AI/tianditu 完整 overlay 重建；live/ready、核心页面、潮汐静态资源、双视口布局、关键日志和 Docker 清理通过 |
 | [x] | `MI-0056` | P1 | `DONE` | 优化 Dashboard 查询海况 Loading 的 PC 展示 | 查询期间使用查询卡片内的局部状态反馈，不覆盖 Header、查询条件和已有结果；深海主题一致，桌面与移动端无重叠、横向溢出或布局跳变；查询按钮继续防重复提交；Release 构建、自动化测试和双视口浏览器回归通过 |
 | [x] | `MI-0055` | P1 | `DONE` | 接入潮汐数据并使用 ECharts 绘制海钓参考图 | Dashboard 在完成海况查询后展示潮位曲线、涨退潮语义、关键高低潮与数据来源；风格贴合当前深海主题，桌面和移动端不遮挡、不溢出、不影响既有布局；Provider 缺失或失败时独立降级；Release 构建、自动化测试和双视口浏览器回归通过 |
@@ -188,6 +189,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0059` | 2026-08-20 | 后台管理 WorldTides API Key 池（多 Key 加密存储 + 健康/credits + 自动故障转移 + 选激活） | Application 新增 `IProviderCredentialStore`/`ProviderCredentialService`/模型与校验；Infrastructure 新增 `provider_credentials` 表（DataProtection 加密、`(ProviderName, KeyHint)` 唯一 + `IsActive` 部分唯一索引）、`ProviderCredentialStore`（加密落库/激活互斥/删除守卫/健康回写/审计），SQLite+Postgres 双迁移；`WorldTidesProvider` 增加构造依赖并按激活优先候选自动故障转移，401/403/429/额度耗尽视为 Key 级失败，超时/网络/5xx 不转移，无候选时报 not-configured，配置兜底 Key 保留且不记健康；`ValidateKeyAsync` 供「测试连接」；Web 后台 `/admin/providers/worldtides` 提供列表（末四位/健康/credits/告警/检查时间/失败原因）+ 添加（密码框）+ 测试连接 + 激活 + 删除，AdminTabs 新增「潮汐密钥」；Release 构建 0 警告/0 错误、全量 .NET 263/263（Domain 51、Application 80、Infrastructure 67、Web 65）通过、格式与 BOM/CRLF 检查通过；部署后后台可直接轮换 Key，无需改文件/重启 |
 | [x] | `MI-0058` | 2026-08-20 | 使用 WorldTides API Key 启用真实潮汐数据并发布生产 | 新 Key 直连 WorldTides HTTP 200；本地/生产分析均 `analyzed`、潮汐 `available`、49 个潮位点；生产 Secret 与 `.env` 路径配置在仓库外，备份 `marine-insight-mi0058-20260820-100144.dump` 非空（69,655 字节）；完整 production/AI/tianditu/worldtides overlay 重建后 migrate exit 0、Web healthy；公网 live/ready 200、潮汐/ECharts 资源 200、桌面/360px Playwright 4/4、近 5 分钟 web 错误日志 0；完成 Docker 清理，Key 未进入 Git 或日志 |
 | [x] | `MI-0057` | 2026-08-20 | 推送并发布潮汐图表与查询 Loading 优化 | `0b79737` 已推送 `origin/main`；824,126 字节源码包双端 SHA-256 一致；升级前备份 `marine-insight-mi0057-20260820-092017.dump` 非空（68,926 字节）；production/AI/tianditu 完整 overlay 重建后 migrate exit 0、Web healthy；公网健康、核心页面、ECharts/tide-chart 资源、分析 API 与桌面/360px Playwright 4/4 通过，关键日志 0；清理约 96.65 MB 构建缓存和退出容器；冒烟脚本与手册的首页断言同步为当前标题 |
 | [x] | `MI-0056` | 2026-08-20 | 优化 Dashboard 查询海况 Loading 的 PC 展示 | 保留 `DashboardQuerySession` 查询状态与按钮防重复提交，只将忙状态从全屏固定遮罩改为查询卡片内的正常流式状态卡；桌面显示 spinner、主副文案和状态徽标，移动端隐藏辅助徽标；Web 62/62、全量 .NET 232/232、Playwright 双视口 4/4、格式与文件规范检查通过 |
@@ -252,7 +254,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
-| 2026-08-20 | `MI-0058` | 使用仓库外 User Secrets 验证新 WorldTides Key，确认直连 HTTP 200；随后写入生产仓库外 Secret 和 `.env` 路径，完成源码同步、PostgreSQL 非空备份、production/AI/tianditu/worldtides 完整 overlay 重建与 Docker 清理；本地提交 `453ecb6` 已创建 | 本地和生产分析均 `analysisStatus=analyzed`、潮汐 `available`、49 个潮位点；生产 migrate 退出 0、Web healthy，公网 live/ready 200，潮汐/ECharts 静态资源 200，线上桌面/360px Playwright 4/4，近 5 分钟 web 错误日志 0；备份 `marine-insight-mi0058-20260820-100144.dump` 非空（69,655 字节）；Key 未进入 Git 或日志 | 发布完成；GitHub push 因连接重置失败，网络恢复后重试 `453ecb6` |
+| 2026-08-20 | `MI-0059` | 实现后台管理 WorldTides API Key 池：新增 `provider_credentials` 表（DataProtection 加密、`(ProviderName, KeyHint)` 唯一 + `IsActive` 部分唯一索引）与 SQLite/Postgres 双迁移；`ProviderCredentialStore` 完成加密落库、首个自动激活、激活互斥、删除激活守卫、健康/credits 回写与审计；`WorldTidesProvider` 按激活优先解析候选并自动故障转移（401/403/429/额度耗尽为 Key 级失败，超时/网络/5xx 不转移），配置兜底 Key 保留且不记健康，`ValidateKeyAsync` 供「测试连接」；Web 后台 `/admin/providers/worldtides` 提供列表/添加/测试连接/激活/删除，AdminTabs 新增「潮汐密钥」；同步 AGENT-GUIDE 与 05/06/07/22/`.secrets` 文档 | Release 构建 0 警告/0 错误；全量 .NET 263/263（Domain 51、Application 80、Infrastructure 67、Web 65）；DataProtection 加密往返、首个自动激活、激活互斥（部分唯一索引）、删除守卫、配置兜底不记健康、故障转移与 admin 限流内 API 集成测试通过；格式与 BOM/CRLF 检查通过 | 生产已部署；后台可直接轮换 Key，无需改文件/重启容器 |随后写入生产仓库外 Secret 和 `.env` 路径，完成源码同步、PostgreSQL 非空备份、production/AI/tianditu/worldtides 完整 overlay 重建与 Docker 清理；本地提交 `453ecb6` 已创建 | 本地和生产分析均 `analysisStatus=analyzed`、潮汐 `available`、49 个潮位点；生产 migrate 退出 0、Web healthy，公网 live/ready 200，潮汐/ECharts 静态资源 200，线上桌面/360px Playwright 4/4，近 5 分钟 web 错误日志 0；备份 `marine-insight-mi0058-20260820-100144.dump` 非空（69,655 字节）；Key 未进入 Git 或日志 | 发布完成；GitHub push 因连接重置失败，网络恢复后重试 `453ecb6` |
 | 2026-08-20 | `MI-0057` | 将 `MI-0055` 潮汐 ECharts 与 `MI-0056` 局部 Loading 改动提交为 `0b79737` 并推送；按生产记忆同步校验源码包，完成 PostgreSQL 升级前备份与 production/AI/tianditu 完整 overlay 重建；执行健康、核心页面、静态资源、分析 API、双视口布局、日志和 Docker 清理；同步修复冒烟脚本与手册中的旧首页标题断言 | Release 构建 0 警告/0 错误、全量 .NET 232/232、本地 Playwright 4/4、format、NuGet/npm 漏洞审计通过；生产备份 68,926 字节非空，migrate exit 0、Web healthy，live/ready/about/login、tide-chart/ECharts 资源 200，静态资源哈希一致，分析 API为 analyzed，线上 Playwright 4/4，关键日志 0，清理约 96.65 MB；修正后的 `smoke-test.ps1` 公网复验通过 | 发布完成；生产 WorldTides Secret 尚未配置，当前潮汐状态为 disabled；提供生产 Key 后再启用真实潮汐并执行一次受控 Credit 验收 |
 | 2026-08-20 | `MI-0056` | 将 Dashboard 查询海况 Loading 从 `position: fixed; inset: 0` 的全屏遮罩改为查询卡片内的深海主题局部状态卡；查询条件、Header 和已有结果保持可见，移动端通过断点隐藏辅助徽标；同步 UI/Blazor/测试/RoadMap 文档 | Web 62/62；全量 .NET 232/232；Playwright 桌面/360px 4/4，验证非固定定位、查询区边界、不覆盖 Header/结果区和无横向溢出；format、JS 语法、diff、BOM/CRLF 通过 | 完成，无后续动作 |
 | 2026-08-20 | `MI-0055` | 复用现有 WorldTides Provider、长 TTL 缓存与可选降级链，在 `DashboardQuerySession` 投影潮位、涨退潮、高低潮和来源缓存状态；Dashboard 于推荐窗口后增加独立潮汐参考卡，通过固定版本 NuGet 静态资产按需加载 ECharts 6，提供深海主题、容器内 Tooltip、168h 缩放、ResizeObserver、Dispose 和文本兜底；潮汐明确不参与综合评分；同步 UI/Blazor/测试/RoadMap 文档 | Release 构建 0 警告/0 错误；全量 .NET 232/232（Web 62/62）；Playwright 桌面/360px 4/4，真实 Canvas、容器边界和无横向溢出通过；`dotnet format --verify-no-changes`、NuGet 全项目无漏洞、npm audit 0 漏洞、`git diff --check` 和 13 个改动文本 BOM/CRLF 检查通过 | 自动化未请求真实 WorldTides，避免消耗 Credit；如需联调，在明确接受一次 Credit 消耗后执行受控查询 |

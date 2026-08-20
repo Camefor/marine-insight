@@ -32,6 +32,8 @@ public sealed class MarineInsightDbContext(DbContextOptions<MarineInsightDbConte
 
     public DbSet<AnalysisSourceBatchEntity> AnalysisSourceBatches => Set<AnalysisSourceBatchEntity>();
 
+    public DbSet<ProviderCredentialEntity> ProviderCredentials => Set<ProviderCredentialEntity>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
