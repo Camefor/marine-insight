@@ -133,7 +133,7 @@
 | 当前状态 | `DONE` |
 | 当前目标 | 使用 Ant Design Blazor TimePicker 替换 Dashboard 起报小时原生下拉，统一桌面/移动交互并保留显示时区与 UTC 整点不变量 |
 | 最后完成动作 | 已接入 AntDesign 服务、CSS/JS 资源和受控 `TimePicker<TimeOnly?>`，完成整点弹层、状态回写、文档与双视口回归 |
-| 下一步动作 | GitHub 网络恢复后推送 `baf2d41`；生产已完成发布，无其他部署动作 |
+| 下一步动作 | 无；`b450add` 已推送 `origin/main`，生产发布已完成 |
 | 涉及文件 | `MI-0053` 实现/测试/设计文档，以及本台账发布记录 |
 | 验证结果 | 本地 Release 构建 0 警告/0 错误；全量测试 231/231；`dotnet format --verify-no-changes --no-restore`、`git diff --check` 通过；修改文本文件 UTF-8 BOM/CRLF 检查通过；本地 Playwright 2/2；生产备份 `marine-insight-mi0053.dump` 非空；完整 AI/tianditu overlay 重建后 Web healthy；HTTPS live/ready/home/login/about/AntDesign CSS 200；生产桌面/360px TimePicker 均 24 小时单列、`15:00`、无横向溢出；Docker 清理回收约 77 MB 构建缓存 |
 | 阻塞/待确认 | 无 |
@@ -147,7 +147,6 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0053` | P0 | `IN_PROGRESS` | 使用 Ant Design Blazor TimePicker 优化起报时间选择框 | 保留日期输入，以官方 TimePicker 替换小时下拉；支持中文 24 小时整点选择、暗色主题、键盘和移动端；值回传 `ForecastStartLocal` 且分钟秒归零，UTC 整点保护不变；Release 构建、全量测试和双视口浏览器回归通过 |
 | [x] | `MI-0053` | P0 | `DONE` | 使用 Ant Design Blazor TimePicker 优化起报时间选择框 | 保留日期输入，以官方 TimePicker 替换小时下拉；支持中文 24 小时整点选择、暗色主题、键盘和移动端；值回传 `ForecastStartLocal` 且分钟秒归零，UTC 整点保护不变；Release 构建、全量测试和双视口浏览器回归通过 |
 | [ ] | `MI-0027` | P0 | `BLOCKED` | 连续完成阶段 3 剩余产品闭环与阶段 4 可部署基线 | 注册用户可收藏/再次查询并查看历史与单位设置；移动端、键盘和管理员运维入口可用；WorldTides 可配置且凭据安全维护；Docker、代理、迁移、备份恢复、安全与 E2E 验证具备可执行交付物 |
 用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
