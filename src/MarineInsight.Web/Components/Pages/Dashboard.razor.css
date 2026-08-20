@@ -688,7 +688,12 @@ dd {
 }
 
 .favorite-star {
-    font-size: 1.15rem;
+    height: 19px;
+    width: 19px;
+}
+
+.favorite-button.active .favorite-star {
+    fill: currentColor;
 }
 
 .workspace-inline-status {

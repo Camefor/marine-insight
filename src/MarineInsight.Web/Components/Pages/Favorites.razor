@@ -46,8 +46,8 @@
                         <div><dt>排序</dt><dd>@favorite.SortOrder</dd></div>
                     </dl>
                     <div class="workspace-actions">
-                        <a class="workspace-icon-button" title="再次查询" aria-label="再次查询 @favorite.DisplayName" href="@BuildQueryUrl(favorite)">↻</a>
-                        <button class="workspace-icon-button danger" type="button" title="删除收藏" aria-label="删除收藏 @favorite.DisplayName" @onclick="() => DeleteAsync(favorite.Id)">×</button>
+                        <a class="workspace-icon-button" title="再次查询" aria-label="再次查询 @favorite.DisplayName" href="@BuildQueryUrl(favorite)"><UiIcon Name="RotateCcw" /></a>
+                        <button class="workspace-icon-button danger" type="button" title="删除收藏" aria-label="删除收藏 @favorite.DisplayName" @onclick="() => DeleteAsync(favorite.Id)"><UiIcon Name="Trash2" /></button>
                     </div>
                 </article>
             }

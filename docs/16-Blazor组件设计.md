@@ -174,6 +174,8 @@ public sealed partial class RiskSummary
 
 `MI-0050` 不再依赖各平台对 `datetime-local step=3600` 的实现差异：`Dashboard.razor` 使用 `input[type=date]` 与 24 个整点 `select` 选项，`OnForecastDateChanged`/`OnForecastHourChanged` 合并当前日期或小时并显式把分钟、秒设为零。`DashboardQuerySession` 和 UTC 缓存边界不变量保持不变。
 
+`MI-0051` 新增无状态共享组件 `UiIcon.razor`，集中承载本项目使用的 Lucide 路径、`currentColor` 描边和统一 `24×24` 视口；布局、Dashboard 与工作区页面只传入图标名称和样式类，按钮继续由外层元素提供 `title`、`aria-label` 或可见文字。品牌 PNG 仍由 `App.razor`、`MainLayout.razor` 和 manifest 的既有引用消费，替换二进制资产即可同步 Header、SEO、PWA 与设备图标，不引入运行时图片处理。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |
@@ -199,3 +201,4 @@ public sealed partial class RiskSummary
 | 2.8 | 2026-08-19 | 记录 `MI-0041` 品牌/SEO 组件边界：`App.razor` 维护默认搜索与社交元数据、图标和 manifest，各页面通过 `PageTitle` 输出唯一标题，`Dashboard.razor` 维护首页 canonical，`MainLayout.razor` 渲染 Marine AI 品牌组合；`wwwroot` 提供品牌 PNG、robots 与 sitemap |
 | 2.9 | 2026-08-19 | 记录 `MI-0043` 呈现层重构：业务状态和事件链保持不变，`MainLayout`/`app.css` 负责全站设计系统与移动底部导航，`Dashboard.razor.css` 负责决策工作台和数据可视化，辅助页面通过 scoped CSS 对齐同一视觉语言 |
 | 3.0 | 2026-08-19 | 记录 `MI-0045` 原生日期时间控件封装：不引入新状态或 JS，Razor 增加显示容器与 SVG，scoped CSS 负责暗色 indicator、48px 级点击区域和移动端 16px 输入字体 |
+| 3.1 | 2026-08-20 | 记录 `MI-0051` `UiIcon` 共享组件与品牌资产消费边界：集中维护 Lucide 线性 SVG，布局/Dashboard/工作区复用同一组件，Header/SEO/PWA 保持同源 PNG 引用 |

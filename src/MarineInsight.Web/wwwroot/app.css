@@ -231,6 +231,14 @@
     color: #9a3329;
 }
 
+.ui-icon,
+.workspace-icon-button .ui-icon,
+.dismiss .ui-icon {
+    display: block;
+    height: 20px;
+    width: 20px;
+}
+
 .workspace-danger {
     align-items: center;
     background: #ffffff;
@@ -970,6 +978,11 @@ select {
         gap: 1px;
         min-height: 44px;
         text-decoration: none;
+    }
+
+    .mobile-dock-link .ui-icon {
+        height: 21px;
+        width: 21px;
     }
 
     .mobile-dock-link small {

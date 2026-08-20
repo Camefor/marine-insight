@@ -129,15 +129,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0050` |
-| 当前状态 | `DONE` |
-| 当前目标 | 将起报时间改为日期与整点小时选择，彻底禁用分钟选择并默认分钟为 00 |
-| 最后完成动作 | 已将 `136135d` 发布生产：原生日期输入 + 00-23 小时选择，分钟/秒始终归零，并通过线上双端验收 |
-| 下一步动作 | 任务已完成；起报时间现在只能选择整点 |
-| 涉及文件 | `Dashboard.razor`、`Dashboard.razor.css`、`tests/e2e/dashboard.spec.js`、`docs/15-UI设计.md`、`docs/16-Blazor组件设计.md`、`docs/20-测试方案.md` 与本台账 |
-| 验证结果 | Release 0 警告/0 错误；全量测试 231/231；格式/diff 检查、线上桌面/360px 移动 Playwright 2/2，生产 migrate exit 0、Web healthy、核心页面 200，异常日志为空并完成 Docker 清理 |
-| 阻塞/待确认 | 无；UTC 整点校验继续保留为服务端保护 |
-| 最后更新 | 2026-08-19 |
+| 当前任务 ID | `MI-0052` |
+| 当前状态 | `IN_PROGRESS` |
+| 当前目标 | 提交、推送并将 `MI-0051` 品牌与图标统一改动发布到腾讯云生产环境 |
+| 最后完成动作 | 已核对部署手册、本机生产记忆、完整 Compose overlay、Git 工作区与本地验证基线 |
+| 下一步动作 | 提交并推送本次改动，随后同步发布包、执行生产备份和完整 overlay 重建 |
+| 涉及文件 | `MI-0051` 全部实现/测试/文档文件，以及本台账发布记录 |
+| 验证结果 | 发布前 Release 构建 0 警告/0 错误；全量测试 231/231；Playwright 双视口 2/2；格式、BOM/CRLF 与图片检查通过 |
+| 阻塞/待确认 | 无；若 GitHub push 网络失败，按既定记忆继续直接部署并记录远端同步状态 |
+| 最后更新 | 2026-08-20 |
 
 <!-- agent-state:end -->
 
@@ -147,6 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [ ] | `MI-0052` | P1 | `IN_PROGRESS` | 推送并部署品牌与图标统一改动 | 标准提交推送 `origin/main`；生产升级前完成 PostgreSQL 备份；完整 production/AI/tianditu overlay 重建；迁移、健康、品牌静态资源、关键页面、地图与双视口 E2E 通过；清理 Docker 临时资源 |
 | [ ] | `MI-0027` | P0 | `BLOCKED` | 连续完成阶段 3 剩余产品闭环与阶段 4 可部署基线 | 注册用户可收藏/再次查询并查看历史与单位设置；移动端、键盘和管理员运维入口可用；WorldTides 可配置且凭据安全维护；Docker、代理、迁移、备份恢复、安全与 E2E 验证具备可执行交付物 |
 用户自行处理的 `MI-0002`、`MI-0003`、`MI-0004` 不纳入本 Agent 实施范围。
 
@@ -183,6 +184,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0051` | 2026-08-20 | 统一站点 Logo、应用图标与操作图标风格 | 从 `docs/持续迭代/marine_ai_logos` 提取珊瑚日落/青绿海浪圆形主标识，替换 Header、favicon、Apple Touch、PWA 与社交分享共用的 32/180/192/512 PNG；新增共享 `UiIcon` 集中维护 Lucide 线性图标并替换移动导航、收藏、再次查询、编辑、删除、设置、关闭和日历时钟图标；Release 构建 0 警告/0 错误、全量测试 231/231、Playwright 双视口 2/2、图片尺寸/透明角检查通过 |
 | [x] | `MI-0050` | 2026-08-20 | 起报时间禁用分钟选择并发布 | `136135d` 已按本地提交发布生产；升级前备份 `marine-insight-20260820-013847.dump`，804,581 字节发布包 SHA-256 本地/远端一致；完整 overlay 重建后 migrate exit 0、Web healthy；公网 SSR 已显示日期输入和 24 个整点小时选项，分钟入口消失；线上桌面/360px 移动 Playwright 2/2 通过，关键日志为空并完成 Docker 清理 |
 | [x] | `MI-0049` | 2026-08-20 | 修复非 UTC 整点起报时间查询异常并发布 | `7e2743d` 已按本地提交发布生产；升级前备份 `marine-insight-20260820-012445.dump`（63,272 字节），804,324 字节发布包 SHA-256 本地/远端一致；完整 overlay 重建后 migrate exit 0、Web healthy；线上 `step=3600`/UTC 提示存在，桌面/360px 移动 Playwright 2/2 通过，关键异常日志为空并完成 Docker 清理 |
 | [x] | `MI-0048` | 2026-08-19 | 部署移动端起报时间选择框优化 | `e51f9c0` 已发布生产；升级前备份 `marine-insight-20260819-110407.dump`（62,641 字节），803,998 字节发布包 SHA-256 本地/远端一致；完整 overlay 重建后 migrate exit 0、Web healthy；核心页面/静态资源和线上桌面/360px 移动 Playwright 2/2 通过，关键错误日志为空并完成 Docker 清理 |
@@ -240,6 +242,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-20 | `MI-0051` | 使用持续迭代图稿统一品牌与图标：提取珊瑚日落/青绿海浪圆形主标识并重制 32/180/192/512 品牌 PNG；Header、favicon、Apple Touch、PWA、社交分享保持同源；新增共享 `UiIcon`，把移动导航、收藏、再次查询、编辑、删除、设置、关闭和日历时钟统一为 Lucide 线性风格 | Release 构建 0 警告/0 错误；全量测试 231/231；Playwright 1440×900 与 360×800 2/2；品牌 PNG 尺寸正确、透明角有效，SSR/静态资源回归通过；内置浏览器无可用实例，使用仓库 Playwright 完成真实 Chromium 验证 | 本次未部署；如需上线，按生产手册发布并确认 CDN/浏览器图标缓存刷新 |
 | 2026-08-20 | `MI-0050` | 将起报时间控件从 `datetime-local` 改为日期输入 + `00:00`–`23:00` 小时下拉，彻底禁用分钟选择；日期/小时变更强制分钟、秒为 `00`；保留服务端 UTC 整点校验 | Release 构建 0 警告/0 错误；全量测试 231/231，格式/diff 通过；生产备份 `marine-insight-20260820-013847.dump` 已生成，migrate exit 0、Web healthy；公网首页/live/ready/login/about 200，SSR 日期/小时控件正确，线上桌面/360px 移动 Playwright 2/2，Docker 清理完成 | 发布完成；GitHub 网络恢复后同步提交 |
 | 2026-08-20 | `MI-0049` | 修复起报时间 UTC 整点边界异常：`datetime-local` 增加 `step=3600` 和 `aria-describedby` 提示；`DashboardQuerySession` 在创建 `ForecastRange` 前校验换算后的 UTC 分钟/秒/毫秒，非整点返回中文调整提示并终止请求；补充 Web 非整点回归测试 | Release 构建 0 警告/0 错误；全量测试 230/230，Web 61/61；`dotnet format --verify-no-changes --no-restore`、`git diff --check` 通过；生产备份 `marine-insight-20260820-012445.dump` 非空（63,272 字节），migrate exit 0、Web healthy；公网核心页面 200，线上桌面/360px 移动 Playwright 2/2，关键错误日志为空，Docker 清理完成 | 生产已发布；GitHub 网络恢复后推送发布记录提交 |
 | 2026-08-19 | `MI-0048` | 将移动端起报时间选择框优化提交 `e51f9c0` 发布生产；生成 803,998 字节发布包且本地/远端 SHA-256 均为 `f30d253c5d086de5dcec9cea2190d118ff5ea168892137a0e3ba094111cdc779`；升级前完成 PostgreSQL custom-format 备份；同步源码与部署资产后使用 production/ai/tianditu 完整 overlay 构建重建；完成退出容器、构建缓存与无用网络清理 | 本地 Release 0 警告/0 错误、230/230 测试、format/diff 通过；生产备份 `marine-insight-20260819-110407.dump` 非空（62,641 字节）；migrate exit 0，Web healthy，7 条迁移和 5 个预置地点完好；公网首页/live/ready/login/about、Blazor 脚本和 CSS 均 200，SSR 包含原生时间输入及 24 小时显示层，关键错误日志为空；线上桌面/360px 移动 Playwright 2/2，通过 `zh-CN`、24 小时读数、移动宽度 ≥300px、按钮热区与无横向溢出断言；清理后磁盘占用 38% | 发布完成；移动端页面固定显示 `yyyy-MM-dd HH:mm`，原生系统选择器继续负责输入 |

@@ -174,10 +174,7 @@
                             }
                         </select>
                         <span class="datetime-action" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" focusable="false">
-                                <path d="M7 3v3M17 3v3M4.5 9h15M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
-                                <path d="M12 12v3l2 1" />
-                            </svg>
+                            <UiIcon Name="CalendarClock" />
                         </span>
                     </span>
                     <small id="forecast-time-hint" class="datetime-hint">@Session.ForecastStartHint</small>
@@ -274,7 +271,7 @@
                                     aria-pressed="@_isFavorited"
                                     title="@(_isFavorited ? "取消收藏" : "收藏当前地点")"
                                     @onclick="ToggleFavoriteAsync">
-                                <span class="favorite-star" aria-hidden="true">@(_isFavorited ? "★" : "☆")</span>
+                                <UiIcon Name="Star" CssClass="favorite-star" />
                                 <span>@(_isFavorited ? "已收藏" : "收藏")</span>
                             </button>
                             @if (!string.IsNullOrWhiteSpace(_workspaceStatus))
@@ -284,7 +281,7 @@
                         </Authorized>
                         <NotAuthorized>
                             <a class="favorite-button" href="/account/login?returnUrl=/">
-                                <span class="favorite-star" aria-hidden="true">☆</span>
+                                <UiIcon Name="Star" CssClass="favorite-star" />
                                 <span>登录后收藏</span>
                             </a>
                         </NotAuthorized>

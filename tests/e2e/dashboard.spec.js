@@ -17,6 +17,14 @@ test('dashboard and account shell remain usable without layout overflow', async 
   await expect(page.getByLabel('纬度')).toBeHidden();
   await expect(page.getByLabel('经度')).toBeHidden();
 
+  const brandMark = page.locator('.app-brand-mark');
+  await expect(brandMark).toBeVisible();
+  await expect(page.locator('.mobile-dock .ui-icon')).toHaveCount(4);
+  expect(await brandMark.evaluate(image => image.complete && image.naturalWidth === 192)).toBeTruthy();
+  if (layoutViewportWidth(page) <= 720) {
+    await expect(page.locator('.mobile-dock .ui-icon').first()).toBeVisible();
+  }
+
   const forecastDate = page.getByLabel('起报日期', { exact: true });
   const forecastHour = page.getByLabel('起报小时', { exact: true });
   const datetimeAction = page.locator('.datetime-action');

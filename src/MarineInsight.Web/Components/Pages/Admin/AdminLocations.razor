@@ -119,8 +119,8 @@
                                 <td>@(location.CoastOrientationDeg is { } deg ? deg.ToString("0.#", CultureInfo.InvariantCulture) : "—")</td>
                                 <td>@(location.IsHomeDefault ? "是" : "—")</td>
                                 <td>
-                                    <button class="workspace-icon-button" type="button" title="编辑" aria-label="编辑 @location.DisplayName" @onclick="() => BeginEdit(location)">✎</button>
-                                    <button class="workspace-icon-button danger" type="button" title="删除" aria-label="删除 @location.DisplayName" @onclick="() => DeleteAsync(location.Id, location.DisplayName)">×</button>
+                                    <button class="workspace-icon-button" type="button" title="编辑" aria-label="编辑 @location.DisplayName" @onclick="() => BeginEdit(location)"><UiIcon Name="Pencil" /></button>
+                                    <button class="workspace-icon-button danger" type="button" title="删除" aria-label="删除 @location.DisplayName" @onclick="() => DeleteAsync(location.Id, location.DisplayName)"><UiIcon Name="Trash2" /></button>
                                 </td>
                             </tr>
                         }

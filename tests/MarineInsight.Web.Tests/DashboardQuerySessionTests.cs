@@ -26,6 +26,8 @@ public sealed class DashboardQuerySessionTests
         Assert.Contains("为海钓、露营、摄影和航海而生。", html, StringComparison.Ordinal);
         Assert.Contains("name=\"description\"", html, StringComparison.Ordinal);
         Assert.Contains("/images/brand/marine-ai-mark-192.png", html, StringComparison.Ordinal);
+        Assert.Contains("class=\"ui-icon\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">⌂<", html, StringComparison.Ordinal);
         Assert.Contains("地点搜索", html, StringComparison.Ordinal);
         Assert.Contains("等待查询", html, StringComparison.Ordinal);
         Assert.Contains("Open-Meteo.com", html, StringComparison.Ordinal);
@@ -42,13 +44,24 @@ public sealed class DashboardQuerySessionTests
         var robots = await client.GetStringAsync("/robots.txt");
         var sitemap = await client.GetStringAsync("/sitemap.xml");
         var manifest = await client.GetStringAsync("/site.webmanifest");
-        using var logoResponse = await client.GetAsync("/images/brand/marine-ai-mark-192.png");
+        var brandAssetPaths = new[]
+        {
+            "/images/brand/favicon-32.png",
+            "/images/brand/apple-touch-icon.png",
+            "/images/brand/marine-ai-mark-192.png",
+            "/images/brand/marine-ai-mark-512.png"
+        };
 
         Assert.Contains("Sitemap: https://marine.loyalme.life/sitemap.xml", robots, StringComparison.Ordinal);
         Assert.Contains("https://marine.loyalme.life/about", sitemap, StringComparison.Ordinal);
         Assert.Contains("Marine AI", manifest, StringComparison.Ordinal);
-        Assert.Equal(HttpStatusCode.OK, logoResponse.StatusCode);
-        Assert.Equal("image/png", logoResponse.Content.Headers.ContentType?.MediaType);
+        foreach (var assetPath in brandAssetPaths)
+        {
+            using var assetResponse = await client.GetAsync(assetPath);
+            Assert.Equal(HttpStatusCode.OK, assetResponse.StatusCode);
+            Assert.Equal("image/png", assetResponse.Content.Headers.ContentType?.MediaType);
+            Assert.True(assetResponse.Content.Headers.ContentLength > 0);
+        }
     }
 
     [Fact]

@@ -113,9 +113,9 @@
                         <div><dt>排序</dt><dd>@location.SortOrder</dd></div>
                     </dl>
                     <div class="workspace-actions">
-                        <a class="workspace-icon-button" title="再次查询" aria-label="再次查询 @location.Name" href="@BuildQueryUrl(location)">↻</a>
-                        <button class="workspace-icon-button" type="button" title="编辑" aria-label="编辑 @location.Name" @onclick="() => BeginEdit(location)">✎</button>
-                        <button class="workspace-icon-button danger" type="button" title="删除" aria-label="删除 @location.Name" @onclick="() => DeleteAsync(location.Id)">×</button>
+                        <a class="workspace-icon-button" title="再次查询" aria-label="再次查询 @location.Name" href="@BuildQueryUrl(location)"><UiIcon Name="RotateCcw" /></a>
+                        <button class="workspace-icon-button" type="button" title="编辑" aria-label="编辑 @location.Name" @onclick="() => BeginEdit(location)"><UiIcon Name="Pencil" /></button>
+                        <button class="workspace-icon-button danger" type="button" title="删除" aria-label="删除 @location.Name" @onclick="() => DeleteAsync(location.Id)"><UiIcon Name="Trash2" /></button>
                     </div>
                 </article>
             }
