@@ -716,3 +716,50 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260820104540_AddProviderCredentials') THEN
+    CREATE TABLE provider_credentials (
+        id uuid NOT NULL,
+        provider_name character varying(64) NOT NULL,
+        key_hint character varying(8) NOT NULL,
+        encrypted_value text NOT NULL,
+        is_active boolean NOT NULL,
+        health character varying(16) NOT NULL,
+        remaining_credits integer,
+        credit_warning boolean NOT NULL,
+        last_checked_at timestamp with time zone,
+        last_failure_reason character varying(200),
+        created_at timestamp with time zone NOT NULL,
+        updated_at timestamp with time zone NOT NULL,
+        updated_by_user_id uuid,
+        CONSTRAINT "PK_provider_credentials" PRIMARY KEY (id)
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260820104540_AddProviderCredentials') THEN
+    CREATE UNIQUE INDEX "IX_provider_credentials_provider_name" ON provider_credentials (provider_name) WHERE "is_active";
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260820104540_AddProviderCredentials') THEN
+    CREATE UNIQUE INDEX "IX_provider_credentials_provider_name_key_hint" ON provider_credentials (provider_name, key_hint);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260820104540_AddProviderCredentials') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260820104540_AddProviderCredentials', '10.0.11');
+    END IF;
+END $EF$;
+COMMIT;
+
