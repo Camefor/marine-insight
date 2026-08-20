@@ -132,10 +132,10 @@
 | 当前任务 ID | `MI-0050` |
 | 当前状态 | `DONE` |
 | 当前目标 | 将起报时间改为日期与整点小时选择，彻底禁用分钟选择并默认分钟为 00 |
-| 最后完成动作 | 已改为原生日期输入 + 00-23 小时选择；日期/小时变化都强制分钟和秒为 00，补充双视口与 Web 回归测试 |
-| 下一步动作 | 任务已完成；待用户确认后可按生产手册发布本次控件改动 |
+| 最后完成动作 | 已将 `136135d` 发布生产：原生日期输入 + 00-23 小时选择，分钟/秒始终归零，并通过线上双端验收 |
+| 下一步动作 | 任务已完成；起报时间现在只能选择整点 |
 | 涉及文件 | `Dashboard.razor`、`Dashboard.razor.css`、`tests/e2e/dashboard.spec.js`、`docs/15-UI设计.md`、`docs/16-Blazor组件设计.md`、`docs/20-测试方案.md` 与本台账 |
-| 验证结果 | Release 0 警告/0 错误；全量测试 231/231；格式/diff 检查和桌面/360px 移动 Playwright 2/2 通过 |
+| 验证结果 | Release 0 警告/0 错误；全量测试 231/231；格式/diff 检查、线上桌面/360px 移动 Playwright 2/2，生产 migrate exit 0、Web healthy、核心页面 200，异常日志为空并完成 Docker 清理 |
 | 阻塞/待确认 | 无；UTC 整点校验继续保留为服务端保护 |
 | 最后更新 | 2026-08-19 |
 
@@ -183,7 +183,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
-| [x] | `MI-0050` | 2026-08-20 | 起报时间禁用分钟选择 | `Dashboard.razor` 改为日期输入 + 24 个整点小时选项，分钟/秒始终归零；保留 UTC 整点服务端保护；Release、231/231 测试、格式检查和桌面/360px 移动 Playwright 2/2 通过 |
+| [x] | `MI-0050` | 2026-08-20 | 起报时间禁用分钟选择并发布 | `136135d` 已按本地提交发布生产；升级前备份 `marine-insight-20260820-013847.dump`，804,581 字节发布包 SHA-256 本地/远端一致；完整 overlay 重建后 migrate exit 0、Web healthy；公网 SSR 已显示日期输入和 24 个整点小时选项，分钟入口消失；线上桌面/360px 移动 Playwright 2/2 通过，关键日志为空并完成 Docker 清理 |
 | [x] | `MI-0049` | 2026-08-20 | 修复非 UTC 整点起报时间查询异常并发布 | `7e2743d` 已按本地提交发布生产；升级前备份 `marine-insight-20260820-012445.dump`（63,272 字节），804,324 字节发布包 SHA-256 本地/远端一致；完整 overlay 重建后 migrate exit 0、Web healthy；线上 `step=3600`/UTC 提示存在，桌面/360px 移动 Playwright 2/2 通过，关键异常日志为空并完成 Docker 清理 |
 | [x] | `MI-0048` | 2026-08-19 | 部署移动端起报时间选择框优化 | `e51f9c0` 已发布生产；升级前备份 `marine-insight-20260819-110407.dump`（62,641 字节），803,998 字节发布包 SHA-256 本地/远端一致；完整 overlay 重建后 migrate exit 0、Web healthy；核心页面/静态资源和线上桌面/360px 移动 Playwright 2/2 通过，关键错误日志为空并完成 Docker 清理 |
 | [x] | `MI-0046` | 2026-08-19 | 提交并部署起报时间选择框修复 | `b23668c` 已推送并发布生产；升级前备份 `marine-insight-20260819-095938.dump`（59,086 字节），发布包 SHA-256 本地/远端一致；完整 overlay 重建后 migrate exit 0、Web healthy；核心页面、地点搜索、逆地理编码、安全头、静态资源和线上 1440×900/360×800 Playwright 2/2 通过，关键错误日志为空并完成 Docker 清理 |
@@ -240,6 +240,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-20 | `MI-0050` | 将起报时间控件从 `datetime-local` 改为日期输入 + `00:00`–`23:00` 小时下拉，彻底禁用分钟选择；日期/小时变更强制分钟、秒为 `00`；保留服务端 UTC 整点校验 | Release 构建 0 警告/0 错误；全量测试 231/231，格式/diff 通过；生产备份 `marine-insight-20260820-013847.dump` 已生成，migrate exit 0、Web healthy；公网首页/live/ready/login/about 200，SSR 日期/小时控件正确，线上桌面/360px 移动 Playwright 2/2，Docker 清理完成 | 发布完成；GitHub 网络恢复后同步提交 |
 | 2026-08-20 | `MI-0049` | 修复起报时间 UTC 整点边界异常：`datetime-local` 增加 `step=3600` 和 `aria-describedby` 提示；`DashboardQuerySession` 在创建 `ForecastRange` 前校验换算后的 UTC 分钟/秒/毫秒，非整点返回中文调整提示并终止请求；补充 Web 非整点回归测试 | Release 构建 0 警告/0 错误；全量测试 230/230，Web 61/61；`dotnet format --verify-no-changes --no-restore`、`git diff --check` 通过；生产备份 `marine-insight-20260820-012445.dump` 非空（63,272 字节），migrate exit 0、Web healthy；公网核心页面 200，线上桌面/360px 移动 Playwright 2/2，关键错误日志为空，Docker 清理完成 | 生产已发布；GitHub 网络恢复后推送发布记录提交 |
 | 2026-08-19 | `MI-0048` | 将移动端起报时间选择框优化提交 `e51f9c0` 发布生产；生成 803,998 字节发布包且本地/远端 SHA-256 均为 `f30d253c5d086de5dcec9cea2190d118ff5ea168892137a0e3ba094111cdc779`；升级前完成 PostgreSQL custom-format 备份；同步源码与部署资产后使用 production/ai/tianditu 完整 overlay 构建重建；完成退出容器、构建缓存与无用网络清理 | 本地 Release 0 警告/0 错误、230/230 测试、format/diff 通过；生产备份 `marine-insight-20260819-110407.dump` 非空（62,641 字节）；migrate exit 0，Web healthy，7 条迁移和 5 个预置地点完好；公网首页/live/ready/login/about、Blazor 脚本和 CSS 均 200，SSR 包含原生时间输入及 24 小时显示层，关键错误日志为空；线上桌面/360px 移动 Playwright 2/2，通过 `zh-CN`、24 小时读数、移动宽度 ≥300px、按钮热区与无横向溢出断言；清理后磁盘占用 38% | 发布完成；移动端页面固定显示 `yyyy-MM-dd HH:mm`，原生系统选择器继续负责输入 |
 | 2026-08-19 | `MI-0047` | 优化移动端起报时间选择框：保留原生 `datetime-local`，增加移动端固定 `yyyy-MM-dd HH:mm` 24 小时可视读数；输入声明 `zh-CN`；控件横向扩展 24px；输入边框、外层渐变和焦点阴影收敛为单一边框层 | Release 构建 0 警告/0 错误；全量测试 230/230；`dotnet format --verify-no-changes --no-restore` 与 `git diff --check` 通过；Playwright 桌面/360px 移动 2/2，移动端验证宽度 ≥300px、24 小时读数和无横向溢出 | 提交并推送本次改动；本轮用户未要求部署生产 |
