@@ -133,9 +133,9 @@
 | 当前状态 | `DONE` |
 | 当前目标 | 使用 Ant Design Blazor TimePicker 替换 Dashboard 起报小时原生下拉，统一桌面/移动交互并保留显示时区与 UTC 整点不变量 |
 | 最后完成动作 | 已接入 AntDesign 服务、CSS/JS 资源和受控 `TimePicker<TimeOnly?>`，完成整点弹层、状态回写、文档与双视口回归 |
-| 下一步动作 | 提交并推送 `MI-0053`，随后按生产手册完成备份、完整 overlay 重建、冒烟与清理 |
-| 涉及文件 | `src/MarineInsight.Web/MarineInsight.Web.csproj`、`src/MarineInsight.Web/Program.cs`、`src/MarineInsight.Web/Components/`、`tests/`、相关设计文档与本台账 |
-| 验证结果 | Release 构建 0 警告/0 错误；全量测试 231/231；`dotnet format --verify-no-changes --no-restore`、`git diff --check` 通过；修改文本文件 UTF-8 BOM/CRLF 检查通过；Playwright 桌面/360px 2/2，TimePicker 弹层 24 个整点小时单列、值 `HH:00`、无横向溢出 |
+| 下一步动作 | GitHub 网络恢复后推送 `baf2d41`；生产已完成发布，无其他部署动作 |
+| 涉及文件 | `MI-0053` 实现/测试/设计文档，以及本台账发布记录 |
+| 验证结果 | 本地 Release 构建 0 警告/0 错误；全量测试 231/231；`dotnet format --verify-no-changes --no-restore`、`git diff --check` 通过；修改文本文件 UTF-8 BOM/CRLF 检查通过；本地 Playwright 2/2；生产备份 `marine-insight-mi0053.dump` 非空；完整 AI/tianditu overlay 重建后 Web healthy；HTTPS live/ready/home/login/about/AntDesign CSS 200；生产桌面/360px TimePicker 均 24 小时单列、`15:00`、无横向溢出；Docker 清理回收约 77 MB 构建缓存 |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-08-20 |
 
@@ -185,7 +185,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
-| [x] | `MI-0053` | 2026-08-20 | 使用 Ant Design Blazor TimePicker 优化起报时间选择框 | 引入 `AntDesign` 1.6.2、服务注册、AntDesign CSS/JS 与 `AntContainer`；Dashboard 保留日期输入并改用 `TimePicker<TimeOnly?>`，格式 `HH:00` 仅展示 24 个整点小时；补充 SSR、Playwright 双视口、全量测试和 UI/组件/RoadMap 文档 |
+| [x] | `MI-0053` | 2026-08-20 | 使用 Ant Design Blazor TimePicker 优化起报时间选择框并发布 | `baf2d41` 已本地提交；GitHub push 因网络无法连接暂未同步；生产升级前备份 `marine-insight-mi0053.dump` 非空，源码包 818,907 字节已同步，完整 AI/tianditu overlay 重建后 migrate 成功、Web healthy；HTTPS 页面/AntDesign 资源 200，真实生产桌面/360px TimePicker 24 个整点小时单列、`HH:00`、无横向溢出；Docker 清理完成 |
 | [x] | `MI-0052` | 2026-08-20 | 推送并部署品牌与图标统一改动 | `fac8f9f` 已推送 `origin/main`；升级前备份 `marine-insight-20260820-053556.dump`（66,272 字节）；818,681 字节发布包 SHA-256 本地/远端一致；完整 production/AI/tianditu overlay 重建后 migrate exit 0、Web healthy；公网品牌 PNG 哈希全部与本地一致，核心页面、地点、逆地理编码与真实浏览器天地图瓦片通过；线上桌面/360px 2/2、地图 1/1，关键日志 0 并完成 Docker 清理 |
 | [x] | `MI-0051` | 2026-08-20 | 统一站点 Logo、应用图标与操作图标风格 | 从 `docs/持续迭代/marine_ai_logos` 提取珊瑚日落/青绿海浪圆形主标识，替换 Header、favicon、Apple Touch、PWA 与社交分享共用的 32/180/192/512 PNG；新增共享 `UiIcon` 集中维护 Lucide 线性图标并替换移动导航、收藏、再次查询、编辑、删除、设置、关闭和日历时钟图标；Release 构建 0 警告/0 错误、全量测试 231/231、Playwright 双视口 2/2、图片尺寸/透明角检查通过 |
 | [x] | `MI-0050` | 2026-08-20 | 起报时间禁用分钟选择并发布 | `136135d` 已按本地提交发布生产；升级前备份 `marine-insight-20260820-013847.dump`，804,581 字节发布包 SHA-256 本地/远端一致；完整 overlay 重建后 migrate exit 0、Web healthy；公网 SSR 已显示日期输入和 24 个整点小时选项，分钟入口消失；线上桌面/360px 移动 Playwright 2/2 通过，关键日志为空并完成 Docker 清理 |
@@ -245,7 +245,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
-| 2026-08-20 | `MI-0053` | 使用 Ant Design Blazor `TimePicker` 替换起报小时原生下拉；保留日期输入、本地显示时区和 UTC 整点保护；接入 AntDesign 资源与暗色样式，补充 SSR/Web/E2E 与设计文档 | Release 构建 0 警告/0 错误；全量测试 231/231；`dotnet format --verify-no-changes --no-restore`、`git diff --check`、BOM/CRLF 通过；Playwright 桌面/360px 2/2，弹层 24 个小时单列、`HH:00` 值和无横向溢出通过 | 提交、推送并按生产记忆部署，完成备份、迁移/健康、资源和双视口冒烟、Docker 清理 |
+| 2026-08-20 | `MI-0053` | 使用 Ant Design Blazor `TimePicker` 替换起报小时原生下拉；保留日期输入、本地显示时区和 UTC 整点保护；接入 AntDesign 资源与暗色样式，补充 SSR/Web/E2E 与设计文档；按生产记忆完成备份、源码包同步、完整 overlay 重建和 Docker 清理 | Release 构建 0 警告/0 错误；全量测试 231/231；`dotnet format --verify-no-changes --no-restore`、`git diff --check`、BOM/CRLF 通过；本地 Playwright 2/2；生产 HTTPS live/ready/home/login/about/AntDesign CSS 200，桌面/360px TimePicker 24 个小时单列、`HH:00`、无横向溢出；备份非空、Web healthy、关键错误日志 0；构建缓存清理约 77 MB | GitHub push 因网络不可达待恢复后同步 `baf2d41` |
 | 2026-08-20 | `MI-0052` | 将 `MI-0051` 品牌与图标统一改动提交为 `fac8f9f` 并推送 `origin/main`；按生产记忆同步校验后的源码包，完成 PostgreSQL 升级前备份与 production/AI/tianditu 完整 overlay 重建；执行健康、品牌资源、地点、逆地理编码、天地图浏览器瓦片、双视口布局和日志冒烟，最后运行 Docker 清理 | Release 构建 0 警告/0 错误、全量测试 231/231、本地 Playwright 2/2；生产备份 `marine-insight-20260820-053556.dump` 非空（66,272 字节），818,681 字节发布包 SHA-256 本地/远端一致；migrate exit 0、Web healthy、live/ready/home/login/about 200，四个品牌 PNG 公网哈希与本地一致，6 个地点与 7 条迁移完整，逆地理编码有结果；线上桌面/360px 2/2、地图瓦片 1/1，关键异常日志 0；清理回收约 77 MB 构建缓存与退出迁移容器，最终磁盘占用 39% | 发布完成；生产已显示新 Logo 与统一线性图标，无后续阻塞 |
 | 2026-08-20 | `MI-0051` | 使用持续迭代图稿统一品牌与图标：提取珊瑚日落/青绿海浪圆形主标识并重制 32/180/192/512 品牌 PNG；Header、favicon、Apple Touch、PWA、社交分享保持同源；新增共享 `UiIcon`，把移动导航、收藏、再次查询、编辑、删除、设置、关闭和日历时钟统一为 Lucide 线性风格 | Release 构建 0 警告/0 错误；全量测试 231/231；Playwright 1440×900 与 360×800 2/2；品牌 PNG 尺寸正确、透明角有效，SSR/静态资源回归通过；内置浏览器无可用实例，使用仓库 Playwright 完成真实 Chromium 验证 | 本次未部署；如需上线，按生产手册发布并确认 CDN/浏览器图标缓存刷新 |
 | 2026-08-20 | `MI-0050` | 将起报时间控件从 `datetime-local` 改为日期输入 + `00:00`–`23:00` 小时下拉，彻底禁用分钟选择；日期/小时变更强制分钟、秒为 `00`；保留服务端 UTC 整点校验 | Release 构建 0 警告/0 错误；全量测试 231/231，格式/diff 通过；生产备份 `marine-insight-20260820-013847.dump` 已生成，migrate exit 0、Web healthy；公网首页/live/ready/login/about 200，SSR 日期/小时控件正确，线上桌面/360px 移动 Playwright 2/2，Docker 清理完成 | 发布完成；GitHub 网络恢复后同步提交 |
