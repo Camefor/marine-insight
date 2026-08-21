@@ -835,9 +835,53 @@
     }
 }
 
-/* Marine AI design system: the shell stays dark so every workflow feels like one
-   calm navigation instrument, while the dashboard adds local risk semantics. */
+/* Theme tokens are the single color source for the shell and page-level scoped CSS. */
 :root {
+    --marine-ink: #f2f7f9;
+    --marine-deep: #e7f0f3;
+    --marine-panel: rgba(255, 255, 255, 0.9);
+    --marine-panel-solid: #ffffff;
+    --marine-line: rgba(34, 78, 94, 0.16);
+    --marine-line-strong: rgba(34, 78, 94, 0.3);
+    --marine-text: #102f3c;
+    --marine-muted: #496775;
+    --marine-muted-disabled: #718993;
+    --marine-accent: #087f72;
+    --marine-accent-strong: #006b5f;
+    --marine-accent-hover: #05685f;
+    --marine-accent-contrast: #ffffff;
+    --marine-accent-soft: rgba(8, 127, 114, 0.1);
+    --marine-coral: #b94336;
+    --marine-sand: #8b6200;
+    --marine-good: #2f7d5b;
+    --marine-good-soft: rgba(47, 125, 91, 0.12);
+    --marine-sand-soft: rgba(139, 98, 0, 0.11);
+    --marine-link: #006b75;
+    --marine-link-hover: #004f58;
+    --marine-danger-soft: #fff0ed;
+    --marine-danger-line: rgba(185, 67, 54, 0.32);
+    --marine-danger-text: #7e2e26;
+    --marine-card-shadow: 0 16px 38px rgba(34, 78, 94, 0.09);
+    --marine-control: rgba(255, 255, 255, 0.94);
+    --marine-control-strong: #ffffff;
+    --marine-header: rgba(248, 252, 253, 0.92);
+    --marine-dock: rgba(248, 252, 253, 0.97);
+    --marine-popover: #ffffff;
+    --page-ambient: radial-gradient(circle at 15% 0%, rgba(8, 127, 114, 0.1), transparent 30rem);
+    --body-background:
+        radial-gradient(circle at 8% 0%, rgba(8, 127, 114, 0.1), transparent 32rem),
+        radial-gradient(circle at 92% 18%, rgba(185, 67, 54, 0.06), transparent 28rem),
+        linear-gradient(145deg, #f8fbfc 0%, #edf5f7 48%, #f8fbfc 100%);
+    --dashboard-background:
+        radial-gradient(circle at 86% 12%, rgba(8, 127, 114, 0.08), transparent 25rem),
+        linear-gradient(180deg, rgba(218, 236, 240, 0.58), transparent 34rem);
+    --dashboard-grid: rgba(34, 78, 94, 0.05);
+    --dashboard-raised: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(232, 243, 246, 0.96));
+    --focus-ring: rgba(8, 127, 114, 0.34);
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
     --marine-ink: #061423;
     --marine-deep: #091c31;
     --marine-panel: rgba(13, 38, 62, 0.82);
@@ -845,12 +889,96 @@
     --marine-line: rgba(151, 201, 222, 0.18);
     --marine-line-strong: rgba(151, 201, 222, 0.3);
     --marine-text: #edf8fb;
-    --marine-muted: #91b2c4;
+    --marine-muted: #a7c3d1;
+    --marine-muted-disabled: #7896a6;
     --marine-accent: #48e0c0;
-    --marine-accent-strong: #00b995;
+    --marine-accent-strong: #67ead0;
+    --marine-accent-hover: #7aefda;
+    --marine-accent-contrast: #03101c;
+    --marine-accent-soft: rgba(72, 224, 192, 0.12);
     --marine-coral: #ff806d;
     --marine-sand: #ffd475;
+    --marine-good: #73e0aa;
+    --marine-good-soft: rgba(115, 224, 170, 0.12);
+    --marine-sand-soft: rgba(255, 212, 117, 0.1);
+    --marine-link: #67ead0;
+    --marine-link-hover: #9af3e2;
+    --marine-danger-soft: rgba(255, 128, 109, 0.11);
+    --marine-danger-line: rgba(255, 128, 109, 0.32);
+    --marine-danger-text: #ffc1b6;
+    --marine-card-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+    --marine-control: rgba(3, 14, 25, 0.68);
+    --marine-control-strong: rgba(3, 14, 25, 0.88);
+    --marine-header: rgba(6, 20, 35, 0.84);
+    --marine-dock: rgba(6, 20, 35, 0.94);
+    --marine-popover: #071b2d;
+    --page-ambient: radial-gradient(circle at 15% 0%, rgba(72, 224, 192, 0.1), transparent 28rem);
+    --body-background:
+        radial-gradient(circle at 8% 0%, rgba(0, 185, 149, 0.13), transparent 32rem),
+        radial-gradient(circle at 92% 18%, rgba(255, 128, 109, 0.08), transparent 28rem),
+        linear-gradient(145deg, #061423 0%, #092239 48%, #061423 100%);
+    --dashboard-background:
+        radial-gradient(circle at 86% 12%, rgba(72, 224, 192, 0.08), transparent 25rem),
+        linear-gradient(180deg, rgba(7, 25, 42, 0.55), transparent 34rem);
+    --dashboard-grid: rgba(151, 201, 222, 0.04);
+    --dashboard-raised: linear-gradient(145deg, rgba(16, 51, 78, 0.9), rgba(7, 27, 45, 0.9));
     --focus-ring: rgba(72, 224, 192, 0.42);
+    color-scheme: dark;
+}
+
+.ant-picker-dropdown .ant-picker-panel-container,
+.ant-picker-dropdown .ant-picker-panel,
+.ant-picker-dropdown .ant-picker-date-panel,
+.ant-picker-dropdown .ant-picker-time-panel,
+.ant-picker-dropdown .ant-picker-content,
+.ant-picker-dropdown .ant-picker-header,
+.ant-picker-dropdown .ant-picker-footer,
+.ant-picker-dropdown .ant-picker-ranges,
+.ant-picker-dropdown .ant-picker-time-panel-column,
+.forecast-date-dropdown,
+.forecast-date-dropdown .ant-picker-panel,
+.forecast-date-dropdown .ant-picker-panel-container,
+.forecast-time-dropdown,
+.forecast-time-dropdown .ant-picker-panel,
+.forecast-time-dropdown .ant-picker-panel-container {
+    background: var(--marine-popover) !important;
+    color: var(--marine-text) !important;
+}
+
+.ant-picker-dropdown .ant-picker-header,
+.ant-picker-dropdown .ant-picker-footer,
+.ant-picker-dropdown .ant-picker-ranges,
+.ant-picker-dropdown .ant-picker-time-panel-column {
+    border-color: var(--marine-line-strong) !important;
+}
+
+.ant-picker-dropdown .ant-picker-header button,
+.ant-picker-dropdown .ant-picker-header-view,
+.ant-picker-dropdown .ant-picker-content th,
+.ant-picker-dropdown .ant-picker-cell-in-view .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-time-panel-cell-inner,
+.ant-picker-dropdown .ant-picker-today-btn,
+.ant-picker-dropdown .ant-picker-now-btn {
+    color: var(--marine-text) !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-time-panel-cell-disabled .ant-picker-time-panel-cell-inner {
+    color: var(--marine-muted-disabled) !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell:hover .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-cell-in-view:hover .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-time-panel-cell:hover .ant-picker-time-panel-cell-inner {
+    background: var(--marine-accent-soft) !important;
+    color: var(--marine-text) !important;
+}
+
+.ant-picker-dropdown .ant-picker-cell-selected .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-cell-selected:hover .ant-picker-cell-inner,
+.ant-picker-dropdown .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+    background: var(--marine-accent) !important;
+    color: var(--marine-accent-contrast) !important;
 }
 
 html {
@@ -864,10 +992,7 @@ html {
 }
 
 body {
-    background:
-        radial-gradient(circle at 8% 0%, rgba(0, 185, 149, 0.13), transparent 32rem),
-        radial-gradient(circle at 92% 18%, rgba(255, 128, 109, 0.08), transparent 28rem),
-        linear-gradient(145deg, #061423 0%, #092239 48%, #061423 100%);
+    background: var(--body-background);
     color: var(--marine-text);
     font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
     min-height: 100vh;
@@ -892,9 +1017,9 @@ select {
 
 .app-header {
     align-items: center;
-    background: rgba(6, 20, 35, 0.84);
+    background: var(--marine-header);
     border-bottom: 1px solid var(--marine-line);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--marine-card-shadow);
     display: flex;
     justify-content: space-between;
     min-height: 72px;
@@ -904,13 +1029,18 @@ select {
 }
 
 .app-header-brand,
-.app-brand {
+.app-brand,
+.app-header-actions {
     align-items: center;
     display: flex;
 }
 
 .app-header-brand {
     gap: clamp(18px, 3vw, 42px);
+}
+
+.app-header-actions {
+    gap: 10px;
 }
 
 .app-brand {
@@ -922,6 +1052,10 @@ select {
     display: block;
     height: 44px;
     width: auto;
+}
+
+:root[data-theme="light"] .app-brand-logo {
+    filter: brightness(0) saturate(100%) invert(15%) sepia(25%) saturate(1314%) hue-rotate(153deg) brightness(91%) contrast(93%);
 }
 
 .main-nav,
@@ -951,7 +1085,7 @@ select {
 
 .account-link:hover,
 .account-link:focus-visible {
-    background: rgba(72, 224, 192, 0.08);
+    background: var(--marine-accent-soft);
     border-color: var(--marine-line);
     color: var(--marine-text);
 }
@@ -959,14 +1093,51 @@ select {
 .account-link-primary {
     background: var(--marine-accent);
     border-color: var(--marine-accent);
-    color: var(--marine-ink);
+    color: var(--marine-accent-contrast);
 }
 
 .account-link-primary:hover,
 .account-link-primary:focus-visible {
-    background: #7aefda;
-    border-color: #7aefda;
-    color: var(--marine-ink);
+    background: var(--marine-accent-hover);
+    border-color: var(--marine-accent-hover);
+    color: var(--marine-accent-contrast);
+}
+
+.theme-toggle {
+    align-items: center;
+    background: var(--marine-accent-soft);
+    border: 1px solid var(--marine-line);
+    border-radius: 999px;
+    color: var(--marine-text);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+    gap: 6px;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 12px;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+    border-color: var(--marine-accent);
+    color: var(--marine-accent-strong);
+}
+
+.theme-icon {
+    height: 17px;
+    width: 17px;
+}
+
+.theme-icon-sun,
+:root[data-theme="dark"] .theme-icon-moon {
+    display: none;
+}
+
+:root[data-theme="dark"] .theme-icon-sun {
+    display: block;
 }
 
 .account-email {
@@ -1036,7 +1207,7 @@ select {
 .about-cta {
     background: var(--marine-accent);
     border-color: var(--marine-accent);
-    color: var(--marine-ink);
+    color: var(--marine-accent-contrast);
 }
 
 .workspace-primary:hover,
@@ -1045,8 +1216,8 @@ select {
 .account-submit:focus-visible,
 .about-cta:hover,
 .about-cta:focus-visible {
-    background: #7aefda;
-    color: var(--marine-ink);
+    background: var(--marine-accent-hover);
+    color: var(--marine-accent-contrast);
 }
 
 .workspace-icon-button,
@@ -1064,7 +1235,7 @@ select {
 .account-form input[type="email"],
 .account-form input[type="password"],
 .account-captcha-input {
-    background: rgba(3, 14, 25, 0.68);
+    background: var(--marine-control);
     border-color: var(--marine-line-strong);
     color: var(--marine-text);
 }
@@ -1088,7 +1259,7 @@ select {
 }
 
 .admin-table-wrap th {
-    background: rgba(72, 224, 192, 0.08);
+    background: var(--marine-accent-soft);
     color: var(--marine-text);
 }
 
@@ -1113,6 +1284,19 @@ select {
         gap: 0;
     }
 
+    .app-header-actions {
+        gap: 4px;
+    }
+
+    .theme-toggle {
+        min-width: 40px;
+        padding: 8px 10px;
+    }
+
+    .theme-toggle-label {
+        display: none;
+    }
+
     .account-link {
         min-height: 40px;
         padding: 8px 9px;
@@ -1120,7 +1304,7 @@ select {
 
     .mobile-dock {
         align-items: stretch;
-        background: rgba(6, 20, 35, 0.94);
+        background: var(--marine-dock);
         border-top: 1px solid var(--marine-line);
         bottom: 0;
         display: grid;

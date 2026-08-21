@@ -1,23 +1,21 @@
 ﻿.dashboard-shell {
-    --dash-bg: #061423;
-    --dash-panel: rgba(13, 38, 62, 0.78);
-    --dash-panel-solid: #0d2943;
-    --dash-panel-soft: rgba(18, 52, 79, 0.54);
-    --dash-line: rgba(151, 201, 222, 0.17);
-    --dash-line-strong: rgba(151, 201, 222, 0.3);
-    --dash-text: #edf8fb;
-    --dash-muted: #91b2c4;
-    --dash-accent: #48e0c0;
-    --dash-coral: #ff806d;
-    --dash-yellow: #ffd475;
-    --dash-good: #73e0aa;
+    --dash-bg: var(--marine-ink);
+    --dash-panel: var(--marine-panel);
+    --dash-panel-solid: var(--marine-panel-solid);
+    --dash-panel-soft: var(--marine-accent-soft);
+    --dash-line: var(--marine-line);
+    --dash-line-strong: var(--marine-line-strong);
+    --dash-text: var(--marine-text);
+    --dash-muted: var(--marine-muted);
+    --dash-accent: var(--marine-accent);
+    --dash-coral: var(--marine-coral);
+    --dash-yellow: var(--marine-sand);
+    --dash-good: var(--marine-good);
     --dash-radius: 12px;
 }
 
 .dashboard-shell {
-    background:
-        radial-gradient(circle at 86% 12%, rgba(72, 224, 192, 0.08), transparent 25rem),
-        linear-gradient(180deg, rgba(7, 25, 42, 0.55), transparent 34rem);
+    background: var(--dashboard-background);
     color: var(--dash-text);
     min-height: calc(100vh - 72px);
     overflow: hidden;
@@ -26,7 +24,7 @@
 }
 
 .dashboard-shell::before {
-    background: repeating-radial-gradient(ellipse at 50% 10%, transparent 0 48px, rgba(151, 201, 222, 0.04) 49px 50px);
+    background: repeating-radial-gradient(ellipse at 50% 10%, transparent 0 48px, var(--dashboard-grid) 49px 50px);
     content: "";
     inset: -40% -15%;
     opacity: 0.32;
@@ -106,11 +104,11 @@
 }
 
 .disclaimer {
-    background: linear-gradient(135deg, rgba(255, 128, 109, 0.12), rgba(13, 38, 62, 0.68));
-    border: 1px solid rgba(255, 128, 109, 0.28);
+    background: linear-gradient(135deg, var(--marine-danger-soft), var(--dash-panel));
+    border: 1px solid var(--marine-danger-line);
     border-left: 3px solid var(--dash-coral);
     border-radius: var(--dash-radius);
-    color: #ffc1b6;
+    color: var(--marine-danger-text);
     font-size: 0.82rem;
     line-height: 1.6;
     padding: 15px 16px;
@@ -136,7 +134,7 @@
 }
 
 .query-band {
-    background: linear-gradient(145deg, rgba(16, 51, 78, 0.9), rgba(7, 27, 45, 0.9));
+    background: var(--dashboard-raised);
     border-color: var(--dash-line-strong);
     overflow: hidden;
 }
@@ -190,10 +188,10 @@
 
 .paid-provider-option {
     align-items: center;
-    background: rgba(7, 27, 44, 0.72);
-    border: 1px solid rgba(99, 210, 190, 0.24);
+    background: var(--marine-control);
+    border: 1px solid var(--dash-line-strong);
     border-radius: 14px;
-    color: var(--text-primary);
+    color: var(--dash-text);
     display: inline-flex;
     gap: 10px;
     min-height: 48px;
@@ -202,7 +200,7 @@
 }
 
 .paid-provider-option input {
-    accent-color: var(--accent-primary);
+    accent-color: var(--dash-accent);
     height: 18px;
     width: 18px;
 }
@@ -213,13 +211,13 @@
 }
 
 .paid-provider-option small {
-    color: var(--text-muted);
+    color: var(--dash-muted);
     font-size: 0.72rem;
 }
 
 .paid-provider-option.locked {
     border-style: dashed;
-    color: var(--text-secondary);
+    color: var(--dash-muted);
 }
 
 .range-controls {
@@ -244,7 +242,7 @@
 }
 
 .field input {
-    background: rgba(3, 14, 25, 0.72);
+    background: var(--marine-control);
     border: 1px solid var(--dash-line-strong);
     border-radius: 8px;
     color: var(--dash-text);
@@ -254,7 +252,7 @@
 }
 
 .field input::placeholder {
-    color: #6f91a4;
+    color: var(--marine-muted-disabled);
 }
 
 .field input:focus {
@@ -303,7 +301,7 @@
 }
 
 .datetime-control input {
-    background: rgba(3, 14, 25, 0.88);
+    background: var(--marine-control-strong);
     border: 0;
     border-radius: 10px;
     color-scheme: dark;
@@ -327,7 +325,7 @@
 }
 
 .datetime-control ::deep .forecast-date-picker.ant-picker {
-    background: rgba(3, 14, 25, 0.88);
+    background: var(--marine-control-strong);
     border: 0;
     border-radius: 10px 0 0 10px;
     min-height: 46px;
@@ -402,7 +400,7 @@
 }
 
 .datetime-control ::deep .forecast-time-picker.ant-picker {
-    background: rgba(3, 14, 25, 0.88);
+    background: var(--marine-control-strong);
     border: 0;
     border-left: 1px solid rgba(111, 145, 164, 0.3);
     border-radius: 0 10px 10px 0;
@@ -456,7 +454,7 @@
 
 .primary-button:hover,
 .primary-button:focus-visible {
-    background: #86f1dd;
+    background: var(--marine-accent-hover);
     transform: translateY(-1px);
 }
 
@@ -487,7 +485,7 @@
 }
 
 .candidate-button {
-    background: rgba(3, 14, 25, 0.45);
+    background: var(--marine-control);
     border: 1px solid var(--dash-line);
     color: var(--dash-text);
     display: grid;
@@ -522,7 +520,7 @@
 }
 
 .segment {
-    background: rgba(3, 14, 25, 0.58);
+    background: var(--marine-control);
     border: 1px solid var(--dash-line);
     color: var(--dash-muted);
     padding: 0 15px;
@@ -604,7 +602,7 @@
 }
 
 .map-canvas {
-    background: #0b263e;
+    background: var(--marine-panel-solid);
     border: 1px solid var(--dash-line);
     border-radius: 8px;
     min-height: 340px;
@@ -641,7 +639,7 @@
 .status-band.error {
     background: rgba(255, 128, 109, 0.13);
     border: 1px solid rgba(255, 128, 109, 0.35);
-    color: #ffc1b6;
+    color: var(--marine-danger-text);
 }
 
 .status-band.warning {
@@ -656,7 +654,7 @@
 }
 
 .empty-state {
-    background: linear-gradient(135deg, rgba(72, 224, 192, 0.09), rgba(13, 38, 62, 0.65));
+    background: linear-gradient(135deg, var(--marine-accent-soft), var(--dash-panel));
     border: 1px dashed var(--dash-line-strong);
     border-radius: var(--dash-radius);
     margin-bottom: 16px;
@@ -828,7 +826,7 @@ dd {
 
 .explanation-risk {
     border-left: 3px solid var(--dash-coral);
-    color: #ffc1b6;
+    color: var(--marine-danger-text);
     padding-left: 11px;
 }
 
@@ -931,7 +929,7 @@ dd {
 }
 
 .trend-tab {
-    background: rgba(3, 14, 25, 0.45);
+    background: var(--marine-control);
     border: 1px solid var(--dash-line);
     color: var(--dash-muted);
     min-height: 38px;
@@ -978,7 +976,7 @@ dd {
 }
 
 .trend-point {
-    background: rgba(3, 14, 25, 0.42);
+    background: var(--marine-control);
     border: 1px solid var(--dash-line);
     border-radius: 8px;
     color: var(--dash-text);
@@ -1110,7 +1108,7 @@ dd {
 }
 
 .detail-metric-grid div {
-    background: rgba(3, 14, 25, 0.38);
+    background: var(--marine-control);
     border: 1px solid var(--dash-line);
     border-radius: 7px;
     min-height: 64px;
@@ -1182,7 +1180,7 @@ dd {
 }
 
 .tide-overview article {
-    background: rgba(3, 14, 25, 0.42);
+    background: var(--marine-control);
     border: 1px solid var(--dash-line);
     border-radius: 10px;
     display: grid;
@@ -1211,7 +1209,7 @@ dd {
 }
 
 .tide-chart-shell {
-    background: rgba(3, 14, 25, 0.42);
+    background: var(--marine-control);
     border: 1px solid var(--dash-line);
     border-radius: 10px;
     contain: layout paint;
@@ -1323,7 +1321,7 @@ dd {
 }
 
 .hourly-table-wrap {
-    background: rgba(3, 14, 25, 0.45);
+    background: var(--marine-control);
     border: 1px solid var(--dash-line);
     border-radius: 8px;
     margin-top: 13px;
@@ -1392,8 +1390,8 @@ td {
 .query-loading {
     align-items: center;
     background:
-        linear-gradient(90deg, rgba(72, 224, 192, 0.1), rgba(10, 31, 50, 0.68) 45%, rgba(255, 157, 92, 0.08)),
-        rgba(3, 14, 25, 0.64);
+        linear-gradient(90deg, var(--marine-accent-soft), transparent 45%, var(--marine-danger-soft)),
+        var(--marine-control-strong);
     border: 1px solid rgba(72, 224, 192, 0.24);
     border-radius: 10px;
     box-shadow: inset 3px 0 0 var(--dash-accent);

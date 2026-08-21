@@ -14,7 +14,14 @@
             <a class="account-link" href="/about">功能介绍</a>
         </nav>
     </div>
-    <AccountNav />
+    <div class="app-header-actions">
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换主题" title="切换主题">
+            <UiIcon Name="Sun" CssClass="ui-icon theme-icon theme-icon-sun" />
+            <UiIcon Name="Moon" CssClass="ui-icon theme-icon theme-icon-moon" />
+            <span class="theme-toggle-label">主题</span>
+        </button>
+        <AccountNav />
+    </div>
 </header>
 
 <nav class="mobile-dock" aria-label="移动端主导航">

@@ -186,6 +186,8 @@ public sealed partial class RiskSummary
 
 `MI-0065` 不改变 `Dashboard.razor` 或认证状态逻辑，仅在 `Dashboard.razor.css` 的大于 1040px 四列查询布局中，为 `.paid-provider-option` 增加 31px 顶部偏移，使其与日期时间控件、范围按钮及查询按钮顶线一致；两列与单列断点继续使用正常文档流。
 
+`MI-0067` 继续保持主题状态在浏览器呈现层：`App.razor` 在主样式前加载 `wwwroot/js/theme.js`，脚本先读取持久化选择、再回退系统 `prefers-color-scheme`，将 `data-theme`、`color-scheme` 和 `theme-color` 同步到文档；`MainLayout.razor` 提供不依赖 Blazor 交互渲染的 `data-theme-toggle` 按钮，因此静态 SSR 的 `/about` 与 Interactive Server 页面共享同一切换行为。`app.css` 统一定义 `--marine-*` 语义变量，组件 scoped CSS 只保留局部布局和风险语义；主题不进入 .NET 状态容器，也不触发服务器重渲染。`About.razor` 增加外部 GitHub 仓库入口，使用新窗口和 `noopener noreferrer` 隔离外部页面。
+
 `MI-0055` 复用 `MarineAnalysisQueryResult.Tide`，由 `DashboardQuerySession` 投影 `DashboardTideResult` 与潮位点、高低潮和涨退潮文本；该投影明确不参与风险评分。`Dashboard.razor` 仅在潮位点存在时动态导入 `tide-chart.js`，模块再从固定版本 `Vizor.ECharts` 静态 Web Asset 加载 ECharts 6；以 SnapshotId 避免重复初始化，通过 `ResizeObserver` 自适应容器，并在重查或页面 Dispose 时销毁实例。JS/Canvas 失败时 Razor 摘要和 Provider 降级文案仍可用。
 
 `MI-0056` 保持 `DashboardQuerySession.IsLoadingAnalysis`、请求取消和重复提交保护不变，仅将条件渲染的忙状态移入 `.query-band`。状态卡使用正常文档流和 scoped CSS，不再采用 `position: fixed` 或页面级 `z-index`；因此查询期间 Header、表单和已有结果继续可见，移动端只通过媒体查询收敛展示密度，不复制业务状态。
@@ -224,3 +226,4 @@ public sealed partial class RiskSummary
 | 3.5 | 2026-08-21 | 记录 `MI-0063` 第二版 Logo 为同 URL、同固有尺寸的 SVG/PNG/ICO 资产替换，组件与 manifest 消费边界保持不变 |
 | 3.6 | 2026-08-21 | 记录 `MI-0064` 海洋罗盘风为同 URL、同尺寸的三套背景适配 SVG，继续离线派生 PNG/ICO，不改变组件与 manifest 边界 |
 | 3.7 | 2026-08-21 | 记录 `MI-0065` 仅通过 Dashboard scoped CSS 修复 PC 潮汐登录提示水平对齐，不改变认证渲染和移动端布局 |
+| 3.8 | 2026-08-21 | 记录 `MI-0067` 浏览器端明暗主题状态、静态 SSR 可用的 Header 切换按钮、全局语义变量与 About 开源入口组件边界 |

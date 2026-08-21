@@ -1,6 +1,6 @@
 ﻿.about-page {
-    background: #f4f7f6;
-    color: #173a35;
+    background: var(--page-ambient);
+    color: var(--marine-text);
     min-height: 100vh;
     padding: 48px 24px 64px;
 }
@@ -12,43 +12,78 @@
 }
 
 .about-eyebrow {
-    color: #52736d;
+    color: var(--marine-accent-strong);
     font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-weight: 800;
+    letter-spacing: 0.12em;
     margin: 0 0 10px;
     text-transform: uppercase;
 }
 
+.about-hero h1,
+.about-section h2,
+.about-source h2,
+.about-card h3 {
+    color: var(--marine-text);
+}
+
 .about-hero h1 {
-    font-size: 2.25rem;
-    letter-spacing: 0;
+    font-size: clamp(2rem, 5vw, 3.35rem);
+    letter-spacing: -0.04em;
+    line-height: 1.08;
     margin: 0 0 16px;
 }
 
 .about-lead {
-    color: #53635f;
+    color: var(--marine-muted);
     font-size: 1.05rem;
-    line-height: 1.7;
+    line-height: 1.8;
     margin: 0 auto 24px;
-    max-width: 560px;
+    max-width: 620px;
+}
+
+.about-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
 }
 
 .about-cta {
-    background: #1f6b5d;
-    border: 1px solid #1f6b5d;
-    border-radius: 6px;
-    color: #ffffff;
+    align-items: center;
+    background: var(--marine-accent);
+    border: 1px solid var(--marine-accent);
+    border-radius: 999px;
+    color: var(--marine-accent-contrast);
     display: inline-flex;
-    font-weight: 700;
+    font-weight: 800;
+    justify-content: center;
     min-height: 48px;
     padding: 12px 28px;
     text-decoration: none;
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .about-cta:hover,
 .about-cta:focus-visible {
-    background: #174f45;
+    background: var(--marine-accent-hover);
+    border-color: var(--marine-accent-hover);
+    color: var(--marine-accent-contrast);
+    transform: translateY(-1px);
+}
+
+.about-cta-secondary {
+    background: var(--marine-panel);
+    border-color: var(--marine-line-strong);
+    color: var(--marine-text);
+}
+
+.about-cta-secondary:hover,
+.about-cta-secondary:focus-visible {
+    background: var(--marine-accent-soft);
+    border-color: var(--marine-accent);
+    color: var(--marine-text);
 }
 
 .about-section {
@@ -56,9 +91,10 @@
     max-width: 1000px;
 }
 
-.about-section h2 {
+.about-section h2,
+.about-source h2 {
     font-size: 1.35rem;
-    letter-spacing: 0;
+    letter-spacing: -0.01em;
     margin: 0 0 16px;
 }
 
@@ -69,11 +105,17 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.about-card,
+.about-trust-list li,
+.about-source {
+    background: var(--marine-panel);
+    border: 1px solid var(--marine-line);
+    box-shadow: var(--marine-card-shadow);
+}
+
 .about-card {
-    background: #ffffff;
-    border: 1px solid #d9e1df;
-    border-radius: 8px;
-    padding: 18px;
+    border-radius: 14px;
+    padding: 20px;
 }
 
 .about-card h3 {
@@ -82,9 +124,10 @@
     margin: 0 0 8px;
 }
 
-.about-card p {
-    color: #53635f;
-    line-height: 1.6;
+.about-card p,
+.about-source p {
+    color: var(--marine-muted);
+    line-height: 1.65;
     margin: 0;
 }
 
@@ -97,23 +140,51 @@
 }
 
 .about-trust-list li {
-    background: #ffffff;
-    border: 1px solid #d9e1df;
-    border-left: 4px solid #1f6b5d;
-    border-radius: 6px;
-    line-height: 1.6;
-    padding: 14px 16px;
+    border-left: 4px solid var(--marine-accent);
+    border-radius: 10px;
+    color: var(--marine-muted);
+    line-height: 1.7;
+    padding: 15px 18px;
 }
 
 .about-trust-list strong {
-    color: #173a35;
+    color: var(--marine-text);
+}
+
+.about-source {
+    align-items: center;
+    border-radius: 14px;
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+    margin: 0 auto 36px;
+    max-width: 1000px;
+    padding: 22px 24px;
+}
+
+.about-source h2 {
+    margin-bottom: 6px;
+}
+
+.about-source a {
+    color: var(--marine-link);
+    font-family: "DM Mono", Consolas, monospace;
+    font-size: 0.88rem;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.about-source a:hover,
+.about-source a:focus-visible {
+    color: var(--marine-link-hover);
 }
 
 .about-disclaimer {
-    background: #fff4d6;
-    border: 1px solid #e7c56f;
-    border-radius: 8px;
-    color: #8a5a00;
+    background: var(--marine-danger-soft);
+    border: 1px solid var(--marine-danger-line);
+    border-left: 4px solid var(--marine-coral);
+    border-radius: 10px;
+    color: var(--marine-danger-text);
     margin: 0 auto;
     max-width: 1000px;
     padding: 16px 18px;
@@ -125,7 +196,7 @@
 }
 
 .about-disclaimer p {
-    line-height: 1.6;
+    line-height: 1.7;
     margin: 0;
 }
 
@@ -138,63 +209,17 @@
 
 @media (max-width: 599px) {
     .about-page {
-        padding: 32px 16px 48px;
-    }
-
-    .about-hero h1 {
-        font-size: 1.75rem;
+        padding: 32px 16px 110px;
     }
 
     .about-feature-grid,
     .about-scenario-grid {
         grid-template-columns: 1fr;
     }
-}
 
-/* Align the supporting page with the dark marine instrument theme. */
-.about-page {
-    background: radial-gradient(circle at 15% 0%, rgba(72, 224, 192, 0.1), transparent 28rem);
-    color: #edf8fb;
-}
-
-.about-eyebrow {
-    color: #48e0c0;
-}
-
-.about-lead,
-.about-card p {
-    color: #91b2c4;
-}
-
-.about-cta {
-    background: #48e0c0;
-    border-color: #48e0c0;
-    color: #061423;
-}
-
-.about-cta:hover,
-.about-cta:focus-visible {
-    background: #7aefda;
-}
-
-.about-card,
-.about-trust-list li {
-    background: rgba(13, 38, 62, 0.78);
-    border-color: rgba(151, 201, 222, 0.17);
-    border-radius: 12px;
-}
-
-.about-trust-list li {
-    border-left-color: #48e0c0;
-}
-
-.about-trust-list strong {
-    color: #edf8fb;
-}
-
-.about-disclaimer {
-    background: rgba(255, 128, 109, 0.11);
-    border-color: rgba(255, 128, 109, 0.32);
-    border-left: 3px solid #ff806d;
-    color: #ffc1b6;
+    .about-source {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
 }

@@ -18,6 +18,28 @@ public sealed class AboutPageTests
         Assert.Contains("开始查询", html, StringComparison.Ordinal);
         Assert.Contains("核心功能", html, StringComparison.Ordinal);
         Assert.Contains("适用场景", html, StringComparison.Ordinal);
+        Assert.Contains("项目完全开源", html, StringComparison.Ordinal);
+        Assert.Contains("https://github.com/Camefor/marine-insight", html, StringComparison.Ordinal);
+        Assert.Contains("target=\"_blank\"", html, StringComparison.Ordinal);
+        Assert.Contains("rel=\"noopener noreferrer\"", html, StringComparison.Ordinal);
+        Assert.Contains("data-theme-toggle", html, StringComparison.Ordinal);
+        Assert.Contains("js/theme.js", html, StringComparison.Ordinal);
         Assert.Contains("免责声明", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ThemeScriptSupportsSystemPreferenceAndPersistedChoice()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        using var client = factory.CreateClient();
+
+        using var response = await client.GetAsync("/js/theme.js");
+        var script = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("prefers-color-scheme: dark", script, StringComparison.Ordinal);
+        Assert.Contains("marine-insight-theme", script, StringComparison.Ordinal);
+        Assert.Contains("localStorage.setItem", script, StringComparison.Ordinal);
+        Assert.Contains("document.documentElement.dataset.theme", script, StringComparison.Ordinal);
     }
 }

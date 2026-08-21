@@ -269,3 +269,109 @@ test('tide chart renders inside its responsive panel', async ({ page }) => {
 function layoutViewportWidth(page) {
   return page.viewportSize()?.width ?? 0;
 }
+
+test('light and dark themes persist across about and dashboard with readable contrast', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/about');
+  await page.evaluate(() => localStorage.removeItem('marine-insight-theme'));
+  await page.reload();
+
+  const themeToggle = page.locator('[data-theme-toggle]');
+  const repositoryLink = page.getByRole('link', { name: 'github.com/Camefor/marine-insight' });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await expect(themeToggle).toHaveAttribute('aria-label', '切换至夜间模式');
+  await expect(repositoryLink).toHaveAttribute('href', 'https://github.com/Camefor/marine-insight');
+  await expect(repositoryLink).toHaveAttribute('target', '_blank');
+  await expectAboutContrast(page);
+
+  await themeToggle.click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(themeToggle).toHaveAttribute('aria-label', '切换至日间模式');
+  expect(await page.evaluate(() => localStorage.getItem('marine-insight-theme'))).toBe('dark');
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expectAboutContrast(page);
+
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  const darkDashboardTheme = await readDashboardTheme(page);
+  await page.locator('[data-theme-toggle]').click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  const lightDashboardTheme = await readDashboardTheme(page);
+  expect(lightDashboardTheme.bodyBackground).not.toBe(darkDashboardTheme.bodyBackground);
+  expect(lightDashboardTheme.textColor).not.toBe(darkDashboardTheme.textColor);
+  expect(lightDashboardTheme.panelBackground).not.toBe(darkDashboardTheme.panelBackground);
+  expect(await page.evaluate(() => localStorage.getItem('marine-insight-theme'))).toBe('light');
+
+  const dimensions = await page.evaluate(() => ({
+    viewportWidth: document.documentElement.clientWidth,
+    documentWidth: document.documentElement.scrollWidth
+  }));
+  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
+});
+
+async function expectAboutContrast(page) {
+  const contrastRatios = await page.evaluate(() => {
+    const parseColor = value => {
+      const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
+      return {
+        red: channels[0] ?? 0,
+        green: channels[1] ?? 0,
+        blue: channels[2] ?? 0,
+        alpha: channels[3] ?? 1
+      };
+    };
+    const blend = (foreground, background) => {
+      const alpha = foreground.alpha + background.alpha * (1 - foreground.alpha);
+      if (alpha === 0) return { red: 255, green: 255, blue: 255, alpha: 1 };
+      return {
+        red: (foreground.red * foreground.alpha + background.red * background.alpha * (1 - foreground.alpha)) / alpha,
+        green: (foreground.green * foreground.alpha + background.green * background.alpha * (1 - foreground.alpha)) / alpha,
+        blue: (foreground.blue * foreground.alpha + background.blue * background.alpha * (1 - foreground.alpha)) / alpha,
+        alpha
+      };
+    };
+    const luminance = color => {
+      const channel = value => {
+        const normalized = value / 255;
+        return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * channel(color.red) + 0.7152 * channel(color.green) + 0.0722 * channel(color.blue);
+    };
+    const contrast = selector => {
+      const element = document.querySelector(selector);
+      const ancestry = [];
+      for (let current = element; current; current = current.parentElement) ancestry.unshift(current);
+      let background = { red: 255, green: 255, blue: 255, alpha: 1 };
+      for (const current of ancestry) {
+        background = blend(parseColor(getComputedStyle(current).backgroundColor), background);
+      }
+      const foreground = parseColor(getComputedStyle(element).color);
+      const lighter = Math.max(luminance(foreground), luminance(background));
+      const darker = Math.min(luminance(foreground), luminance(background));
+      return (lighter + 0.05) / (darker + 0.05);
+    };
+
+    return [
+      '.about-hero h1',
+      '.about-lead',
+      '.about-card p',
+      '.about-trust-list li',
+      '.about-source a',
+      '.about-disclaimer'
+    ].map(selector => ({ selector, ratio: contrast(selector) }));
+  });
+
+  for (const result of contrastRatios) {
+    expect(result.ratio, `${result.selector} contrast ratio`).toBeGreaterThanOrEqual(4.5);
+  }
+}
+
+async function readDashboardTheme(page) {
+  await expect(page.locator('.dashboard-shell')).toBeVisible();
+  return page.evaluate(() => ({
+    bodyBackground: getComputedStyle(document.body).backgroundImage,
+    textColor: getComputedStyle(document.querySelector('.dashboard-shell')).color,
+    panelBackground: getComputedStyle(document.querySelector('.query-band')).backgroundImage
+  }));
+}

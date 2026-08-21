@@ -1,47 +1,28 @@
 ﻿.admin-tabs {
+    border-bottom: 1px solid var(--marine-line);
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    border-bottom: 1px solid #d9e1df;
     padding-bottom: 12px;
 }
 
 .admin-tab {
-    border: 1px solid #d9e1df;
-    border-radius: 8px;
-    color: #465956;
+    border: 1px solid var(--marine-line);
+    border-radius: 999px;
+    color: var(--marine-muted);
     font-size: 0.9rem;
     padding: 6px 14px;
     text-decoration: none;
 }
 
-.admin-tab:hover {
-    background: #edf3f4;
+.admin-tab:hover,
+.admin-tab:focus-visible {
+    background: var(--marine-accent-soft);
+    color: var(--marine-text);
 }
 
 .admin-tab.active {
-    background: #255e57;
-    border-color: #255e57;
-    color: #fff;
-}
-
-.admin-tabs {
-    border-bottom-color: rgba(151, 201, 222, 0.17);
-}
-
-.admin-tab {
-    border-color: rgba(151, 201, 222, 0.17);
-    border-radius: 999px;
-    color: #91b2c4;
-}
-
-.admin-tab:hover {
-    background: rgba(72, 224, 192, 0.08);
-    color: #edf8fb;
-}
-
-.admin-tab.active {
-    background: #48e0c0;
-    border-color: #48e0c0;
-    color: #061423;
+    background: var(--marine-accent);
+    border-color: var(--marine-accent);
+    color: var(--marine-accent-contrast);
 }
