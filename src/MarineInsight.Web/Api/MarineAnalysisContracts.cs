@@ -13,6 +13,8 @@ public sealed record MarineAnalysisRequest
     public MarineAnalysisUnitsInput? Units { get; init; }
 
     public string? TimeZone { get; init; }
+
+    public bool IncludeTide { get; init; }
 }
 
 public sealed record MarineAnalysisLocationInput

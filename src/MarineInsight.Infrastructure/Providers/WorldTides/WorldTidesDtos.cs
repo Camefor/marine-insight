@@ -24,6 +24,9 @@ internal sealed record WorldTidesResponse
 
     [JsonPropertyName("credits")]
     public int? RemainingCredits { get; init; }
+
+    [JsonPropertyName("callCount")]
+    public int? CallCount { get; init; }
 }
 
 internal sealed record WorldTidesHeight

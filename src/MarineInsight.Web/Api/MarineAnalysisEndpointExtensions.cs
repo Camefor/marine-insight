@@ -43,10 +43,26 @@ public static class MarineAnalysisEndpointExtensions
     {
         var traceId = GetTraceId(httpContext);
         httpContext.Response.Headers["Trace-Id"] = traceId;
+        var actorUserId = httpContext.User.Identity?.IsAuthenticated == true
+            ? UserWorkspaceEndpointExtensions.GetUserId(httpContext.User)
+            : (Guid?)null;
+        if (request?.IncludeTide == true && !actorUserId.HasValue)
+        {
+            return Results.Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Authentication required.",
+                detail: "Tide data is a paid API enrichment and is available to signed-in users only.",
+                extensions: new Dictionary<string, object?>
+                {
+                    ["code"] = "AUTHENTICATION_REQUIRED",
+                    ["traceId"] = traceId
+                });
+        }
 
         var queryCreation = await CreateQueryAsync(
             request,
             locationQueryService,
+            actorUserId,
             cancellationToken);
         if (queryCreation.MissingLocationId is { } missingLocationId)
         {
@@ -88,13 +104,14 @@ public static class MarineAnalysisEndpointExtensions
     private static async Task<QueryCreationResult> CreateQueryAsync(
         MarineAnalysisRequest? request,
         LocationQueryService locationQueryService,
+        Guid? actorUserId,
         CancellationToken cancellationToken)
     {
         if (request?.Location?.LocationId is null ||
             request.Location.Latitude.HasValue ||
             request.Location.Longitude.HasValue)
         {
-            return TryCreateCoordinateQuery(request);
+            return TryCreateCoordinateQuery(request, actorUserId);
         }
 
         var locationId = request.Location.LocationId.Value;
@@ -131,7 +148,7 @@ public static class MarineAnalysisEndpointExtensions
                 Longitude = location.Longitude
             }
         };
-        var coordinateResult = TryCreateCoordinateQuery(resolvedRequest);
+        var coordinateResult = TryCreateCoordinateQuery(resolvedRequest, actorUserId);
         if (coordinateResult.Query is null)
         {
             return coordinateResult;
@@ -143,19 +160,24 @@ public static class MarineAnalysisEndpointExtensions
                 coordinateResult.Query.Location,
                 coordinateResult.Query.Range,
                 location,
-                coordinateResult.Query.Activities)
+                coordinateResult.Query.Activities,
+                includeTide: coordinateResult.Query.IncludeTide,
+                requestedByUserId: coordinateResult.Query.RequestedByUserId)
         };
     }
 
-    private static QueryCreationResult TryCreateCoordinateQuery(MarineAnalysisRequest? request)
+    private static QueryCreationResult TryCreateCoordinateQuery(
+        MarineAnalysisRequest? request,
+        Guid? actorUserId)
     {
-        return TryCreateQuery(request, out var query, out var errors)
+        return TryCreateQuery(request, actorUserId, out var query, out var errors)
             ? new QueryCreationResult(query, errors, null)
             : new QueryCreationResult(null, errors, null);
     }
 
     private static bool TryCreateQuery(
         MarineAnalysisRequest? request,
+        Guid? actorUserId,
         out MarineAnalysisQuery? query,
         out Dictionary<string, string[]> errors)
     {
@@ -230,7 +252,9 @@ public static class MarineAnalysisEndpointExtensions
                     request.Location!.Latitude!.Value,
                     request.Location.Longitude!.Value),
                 new ForecastRange(request.From, request.Hours),
-                activities: ParseActivities(request));
+                activities: ParseActivities(request),
+                includeTide: request.IncludeTide,
+                requestedByUserId: actorUserId);
             return true;
         }
         catch (ArgumentException exception)

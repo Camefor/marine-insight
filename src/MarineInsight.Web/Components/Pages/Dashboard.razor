@@ -197,6 +197,27 @@
                     }
                 </fieldset>
 
+                <AuthorizeView>
+                    <Authorized>
+                        <label class="paid-provider-option">
+                            <input type="checkbox" @bind="Session.IncludeTide" disabled="@Session.IsLoadingAnalysis" />
+                            <span>
+                                <strong>查询潮汐</strong>
+                                <small>按需调用 WorldTides，会消耗 Credits</small>
+                            </span>
+                        </label>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a class="paid-provider-option locked" href="/account/login?returnUrl=%2F">
+                            <UiIcon Name="LockKeyhole" />
+                            <span>
+                                <strong>登录后可查询潮汐</strong>
+                                <small>潮汐为付费 API 数据，默认不查询</small>
+                            </span>
+                        </a>
+                    </NotAuthorized>
+                </AuthorizeView>
+
                 <button class="primary-button" type="submit" disabled="@(!Session.CanSubmit)">
                     @(Session.IsLoadingAnalysis ? "查询中" : "查询海况")
                 </button>
@@ -209,7 +230,7 @@
                 <span class="spinner" aria-hidden="true"></span>
                 <span class="query-loading-copy">
                     <strong>正在查询海况</strong>
-                    <span>正在汇总天气、海浪与潮汐数据，完成后将在下方更新结果。</span>
+                    <span>@(Session.IncludeTide ? "正在汇总天气、海浪与潮汐数据，完成后将在下方更新结果。" : "正在汇总天气与海浪数据，完成后将在下方更新结果。")</span>
                 </span>
                 <span class="query-loading-badge" aria-hidden="true">数据汇总中</span>
             </div>

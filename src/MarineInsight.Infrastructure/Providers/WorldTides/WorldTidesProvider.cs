@@ -1,13 +1,17 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using MarineInsight.Application.Credentials.Ports;
 using MarineInsight.Application.Errors;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Forecast.Ports;
+using MarineInsight.Application.ProviderCalls;
+using MarineInsight.Application.ProviderCalls.Ports;
 using MarineInsight.Domain.Forecast;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace MarineInsight.Infrastructure.Providers.WorldTides;
@@ -23,16 +27,27 @@ public sealed class WorldTidesProvider(
     IOptions<WorldTidesOptions> options,
     IMemoryCache cache,
     IProviderCredentialStore credentialStore,
-    TimeProvider timeProvider) : ITideProvider
+    IProviderCallLogStore callLogStore,
+    TimeProvider timeProvider,
+    ILogger<WorldTidesProvider> logger) : ITideProvider
 {
     private const string Code = "worldtides";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly Action<ILogger, Guid, string, Exception?> LogCallCompletionFailure =
+        LoggerMessage.Define<Guid, string>(
+            LogLevel.Error,
+            new EventId(6101, "ProviderCallLogCompletionFailed"),
+            "Failed to complete paid provider call log {ProviderCallId} for {ProviderCode}.");
 
     public string ProviderCode => Code;
 
     public bool IsEnabled => options.Value.Enabled;
 
-    public async Task<ProviderTideResult> GetTidesAsync(GeoPoint location, ForecastRange range, CancellationToken cancellationToken)
+    public async Task<ProviderTideResult> GetTidesAsync(
+        GeoPoint location,
+        ForecastRange range,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
     {
         var settings = options.Value;
         settings.Validate();
@@ -49,14 +64,17 @@ public sealed class WorldTidesProvider(
             return new ProviderTideResult(cached.Batch, true, cached.RemainingCredits, cached.CreditWarning);
         }
 
-        var response = await FetchWithFailoverAsync(location, range, settings, cancellationToken);
+        var response = await FetchWithFailoverAsync(location, range, actorUserId, settings, cancellationToken);
         var result = Normalize(response, location, range, timeProvider.GetUtcNow(), settings.CreditWarningThreshold);
         cache.Set(key, result, settings.CacheLifetime);
         return result;
     }
 
     /// <summary>用候选密钥真实调用一次 WorldTides 验证连通性，供后台添加密钥前测试。</summary>
-    public async Task<WorldTidesKeyTestResult> ValidateKeyAsync(string apiKey, CancellationToken cancellationToken)
+    public async Task<WorldTidesKeyTestResult> ValidateKeyAsync(
+        Guid actorUserId,
+        string apiKey,
+        CancellationToken cancellationToken)
     {
         var settings = options.Value;
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -64,40 +82,64 @@ public sealed class WorldTidesProvider(
             return new WorldTidesKeyTestResult(false, "API key 不能为空。", null);
         }
 
+        var normalizedApiKey = apiKey.Trim();
+        var requestedAt = timeProvider.GetUtcNow();
         var query = new Dictionary<string, string?>
         {
             ["heights"] = string.Empty,
             ["lat"] = "30.194000",
             ["lon"] = "122.687000",
-            ["date"] = timeProvider.GetUtcNow().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            ["date"] = requestedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             ["days"] = "1",
-            ["key"] = apiKey.Trim()
+            ["key"] = normalizedApiKey
         };
         var uri = QueryHelpers.AddQueryString(settings.BaseUrl, query);
+        var callId = await callLogStore.BeginAsync(new StartProviderCallLog(
+            actorUserId,
+            Code,
+            ProviderCallOperations.CredentialValidation,
+            null,
+            CredentialHint(normalizedApiKey),
+            30.19,
+            122.69,
+            new DateTimeOffset(requestedAt.UtcDateTime.Date, TimeSpan.Zero),
+            new DateTimeOffset(requestedAt.UtcDateTime.Date.AddDays(1), TimeSpan.Zero),
+            1,
+            Activity.Current?.TraceId.ToString()), cancellationToken);
+        var stopwatch = Stopwatch.StartNew();
+        int? httpStatusCode = null;
+        WorldTidesResponse? payload = null;
+        var succeeded = false;
+        string? errorCode = null;
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(settings.Timeout);
         try
         {
             using var response = await httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            httpStatusCode = (int)response.StatusCode;
             if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
             {
+                errorCode = MarineInsightErrorCodes.ProviderAuthenticationFailed;
                 return new WorldTidesKeyTestResult(false, "WorldTides 拒绝了该 Key（401/403）。", null);
             }
 
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
+                errorCode = MarineInsightErrorCodes.RateLimited;
                 return new WorldTidesKeyTestResult(false, "WorldTides 请求被限流（429）。", null);
             }
 
             if (!response.IsSuccessStatusCode)
             {
+                errorCode = MarineInsightErrorCodes.ProviderUnavailable;
                 return new WorldTidesKeyTestResult(false, $"WorldTides 返回 HTTP {(int)response.StatusCode}。", null);
             }
 
             await using var stream = await response.Content.ReadAsStreamAsync(timeout.Token);
-            var payload = await JsonSerializer.DeserializeAsync<WorldTidesResponse>(stream, JsonOptions, timeout.Token);
+            payload = await JsonSerializer.DeserializeAsync<WorldTidesResponse>(stream, JsonOptions, timeout.Token);
             if (payload is null)
             {
+                errorCode = MarineInsightErrorCodes.ProviderContractInvalid;
                 return new WorldTidesKeyTestResult(false, "WorldTides 返回了空响应。", null);
             }
 
@@ -105,31 +147,49 @@ public sealed class WorldTidesProvider(
             {
                 if (payload.Error?.Contains("credit", StringComparison.OrdinalIgnoreCase) == true)
                 {
+                    errorCode = MarineInsightErrorCodes.ProviderQuotaExceeded;
                     return new WorldTidesKeyTestResult(false, "Key 有效但 WorldTides 额度已耗尽。", payload.RemainingCredits);
                 }
 
+                errorCode = MarineInsightErrorCodes.ProviderContractInvalid;
                 return new WorldTidesKeyTestResult(false, $"WorldTides 返回错误：{payload.Error ?? $"status {payload.Status}"}", payload.RemainingCredits);
             }
 
+            succeeded = true;
             return new WorldTidesKeyTestResult(true, "连接成功，Key 有效。", payload.RemainingCredits);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            errorCode = MarineInsightErrorCodes.ProviderUnavailable;
             return new WorldTidesKeyTestResult(false, "WorldTides 请求超时。", null);
         }
         catch (HttpRequestException)
         {
+            errorCode = MarineInsightErrorCodes.ProviderUnavailable;
             return new WorldTidesKeyTestResult(false, "无法连接 WorldTides。", null);
         }
         catch (JsonException)
         {
+            errorCode = MarineInsightErrorCodes.ProviderContractInvalid;
             return new WorldTidesKeyTestResult(false, "WorldTides 响应不是有效 JSON。", null);
+        }
+        finally
+        {
+            stopwatch.Stop();
+            await CompleteCallSafelyAsync(
+                callId,
+                succeeded,
+                httpStatusCode,
+                payload,
+                stopwatch.ElapsedMilliseconds,
+                errorCode);
         }
     }
 
     private async Task<WorldTidesResponse> FetchWithFailoverAsync(
         GeoPoint location,
         ForecastRange range,
+        Guid actorUserId,
         WorldTidesOptions settings,
         CancellationToken cancellationToken)
     {
@@ -139,7 +199,7 @@ public sealed class WorldTidesProvider(
         {
             try
             {
-                var response = await FetchAsync(location, range, settings, candidate.ApiKey, cancellationToken);
+                var response = await FetchAsync(location, range, actorUserId, settings, candidate, cancellationToken);
                 if (IsQuotaExhausted(response, out var quotaReason))
                 {
                     await ReportHealthAsync(
@@ -190,13 +250,13 @@ public sealed class WorldTidesProvider(
         var candidates = new List<CredentialCandidate>(secrets.Count + 1);
         foreach (var secret in secrets)
         {
-            candidates.Add(new CredentialCandidate(secret.Id, secret.ApiKey));
+            candidates.Add(new CredentialCandidate(secret.Id, CredentialHint(secret.ApiKey), secret.ApiKey));
         }
 
         // 配置兜底：无 DB 密钥时使用注入的 ApiKey（User Secrets / key-per-file），不记健康。
         if (secrets.Count == 0 && !string.IsNullOrWhiteSpace(settings.ApiKey))
         {
-            candidates.Add(new CredentialCandidate(null, settings.ApiKey));
+            candidates.Add(new CredentialCandidate(null, CredentialHint(settings.ApiKey), settings.ApiKey));
         }
 
         return candidates;
@@ -217,8 +277,9 @@ public sealed class WorldTidesProvider(
     private async Task<WorldTidesResponse> FetchAsync(
         GeoPoint location,
         ForecastRange range,
+        Guid actorUserId,
         WorldTidesOptions settings,
-        string apiKey,
+        CredentialCandidate candidate,
         CancellationToken cancellationToken)
     {
         var days = Math.Max(1, (int)Math.Ceiling((range.EndUtc.Date - range.StartUtc.Date).TotalDays) + 1);
@@ -230,14 +291,34 @@ public sealed class WorldTidesProvider(
             ["lon"] = location.Longitude.ToString("F6", CultureInfo.InvariantCulture),
             ["date"] = range.StartUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             ["days"] = days.ToString(CultureInfo.InvariantCulture),
-            ["key"] = apiKey
+            ["key"] = candidate.ApiKey
         };
         var uri = QueryHelpers.AddQueryString(settings.BaseUrl, query);
+        // 先落 started 记录再出网：若费用日志存储不可用，则不发起可能消耗 Credits 的请求。
+        // 坐标仅保留两位小数桶，既能定位费用来源区域，又避免在运维日志保存精确位置。
+        var callId = await callLogStore.BeginAsync(new StartProviderCallLog(
+            actorUserId,
+            Code,
+            ProviderCallOperations.TideForecast,
+            candidate.KeyId,
+            candidate.KeyHint,
+            Math.Round(location.Latitude, 2),
+            Math.Round(location.Longitude, 2),
+            range.StartUtc,
+            range.EndUtc,
+            days,
+            Activity.Current?.TraceId.ToString()), cancellationToken);
+        var stopwatch = Stopwatch.StartNew();
+        int? httpStatusCode = null;
+        WorldTidesResponse? payload = null;
+        var succeeded = false;
+        string? errorCode = null;
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(settings.Timeout);
         try
         {
             using var response = await httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            httpStatusCode = (int)response.StatusCode;
             if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
             {
                 throw new ProviderAuthenticationException(Code, "WorldTides rejected the configured credential.");
@@ -252,20 +333,46 @@ public sealed class WorldTidesProvider(
             }
 
             await using var stream = await response.Content.ReadAsStreamAsync(timeout.Token);
-            return await JsonSerializer.DeserializeAsync<WorldTidesResponse>(stream, JsonOptions, timeout.Token)
+            payload = await JsonSerializer.DeserializeAsync<WorldTidesResponse>(stream, JsonOptions, timeout.Token)
                 ?? throw new ProviderContractException(Code, "WorldTides returned an empty response.");
+            succeeded = payload.Status is < 400 && string.IsNullOrWhiteSpace(payload.Error);
+            errorCode = succeeded
+                ? null
+                : payload.Error?.Contains("credit", StringComparison.OrdinalIgnoreCase) == true
+                    ? MarineInsightErrorCodes.ProviderQuotaExceeded
+                    : MarineInsightErrorCodes.ProviderContractInvalid;
+            return payload;
         }
         catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
         {
+            errorCode = MarineInsightErrorCodes.ProviderUnavailable;
             throw new ProviderTimeoutException(Code, "WorldTides request timed out.", exception);
         }
         catch (JsonException exception)
         {
+            errorCode = MarineInsightErrorCodes.ProviderContractInvalid;
             throw new ProviderContractException(Code, "WorldTides response JSON is invalid.", exception);
         }
         catch (HttpRequestException exception)
         {
+            errorCode = MarineInsightErrorCodes.ProviderUnavailable;
             throw new ProviderException(Code, ProviderFailureKind.Unavailable, "WorldTides could not be reached.", true, innerException: exception);
+        }
+        catch (ProviderException exception)
+        {
+            errorCode = exception.ErrorCode;
+            throw;
+        }
+        finally
+        {
+            stopwatch.Stop();
+            await CompleteCallSafelyAsync(
+                callId,
+                succeeded,
+                httpStatusCode,
+                payload,
+                stopwatch.ElapsedMilliseconds,
+                errorCode);
         }
     }
 
@@ -336,5 +443,37 @@ public sealed class WorldTidesProvider(
         return nearest?.Type?.ToLowerInvariant() switch { "high" => TideType.High, "low" => TideType.Low, _ => null };
     }
 
-    private sealed record CredentialCandidate(Guid? KeyId, string ApiKey);
+    private async Task CompleteCallSafelyAsync(
+        Guid callId,
+        bool succeeded,
+        int? httpStatusCode,
+        WorldTidesResponse? payload,
+        long durationMs,
+        string? errorCode)
+    {
+        try
+        {
+            await callLogStore.CompleteAsync(callId, new CompleteProviderCallLog(
+                succeeded,
+                httpStatusCode,
+                payload?.CallCount,
+                payload?.RemainingCredits,
+                durationMs,
+                errorCode), CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            // started 行已经持久化；完成更新失败时保留为 started，供后台识别并排查，且不得以日志异常覆盖 Provider 原始结果。
+            LogCallCompletionFailure(logger, callId, Code, exception);
+        }
+    }
+
+    private static string CredentialHint(string apiKey)
+    {
+        var normalized = apiKey.Trim();
+        var suffix = normalized.Length <= 4 ? normalized : normalized[^4..];
+        return $"••••{suffix}";
+    }
+
+    private sealed record CredentialCandidate(Guid? KeyId, string KeyHint, string ApiKey);
 }

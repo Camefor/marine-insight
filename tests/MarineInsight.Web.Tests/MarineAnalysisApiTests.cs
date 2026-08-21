@@ -21,6 +21,7 @@ namespace MarineInsight.Web.Tests;
 public sealed class MarineAnalysisApiTests
 {
     private static readonly string[] UnsupportedActivities = ["diving"];
+    private static readonly string[] BoatActivities = ["boat"];
 
     [Fact]
     public void TestHostDisablesWorldTidesEvenWhenUserSecretsEnableIt()
@@ -91,6 +92,7 @@ public sealed class MarineAnalysisApiTests
             "template",
             firstDocument.RootElement.GetProperty("explanation").GetProperty("source").GetString());
         Assert.False(firstDocument.RootElement.GetProperty("explanation").GetProperty("degraded").GetBoolean());
+        Assert.Equal("not_requested", firstDocument.RootElement.GetProperty("tide").GetProperty("status").GetString());
 
         using var secondResponse = await client.PostAsJsonAsync("/api/v1/marine-analyses", request);
         using var secondDocument = JsonDocument.Parse(await secondResponse.Content.ReadAsStringAsync());
@@ -111,6 +113,33 @@ public sealed class MarineAnalysisApiTests
         Assert.Equal(etag, conditionalResponse.Headers.GetValues("ETag").Single());
         Assert.Equal(1, factory.Weather.CallCount);
         Assert.Equal(1, factory.Marine.CallCount);
+        Assert.Equal(0, factory.Tide.CallCount);
+    }
+
+    [Fact]
+    public async Task AnonymousTideQueryIsRejectedBeforeProviderCall()
+    {
+        using var factory = new ApiTestApplicationFactory();
+        factory.Tide.IsEnabled = true;
+        using var client = factory.CreateClient();
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/v1/marine-analyses",
+            new
+            {
+                location = new { latitude = 30.194, longitude = 122.687 },
+                from = "2026-07-16T00:00:00Z",
+                hours = 24,
+                activities = BoatActivities,
+                includeTide = true
+            });
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("AUTHENTICATION_REQUIRED", document.RootElement.GetProperty("code").GetString());
+        Assert.Equal(0, factory.Tide.CallCount);
+        Assert.Equal(0, factory.Weather.CallCount);
+        Assert.Equal(0, factory.Marine.CallCount);
     }
 
     [Fact]
@@ -429,12 +458,16 @@ public sealed class MarineAnalysisApiTests
 
         public bool IsEnabled { get; set; }
 
+        public int CallCount { get; private set; }
+
         public Task<ProviderTideResult> GetTidesAsync(
             GeoPoint location,
             ForecastRange range,
+            Guid actorUserId,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            CallCount++;
             var provider = new ProviderIdentity(ProviderCode, "configured-tide");
             var batchId = Guid.NewGuid();
             var points = Enumerable.Range(0, range.Hours + 1)

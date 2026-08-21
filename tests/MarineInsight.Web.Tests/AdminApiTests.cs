@@ -2,6 +2,8 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using MarineInsight.Application.ProviderCalls;
+using MarineInsight.Application.ProviderCalls.Ports;
 using MarineInsight.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -61,6 +63,7 @@ public sealed class AdminApiTests
         using var locationsResponse = await client.GetAsync("/api/v1/admin/locations");
         using var usersResponse = await client.GetAsync("/api/v1/admin/users");
         using var credentialsResponse = await client.GetAsync("/api/v1/admin/providers/worldtides/credentials");
+        using var callLogsResponse = await client.GetAsync("/api/v1/admin/provider-call-logs");
 
         Assert.Equal(HttpStatusCode.Redirect, locationsResponse.StatusCode);
         Assert.Equal("/account/access-denied", new Uri(locationsResponse.Headers.Location!.OriginalString).AbsolutePath);
@@ -68,6 +71,65 @@ public sealed class AdminApiTests
         Assert.Equal("/account/access-denied", new Uri(usersResponse.Headers.Location!.OriginalString).AbsolutePath);
         Assert.Equal(HttpStatusCode.Redirect, credentialsResponse.StatusCode);
         Assert.Equal("/account/access-denied", new Uri(credentialsResponse.Headers.Location!.OriginalString).AbsolutePath);
+        Assert.Equal(HttpStatusCode.Redirect, callLogsResponse.StatusCode);
+        Assert.Equal("/account/access-denied", new Uri(callLogsResponse.Headers.Location!.OriginalString).AbsolutePath);
+    }
+
+    [Fact]
+    public async Task AdminCanFilterPaidProviderCallLogs()
+    {
+        using var factory = new AdminApplicationFactory();
+        await factory.MigrateDatabaseAsync();
+        using var client = factory.CreateHttpsClient();
+        await AdminApplicationFactory.RegisterAsync(client, AdminEmail, Password);
+
+        Guid adminId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<MarineInsightUser>>();
+            adminId = (await userManager.FindByEmailAsync(AdminEmail))!.Id;
+            var store = scope.ServiceProvider.GetRequiredService<IProviderCallLogStore>();
+            var succeededId = await store.BeginAsync(new StartProviderCallLog(
+                adminId,
+                "worldtides",
+                ProviderCallOperations.TideForecast,
+                null,
+                "••••cdef",
+                30.19,
+                122.69,
+                new DateTimeOffset(2026, 8, 21, 0, 0, 0, TimeSpan.Zero),
+                new DateTimeOffset(2026, 8, 22, 0, 0, 0, TimeSpan.Zero),
+                1,
+                "test-trace"));
+            await store.CompleteAsync(succeededId, new CompleteProviderCallLog(true, 200, 2, 98, 125, null));
+            await store.BeginAsync(new StartProviderCallLog(
+                adminId,
+                "worldtides",
+                ProviderCallOperations.CredentialValidation,
+                null,
+                "••••3210",
+                null,
+                null,
+                null,
+                null,
+                null,
+                "test-trace-2"));
+        }
+
+        using var apiResponse = await client.GetAsync(
+            $"/api/v1/admin/provider-call-logs?operation=tide.forecast&outcome=succeeded&actorUserId={adminId}");
+        using var document = JsonDocument.Parse(await apiResponse.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, apiResponse.StatusCode);
+        Assert.Equal(1, document.RootElement.GetProperty("total").GetInt32());
+        var item = Assert.Single(document.RootElement.GetProperty("items").EnumerateArray());
+        Assert.Equal("tide.forecast", item.GetProperty("operation").GetString());
+        Assert.Equal("succeeded", item.GetProperty("outcome").GetString());
+        Assert.Equal(2, item.GetProperty("creditsUsed").GetInt32());
+
+        using var pageResponse = await client.GetAsync("/admin/provider-call-logs");
+        Assert.Equal(HttpStatusCode.OK, pageResponse.StatusCode);
+        Assert.Contains("付费 API 调用日志", await pageResponse.Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }
 
     [Fact]

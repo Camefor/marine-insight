@@ -12,6 +12,7 @@ public sealed class MarineAnalysisQueryServiceTests
     private static readonly DateTimeOffset StartUtc = new(2026, 7, 16, 0, 0, 0, TimeSpan.Zero);
     private static readonly GeoPoint Location = new(30.194, 122.687);
     private static readonly ForecastRange Range = new(StartUtc, 24);
+    private static readonly Guid ActorUserId = Guid.Parse("10000000-0000-0000-0000-000000000001");
 
     [Fact]
     public async Task ExecuteFetchesWeatherAndMarineThenUsesBothL1Entries()
@@ -57,11 +58,33 @@ public sealed class MarineAnalysisQueryServiceTests
     public async Task DisabledTideProviderIsNotCalled()
     {
         var tide = new FakeTideProvider { IsEnabled = false };
-        var result = await CreateService(tide).ExecuteAsync(new MarineAnalysisQuery(Location, Range));
+        var result = await CreateService(tide).ExecuteAsync(CreateTideQuery());
 
         Assert.Equal(0, tide.CallCount);
         Assert.Equal("disabled", result.Tide.Status);
         Assert.Equal(2, result.Snapshot.SourceBatches.Count);
+    }
+
+    [Fact]
+    public async Task TideIsNotRequestedByDefault()
+    {
+        var tide = new FakeTideProvider();
+        var result = await CreateService(tide).ExecuteAsync(new MarineAnalysisQuery(Location, Range));
+
+        Assert.Equal(0, tide.CallCount);
+        Assert.Equal("not_requested", result.Tide.Status);
+        Assert.Equal(2, result.Snapshot.SourceBatches.Count);
+    }
+
+    [Fact]
+    public void TideQueryRequiresAuthenticatedUserId()
+    {
+        var exception = Assert.Throws<ArgumentException>(() => new MarineAnalysisQuery(
+            Location,
+            Range,
+            includeTide: true));
+
+        Assert.Equal("requestedByUserId", exception.ParamName);
     }
 
     [Fact]
@@ -71,7 +94,7 @@ public sealed class MarineAnalysisQueryServiceTests
         {
             Failure = new ProviderException("fake-tide", ProviderFailureKind.QuotaExceeded, "No credits.", false)
         };
-        var result = await CreateService(tide).ExecuteAsync(new MarineAnalysisQuery(Location, Range));
+        var result = await CreateService(tide).ExecuteAsync(CreateTideQuery());
 
         Assert.Equal("unavailable", result.Tide.Status);
         Assert.Equal(MarineInsightErrorCodes.ProviderQuotaExceeded, result.Tide.ErrorCode);
@@ -83,7 +106,7 @@ public sealed class MarineAnalysisQueryServiceTests
     public async Task LowTideCreditsRemainAvailableAsDegradedEnrichment()
     {
         var tide = new FakeTideProvider { CreditWarning = true };
-        var result = await CreateService(tide).ExecuteAsync(new MarineAnalysisQuery(Location, Range));
+        var result = await CreateService(tide).ExecuteAsync(CreateTideQuery());
 
         Assert.Equal("degraded", result.Tide.Status);
         Assert.Equal(MarineInsightErrorCodes.ProviderQuotaExceeded, result.Tide.ErrorCode);
@@ -102,6 +125,12 @@ public sealed class MarineAnalysisQueryServiceTests
             new ForecastSnapshotAssembler(),
             tideProviders: [tideProvider]);
     }
+
+    private static MarineAnalysisQuery CreateTideQuery() => new(
+        Location,
+        Range,
+        includeTide: true,
+        requestedByUserId: ActorUserId);
 
     private sealed class FakeCacheKeyFactory : IForecastCacheKeyFactory
     {
@@ -203,6 +232,7 @@ public sealed class MarineAnalysisQueryServiceTests
         public Task<ProviderTideResult> GetTidesAsync(
             GeoPoint location,
             ForecastRange range,
+            Guid actorUserId,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

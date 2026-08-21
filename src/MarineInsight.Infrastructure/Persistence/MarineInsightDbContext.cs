@@ -34,6 +34,8 @@ public sealed class MarineInsightDbContext(DbContextOptions<MarineInsightDbConte
 
     public DbSet<ProviderCredentialEntity> ProviderCredentials => Set<ProviderCredentialEntity>();
 
+    public DbSet<ProviderCallLogEntity> ProviderCallLogs => Set<ProviderCallLogEntity>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

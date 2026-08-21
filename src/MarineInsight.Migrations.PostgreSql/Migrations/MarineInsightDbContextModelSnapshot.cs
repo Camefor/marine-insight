@@ -713,6 +713,92 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.ProviderCallLogEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CredentialHint")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid?>("CredentialId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("CreditsUsed")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("DurationMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("HttpStatusCode")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("LatitudeBucket")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("LongitudeBucket")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("ProviderCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("RangeEndUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("RangeStartUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RemainingCredits")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RequestedDays")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TraceId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartedAtUtc");
+
+                    b.HasIndex("ActorUserId", "StartedAtUtc");
+
+                    b.HasIndex("Outcome", "StartedAtUtc");
+
+                    b.HasIndex("ProviderCode", "StartedAtUtc");
+
+                    b.ToTable("provider_call_logs", (string)null);
+                });
+
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.ProviderCredentialEntity", b =>
                 {
                     b.Property<Guid>("Id")

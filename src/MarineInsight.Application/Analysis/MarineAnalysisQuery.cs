@@ -14,13 +14,22 @@ public sealed record MarineAnalysisQuery
         ForecastRange range,
         Location? locationMetadata = null,
         IEnumerable<ActivityType>? activities = null,
-        string? displayName = null)
+        string? displayName = null,
+        bool includeTide = false,
+        Guid? requestedByUserId = null)
     {
         if (locationMetadata is not null && locationMetadata.Coordinates != location)
         {
             throw new ArgumentException(
                 "Location metadata coordinates must match the forecast query location.",
                 nameof(locationMetadata));
+        }
+
+        if (includeTide && !requestedByUserId.HasValue)
+        {
+            throw new ArgumentException(
+                "Tide data can only be requested by an authenticated user.",
+                nameof(requestedByUserId));
         }
 
         Location = location;
@@ -30,6 +39,8 @@ public sealed record MarineAnalysisQuery
             .Select(profile => profile.ActivityType)
             .ToArray();
         DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
+        IncludeTide = includeTide;
+        RequestedByUserId = requestedByUserId;
     }
 
     public GeoPoint Location { get; }
@@ -44,4 +55,8 @@ public sealed record MarineAnalysisQuery
     /// Presentation label for coordinate-only queries that have no location catalog metadata.
     /// </summary>
     public string? DisplayName { get; }
+
+    public bool IncludeTide { get; }
+
+    public Guid? RequestedByUserId { get; }
 }

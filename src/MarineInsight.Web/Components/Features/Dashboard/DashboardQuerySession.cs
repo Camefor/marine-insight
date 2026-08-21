@@ -50,6 +50,8 @@ public sealed class DashboardQuerySession : IDisposable
 
     public int Hours { get; set; } = 24;
 
+    public bool IncludeTide { get; set; }
+
     public DateTime ForecastStartLocal
     {
         get => _forecastStartLocal;
@@ -345,7 +347,7 @@ public sealed class DashboardQuerySession : IDisposable
 
         try
         {
-            var query = await CreateAnalysisQueryAsync(_activeRequest.Token);
+            var query = await CreateAnalysisQueryAsync(userId, _activeRequest.Token);
             if (query is null)
             {
                 Result = null;
@@ -417,8 +419,16 @@ public sealed class DashboardQuerySession : IDisposable
     private int GetUtcBoundaryMinute() =>
         ClientTimeZone.ToUtc(ForecastStartLocal, _displayZone).Offset.Duration().Minutes;
 
-    private async Task<MarineAnalysisQuery?> CreateAnalysisQueryAsync(CancellationToken cancellationToken)
+    private async Task<MarineAnalysisQuery?> CreateAnalysisQueryAsync(
+        Guid? userId,
+        CancellationToken cancellationToken)
     {
+        if (IncludeTide && !userId.HasValue)
+        {
+            AnalysisError = "潮汐数据属于付费查询，请先登录后再选择查询潮汐。";
+            return null;
+        }
+
         var startUtc = GetForecastStartOffset();
         if (startUtc.Minute != 0 || startUtc.Second != 0 || startUtc.Millisecond != 0)
         {
@@ -441,7 +451,13 @@ public sealed class DashboardQuerySession : IDisposable
                 return null;
             }
 
-            return new MarineAnalysisQuery(location.Coordinates, range, location, RequestedActivities);
+            return new MarineAnalysisQuery(
+                location.Coordinates,
+                range,
+                location,
+                RequestedActivities,
+                includeTide: IncludeTide,
+                requestedByUserId: userId);
         }
 
         if (SelectedMapPoint is null)
@@ -455,7 +471,9 @@ public sealed class DashboardQuerySession : IDisposable
             new GeoPoint(SelectedMapPoint.Latitude, SelectedMapPoint.Longitude),
             range,
             activities: RequestedActivities,
-            displayName: MapPointName);
+            displayName: MapPointName,
+            includeTide: IncludeTide,
+            requestedByUserId: userId);
     }
 
     private static DashboardLocationOption ToLocationOption(Location location) => new(
@@ -883,6 +901,7 @@ public sealed class DashboardQuerySession : IDisposable
                 "available" => "潮汐可用",
                 "degraded" => "额度预警",
                 "unavailable" => "潮汐暂不可用",
+                "not_requested" => "未查询潮汐",
                 _ => "潮汐未启用"
             },
             result.Tide.CacheStatus,
@@ -893,6 +912,7 @@ public sealed class DashboardQuerySession : IDisposable
                 "degraded" => "潮汐额度偏低，本次结果仍可参考；基础海况分析不受影响。",
                 "unavailable" => "潮汐服务暂时不可用，基础海况分析仍可正常使用。",
                 "disabled" => "当前环境未启用潮汐数据，基础海况分析仍可正常使用。",
+                "not_requested" => "本次未选择付费潮汐查询；登录后勾选“查询潮汐”即可获取。",
                 _ when points.Length == 0 => "当前查询时段没有可展示的潮位点。",
                 _ => "潮汐曲线用于叠加判断海钓时段，尚未计入综合评分。"
             },

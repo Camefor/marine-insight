@@ -1,0 +1,185 @@
+﻿@page "/admin/provider-call-logs"
+@attribute [Authorize(Policy = "Administrator")]
+@rendermode InteractiveServer
+@using MarineInsight.Application.ProviderCalls
+@inject ProviderCallLogService CallLogService
+
+<PageTitle>付费 API 日志 | Marine AI</PageTitle>
+
+<main class="workspace-page admin-page">
+    <header class="workspace-heading">
+        <div><p class="workspace-eyebrow">管理员</p><h1>付费 API 调用日志</h1></div>
+    </header>
+
+    <AdminTabs />
+
+    <section class="admin-section" aria-labelledby="call-log-filter-title">
+        <h2 id="call-log-filter-title">筛选</h2>
+        <form class="provider-call-filters" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+            <label><span>Provider</span><select @bind="_provider"><option value="">全部</option><option value="worldtides">WorldTides</option></select></label>
+            <label><span>调用类型</span><select @bind="_operation"><option value="">全部</option><option value="tide.forecast">潮汐查询</option><option value="credential.validate">密钥测试</option></select></label>
+            <label><span>结果</span><select @bind="_outcome"><option value="">全部</option><option value="succeeded">成功</option><option value="failed">失败</option><option value="started">未完成</option></select></label>
+            <label><span>用户 ID</span><input type="text" @bind="_actorUserId" placeholder="可选 UUID" /></label>
+            <label><span>开始日期（UTC）</span><input type="date" @bind="_fromDate" /></label>
+            <label><span>结束日期（UTC）</span><input type="date" @bind="_toDate" /></label>
+            <div class="provider-call-filter-actions">
+                <button class="workspace-secondary" type="button" @onclick="ResetAsync">重置</button>
+                <button class="workspace-primary" type="submit" disabled="@_loading">@(_loading ? "查询中…" : "查询")</button>
+            </div>
+        </form>
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <p class="account-alert" role="alert">@_error</p>
+        }
+    </section>
+
+    <section class="admin-section" aria-labelledby="call-log-list-title">
+        <h2 id="call-log-list-title">调用记录（@(_page?.Total ?? 0)）</h2>
+        @if (_loading && _page is null)
+        {
+            <p class="workspace-status" role="status">正在加载调用日志…</p>
+        }
+        else if (_page is null || _page.Items.Count == 0)
+        {
+            <p class="workspace-status">当前筛选条件下暂无记录。</p>
+        }
+        else
+        {
+            <div class="admin-table-wrap">
+                <table>
+                    <thead><tr><th>时间</th><th>Provider / 类型</th><th>用户</th><th>Key</th><th>区域 / 范围</th><th>结果</th><th>Credits</th><th>耗时</th><th>错误</th></tr></thead>
+                    <tbody>
+                        @foreach (var item in _page.Items)
+                        {
+                            <tr @key="item.Id">
+                                <td>@item.StartedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@item.ProviderCode<br /><small>@OperationText(item.Operation)</small></td>
+                                <td><code>@item.ActorUserId</code></td>
+                                <td>@item.CredentialHint</td>
+                                <td>@LocationText(item)<br /><small>@RangeText(item)</small></td>
+                                <td><span class="call-outcome @item.Outcome">@OutcomeText(item.Outcome)</span><br /><small>HTTP @(item.HttpStatusCode?.ToString() ?? "—")</small></td>
+                                <td>消耗 @(item.CreditsUsed?.ToString() ?? "—")<br /><small>余额 @(item.RemainingCredits?.ToString() ?? "—")</small></td>
+                                <td>@(item.DurationMs.HasValue ? $"{item.DurationMs} ms" : "—")</td>
+                                <td>@(item.ErrorCode ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="provider-call-pager">
+                <button class="workspace-secondary" type="button" disabled="@(_page.Page <= 1 || _loading)" @onclick="PreviousAsync">上一页</button>
+                <span>第 @_page.Page 页 / 共 @TotalPages 页</span>
+                <button class="workspace-secondary" type="button" disabled="@(_page.Page >= TotalPages || _loading)" @onclick="NextAsync">下一页</button>
+            </div>
+        }
+    </section>
+</main>
+
+@code {
+    private const int PageSize = 50;
+    private bool _loading = true;
+    private string _provider = string.Empty;
+    private string _operation = string.Empty;
+    private string _outcome = string.Empty;
+    private string _actorUserId = string.Empty;
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
+    private int _currentPage = 1;
+    private string? _error;
+    private ProviderCallLogPage? _page;
+
+    private int TotalPages => _page is null ? 1 : Math.Max(1, (int)Math.Ceiling(_page.Total / (double)_page.PageSize));
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task SearchAsync()
+    {
+        _currentPage = 1;
+        await LoadAsync();
+    }
+
+    private async Task ResetAsync()
+    {
+        _provider = string.Empty;
+        _operation = string.Empty;
+        _outcome = string.Empty;
+        _actorUserId = string.Empty;
+        _fromDate = null;
+        _toDate = null;
+        _currentPage = 1;
+        await LoadAsync();
+    }
+
+    private async Task PreviousAsync()
+    {
+        _currentPage = Math.Max(1, _currentPage - 1);
+        await LoadAsync();
+    }
+
+    private async Task NextAsync()
+    {
+        _currentPage++;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+        if (!string.IsNullOrWhiteSpace(_actorUserId) && !Guid.TryParse(_actorUserId, out _))
+        {
+            _error = "用户 ID 必须是有效 UUID。";
+            _loading = false;
+            return;
+        }
+
+        try
+        {
+            _page = await CallLogService.SearchAsync(new ProviderCallLogFilter(
+                _provider,
+                _operation,
+                _outcome,
+                Guid.TryParse(_actorUserId, out var actorUserId) ? actorUserId : null,
+                ToUtc(_fromDate),
+                ToUtc(_toDate)?.AddDays(1).AddTicks(-1),
+                _currentPage,
+                PageSize));
+        }
+        catch (ArgumentException exception)
+        {
+            _error = exception.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static DateTimeOffset? ToUtc(DateTime? value) => value.HasValue
+        ? new DateTimeOffset(DateTime.SpecifyKind(value.Value.Date, DateTimeKind.Utc))
+        : null;
+
+    private static string OperationText(string operation) => operation switch
+    {
+        ProviderCallOperations.TideForecast => "潮汐查询",
+        ProviderCallOperations.CredentialValidation => "密钥测试",
+        _ => operation
+    };
+
+    private static string OutcomeText(string outcome) => outcome switch
+    {
+        ProviderCallOutcomes.Succeeded => "成功",
+        ProviderCallOutcomes.Failed => "失败",
+        _ => "未完成"
+    };
+
+    private static string LocationText(ProviderCallLogItem item) =>
+        item.LatitudeBucket.HasValue && item.LongitudeBucket.HasValue
+            ? $"{item.LatitudeBucket:0.00}, {item.LongitudeBucket:0.00}"
+            : "—";
+
+    private static string RangeText(ProviderCallLogItem item) =>
+        item.RangeStartUtc.HasValue && item.RangeEndUtc.HasValue
+            ? $"{item.RangeStartUtc:MM-dd HH:mm} → {item.RangeEndUtc:MM-dd HH:mm} · {item.RequestedDays ?? 0}d"
+            : "—";
+}

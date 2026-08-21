@@ -61,5 +61,7 @@ public sealed record TideQueryStatus(
     string? ErrorCode,
     ProviderTideResult? Result)
 {
+    public static TideQueryStatus NotRequested { get; } = new("not_requested", "none", null, null, null);
+
     public static TideQueryStatus Disabled { get; } = new("disabled", "none", null, null, null);
 }

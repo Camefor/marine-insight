@@ -3,9 +3,12 @@ using System.Text;
 using MarineInsight.Application.Credentials;
 using MarineInsight.Application.Credentials.Ports;
 using MarineInsight.Application.Errors;
+using MarineInsight.Application.ProviderCalls;
+using MarineInsight.Application.ProviderCalls.Ports;
 using MarineInsight.Domain.Forecast;
 using MarineInsight.Infrastructure.Providers.WorldTides;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace MarineInsight.Infrastructure.Tests;
@@ -14,6 +17,7 @@ public sealed class WorldTidesProviderTests
 {
     private static readonly DateTimeOffset StartUtc = new(2026, 8, 12, 0, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset FetchedAtUtc = StartUtc.AddMinutes(-5);
+    private static readonly Guid ActorUserId = Guid.Parse("10000000-0000-0000-0000-000000000001");
 
     [Fact]
     public async Task ProviderNormalizesTidesWarnsOnCreditsAndCachesExactRange()
@@ -21,12 +25,13 @@ public sealed class WorldTidesProviderTests
         var handler = new StubHttpMessageHandler(_ => JsonResponse(ReadSample()));
         using var httpClient = new HttpClient(handler);
         using var cache = new MemoryCache(new MemoryCacheOptions());
-        var provider = CreateProvider(httpClient, cache);
+        var callLogs = new FakeProviderCallLogStore();
+        var provider = CreateProvider(httpClient, cache, callLogStore: callLogs);
         var location = new GeoPoint(30.194, 122.687);
 
-        var first = await provider.GetTidesAsync(location, new ForecastRange(StartUtc, 24), default);
-        var cached = await provider.GetTidesAsync(location, new ForecastRange(StartUtc, 24), default);
-        _ = await provider.GetTidesAsync(location, new ForecastRange(StartUtc.AddHours(1), 24), default);
+        var first = await provider.GetTidesAsync(location, new ForecastRange(StartUtc, 24), ActorUserId, default);
+        var cached = await provider.GetTidesAsync(location, new ForecastRange(StartUtc, 24), ActorUserId, default);
+        _ = await provider.GetTidesAsync(location, new ForecastRange(StartUtc.AddHours(1), 24), ActorUserId, default);
 
         Assert.True(provider.IsEnabled);
         Assert.Equal(2, handler.CallCount);
@@ -40,6 +45,10 @@ public sealed class WorldTidesProviderTests
         Assert.Equal(1.2, first.Batch.Points[0].Metrics.TideHeightM);
         Assert.Equal(TideType.High, first.Batch.Points[0].Metrics.TideType);
         Assert.Contains("key=test-key", handler.LastRequestUri?.Query, StringComparison.Ordinal);
+        Assert.Equal(2, callLogs.Starts.Count);
+        Assert.Equal(2, callLogs.Completions.Count);
+        Assert.All(callLogs.Starts, item => Assert.Equal(ProviderCallOperations.TideForecast, item.Operation));
+        Assert.All(callLogs.Completions, item => Assert.Equal(2, item.Command.CreditsUsed));
     }
 
     [Fact]
@@ -49,17 +58,17 @@ public sealed class WorldTidesProviderTests
         using var unauthorizedClient = new HttpClient(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.Unauthorized)));
         var unauthorized = CreateProvider(unauthorizedClient, cache);
         await Assert.ThrowsAsync<ProviderAuthenticationException>(() => unauthorized.GetTidesAsync(
-            new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), default));
+            new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), ActorUserId, default));
 
         using var limitedClient = new HttpClient(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.TooManyRequests)));
         var limited = CreateProvider(limitedClient, cache);
         await Assert.ThrowsAsync<ProviderRateLimitedException>(() => limited.GetTidesAsync(
-            new GeoPoint(31, 123), new ForecastRange(StartUtc, 24), default));
+            new GeoPoint(31, 123), new ForecastRange(StartUtc, 24), ActorUserId, default));
 
         using var quotaClient = new HttpClient(new StubHttpMessageHandler(_ => JsonResponse("{\"status\":400,\"error\":\"Insufficient credits\"}")));
         var quota = CreateProvider(quotaClient, cache);
         var exception = await Assert.ThrowsAsync<ProviderException>(() => quota.GetTidesAsync(
-            new GeoPoint(32, 124), new ForecastRange(StartUtc, 24), default));
+            new GeoPoint(32, 124), new ForecastRange(StartUtc, 24), ActorUserId, default));
         Assert.Equal(ProviderFailureKind.QuotaExceeded, exception.FailureKind);
     }
 
@@ -82,11 +91,16 @@ public sealed class WorldTidesProviderTests
                 : JsonResponse(ReadSample()));
         using var httpClient = new HttpClient(handler);
         using var cache = new MemoryCache(new MemoryCacheOptions());
-        var provider = CreateProvider(httpClient, cache, apiKey: null, store);
+        var callLogs = new FakeProviderCallLogStore();
+        var provider = CreateProvider(httpClient, cache, apiKey: null, store, callLogs);
 
-        var result = await provider.GetTidesAsync(new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), default);
+        var result = await provider.GetTidesAsync(new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), ActorUserId, default);
 
         Assert.Equal(2, handler.CallCount);
+        Assert.Equal(2, callLogs.Starts.Count);
+        Assert.Equal(2, callLogs.Completions.Count);
+        Assert.Contains(callLogs.Completions, item => !item.Command.Succeeded && item.Command.HttpStatusCode == 401);
+        Assert.Contains(callLogs.Completions, item => item.Command.Succeeded && item.Command.CreditsUsed == 2);
         Assert.Equal(80, result.RemainingCredits);
         Assert.Contains(store.HealthReports, report => report.KeyId == activeId && !report.Success && report.FailureReason == "WorldTides rejected the configured credential.");
         Assert.Contains(store.HealthReports, report => report.KeyId == backupId && report.Success && report.Credits == 80);
@@ -108,7 +122,7 @@ public sealed class WorldTidesProviderTests
         var provider = CreateProvider(httpClient, cache, apiKey: null, store);
 
         await Assert.ThrowsAsync<ProviderAuthenticationException>(() =>
-            provider.GetTidesAsync(new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), default));
+            provider.GetTidesAsync(new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), ActorUserId, default));
 
         Assert.Equal(2, store.HealthReports.Count(report => !report.Success));
     }
@@ -122,7 +136,7 @@ public sealed class WorldTidesProviderTests
         var provider = CreateProvider(httpClient, cache, apiKey: null, new FakeCredentialStore());
 
         var exception = await Assert.ThrowsAsync<ProviderAuthenticationException>(() =>
-            provider.GetTidesAsync(new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), default));
+            provider.GetTidesAsync(new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), ActorUserId, default));
 
         Assert.Contains("not configured", exception.Message, StringComparison.Ordinal);
         Assert.Equal(0, handler.CallCount);
@@ -137,7 +151,7 @@ public sealed class WorldTidesProviderTests
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var provider = CreateProvider(httpClient, cache, apiKey: "test-key", store);
 
-        var result = await provider.GetTidesAsync(new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), default);
+        var result = await provider.GetTidesAsync(new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), ActorUserId, default);
 
         Assert.Equal(80, result.RemainingCredits);
         Assert.Equal("test-key", QueryKey(handler.LastRequestUri!.Query));
@@ -149,12 +163,15 @@ public sealed class WorldTidesProviderTests
     {
         using var httpClient = new HttpClient(new StubHttpMessageHandler(_ => JsonResponse(ReadSample())));
         using var cache = new MemoryCache(new MemoryCacheOptions());
-        var provider = CreateProvider(httpClient, cache);
+        var callLogs = new FakeProviderCallLogStore();
+        var provider = CreateProvider(httpClient, cache, callLogStore: callLogs);
 
-        var result = await provider.ValidateKeyAsync("valid-key", default);
+        var result = await provider.ValidateKeyAsync(ActorUserId, "valid-key", default);
 
         Assert.True(result.Success);
         Assert.Equal(80, result.RemainingCredits);
+        Assert.Equal(ProviderCallOperations.CredentialValidation, Assert.Single(callLogs.Starts).Operation);
+        Assert.Equal(2, Assert.Single(callLogs.Completions).Command.CreditsUsed);
     }
 
     [Fact]
@@ -164,7 +181,7 @@ public sealed class WorldTidesProviderTests
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var provider = CreateProvider(httpClient, cache);
 
-        var result = await provider.ValidateKeyAsync("bad-key", default);
+        var result = await provider.ValidateKeyAsync(ActorUserId, "bad-key", default);
 
         Assert.False(result.Success);
         Assert.Contains("401", result.Message, StringComparison.Ordinal);
@@ -177,7 +194,7 @@ public sealed class WorldTidesProviderTests
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var provider = CreateProvider(httpClient, cache);
 
-        var result = await provider.ValidateKeyAsync("quota-key", default);
+        var result = await provider.ValidateKeyAsync(ActorUserId, "quota-key", default);
 
         Assert.False(result.Success);
         Assert.Contains("额度", result.Message, StringComparison.Ordinal);
@@ -191,9 +208,30 @@ public sealed class WorldTidesProviderTests
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var provider = CreateProvider(httpClient, cache);
 
-        var result = await provider.ValidateKeyAsync("   ", default);
+        var result = await provider.ValidateKeyAsync(ActorUserId, "   ", default);
 
         Assert.False(result.Success);
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task PaidCallLogBeginFailurePreventsWorldTidesRequest()
+    {
+        var handler = new StubHttpMessageHandler(_ => JsonResponse(ReadSample()));
+        using var httpClient = new HttpClient(handler);
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var callLogs = new FakeProviderCallLogStore
+        {
+            BeginFailure = new InvalidOperationException("log unavailable")
+        };
+        var provider = CreateProvider(httpClient, cache, callLogStore: callLogs);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => provider.GetTidesAsync(
+            new GeoPoint(30.194, 122.687),
+            new ForecastRange(StartUtc, 24),
+            ActorUserId,
+            default));
+
         Assert.Equal(0, handler.CallCount);
     }
 
@@ -201,7 +239,8 @@ public sealed class WorldTidesProviderTests
         HttpClient client,
         IMemoryCache cache,
         string? apiKey = "test-key",
-        FakeCredentialStore? store = null) =>
+        FakeCredentialStore? store = null,
+        FakeProviderCallLogStore? callLogStore = null) =>
         new(
             client,
             Options.Create(new WorldTidesOptions
@@ -214,7 +253,9 @@ public sealed class WorldTidesProviderTests
             }),
             cache,
             store ?? new FakeCredentialStore(),
-            new FixedTimeProvider(FetchedAtUtc));
+            callLogStore ?? new FakeProviderCallLogStore(),
+            new FixedTimeProvider(FetchedAtUtc),
+            NullLogger<WorldTidesProvider>.Instance);
 
     private static string ReadSample() => File.ReadAllText(
         Path.Combine(AppContext.BaseDirectory, "TestData", "WorldTides", "tide-response.json"));
@@ -291,6 +332,35 @@ public sealed class WorldTidesProviderTests
             Guid keyId,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
+    }
+
+    private sealed class FakeProviderCallLogStore : IProviderCallLogStore
+    {
+        public Exception? BeginFailure { get; init; }
+
+        public List<StartProviderCallLog> Starts { get; } = [];
+
+        public List<(Guid Id, CompleteProviderCallLog Command)> Completions { get; } = [];
+
+        public Task<Guid> BeginAsync(StartProviderCallLog command, CancellationToken cancellationToken = default)
+        {
+            if (BeginFailure is not null)
+            {
+                throw BeginFailure;
+            }
+
+            Starts.Add(command);
+            return Task.FromResult(Guid.NewGuid());
+        }
+
+        public Task CompleteAsync(Guid id, CompleteProviderCallLog command, CancellationToken cancellationToken = default)
+        {
+            Completions.Add((id, command));
+            return Task.CompletedTask;
+        }
+
+        public Task<ProviderCallLogPage> SearchAsync(ProviderCallLogFilter filter, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new ProviderCallLogPage([], 0, filter.Page, filter.PageSize));
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider

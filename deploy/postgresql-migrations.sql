@@ -763,3 +763,71 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260821020624_AddProviderCallLogs') THEN
+    CREATE TABLE provider_call_logs (
+        "Id" uuid NOT NULL,
+        "ActorUserId" uuid NOT NULL,
+        "ProviderCode" character varying(64) NOT NULL,
+        "Operation" character varying(64) NOT NULL,
+        "CredentialId" uuid,
+        "CredentialHint" character varying(16) NOT NULL,
+        "LatitudeBucket" double precision,
+        "LongitudeBucket" double precision,
+        "RangeStartUtc" timestamp with time zone,
+        "RangeEndUtc" timestamp with time zone,
+        "RequestedDays" integer,
+        "Outcome" character varying(16) NOT NULL,
+        "HttpStatusCode" integer,
+        "CreditsUsed" integer,
+        "RemainingCredits" integer,
+        "DurationMs" bigint,
+        "ErrorCode" character varying(100),
+        "TraceId" character varying(64),
+        "StartedAtUtc" timestamp with time zone NOT NULL,
+        "CompletedAtUtc" timestamp with time zone,
+        CONSTRAINT "PK_provider_call_logs" PRIMARY KEY ("Id")
+    );
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260821020624_AddProviderCallLogs') THEN
+    CREATE INDEX "IX_provider_call_logs_ActorUserId_StartedAtUtc" ON provider_call_logs ("ActorUserId", "StartedAtUtc");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260821020624_AddProviderCallLogs') THEN
+    CREATE INDEX "IX_provider_call_logs_Outcome_StartedAtUtc" ON provider_call_logs ("Outcome", "StartedAtUtc");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260821020624_AddProviderCallLogs') THEN
+    CREATE INDEX "IX_provider_call_logs_ProviderCode_StartedAtUtc" ON provider_call_logs ("ProviderCode", "StartedAtUtc");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260821020624_AddProviderCallLogs') THEN
+    CREATE INDEX "IX_provider_call_logs_StartedAtUtc" ON provider_call_logs ("StartedAtUtc");
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20260821020624_AddProviderCallLogs') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20260821020624_AddProviderCallLogs', '10.0.11');
+    END IF;
+END $EF$;
+COMMIT;
+

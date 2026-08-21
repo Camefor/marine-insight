@@ -182,6 +182,8 @@ public sealed partial class RiskSummary
 
 `MI-0056` 保持 `DashboardQuerySession.IsLoadingAnalysis`、请求取消和重复提交保护不变，仅将条件渲染的忙状态移入 `.query-band`。状态卡使用正常文档流和 scoped CSS，不再采用 `position: fixed` 或页面级 `z-index`；因此查询期间 Header、表单和已有结果继续可见，移动端只通过媒体查询收敛展示密度，不复制业务状态。
 
+`MI-0060` 为 `DashboardQuerySession` 增加默认 `false` 的 `IncludeTide`，提交时只有同时存在登录用户 ID 才构造付费潮汐查询。`Dashboard.razor` 按认证态渲染复选项或登录提示；管理员 `ProviderCallLogs.razor` 通过 `ProviderCallLogService` 加载分页筛选结果，不在组件中接触 Provider 密钥或原始请求。
+
 ## 13. 变更记录
 
 | 版本 | 日期 | 变更说明 |

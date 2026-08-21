@@ -13,6 +13,8 @@ test('dashboard and account shell remain usable without layout overflow', async 
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '海岛海况智能决策平台' })).toBeVisible();
   await expect(page.getByRole('button', { name: '查询海况' })).toBeVisible();
+  await expect(page.getByText('登录后可查询潮汐')).toBeVisible();
+  await expect(page.getByLabel('查询潮汐（消耗 Credits）')).toHaveCount(0);
   await expect(page.getByText('地图选点', { exact: true })).toBeVisible();
   await expect(page.getByLabel('纬度')).toBeHidden();
   await expect(page.getByLabel('经度')).toBeHidden();

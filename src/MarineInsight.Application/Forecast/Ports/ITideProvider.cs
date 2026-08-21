@@ -15,5 +15,6 @@ public interface ITideProvider
     Task<ProviderTideResult> GetTidesAsync(
         GeoPoint location,
         ForecastRange range,
+        Guid actorUserId,
         CancellationToken cancellationToken);
 }

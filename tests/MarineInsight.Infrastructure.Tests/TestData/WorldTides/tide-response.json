@@ -3,6 +3,7 @@
   "responseLat": 30.2,
   "responseLon": 122.7,
   "credits": 80,
+  "callCount": 2,
   "heights": [
     { "dt": 1786492800, "height": 1.2 },
     { "dt": 1786496400, "height": 1.5 }

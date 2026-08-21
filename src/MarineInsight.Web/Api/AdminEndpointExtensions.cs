@@ -2,6 +2,7 @@
 using MarineInsight.Application.Admin;
 using MarineInsight.Application.Credentials;
 using MarineInsight.Application.Errors;
+using MarineInsight.Application.ProviderCalls;
 using MarineInsight.Domain.Location;
 using MarineInsight.Infrastructure.Providers.WorldTides;
 using MarineInsight.Web.Admin;
@@ -32,8 +33,39 @@ public static class AdminEndpointExtensions
         group.MapPut("/providers/worldtides/credentials/{id:guid}/activate", ActivateCredentialAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
         group.MapDelete("/providers/worldtides/credentials/{id:guid}", DeleteCredentialAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
         group.MapPost("/providers/worldtides/credentials/test", TestCredentialAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
+        group.MapGet("/provider-call-logs", ListProviderCallLogsAsync);
 
         return endpoints;
+    }
+
+    private static async Task<IResult> ListProviderCallLogsAsync(
+        string? provider,
+        string? operation,
+        string? outcome,
+        Guid? actorUserId,
+        DateTimeOffset? fromUtc,
+        DateTimeOffset? toUtc,
+        int? page,
+        int? pageSize,
+        ProviderCallLogService service,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Results.Ok(await service.SearchAsync(new ProviderCallLogFilter(
+                provider,
+                operation,
+                outcome,
+                actorUserId,
+                fromUtc,
+                toUtc,
+                page is null or < 1 ? 1 : page.Value,
+                pageSize is null or < 1 ? 50 : pageSize.Value), cancellationToken));
+        }
+        catch (ArgumentException exception)
+        {
+            return Validation(exception.Message);
+        }
     }
 
     private static async Task<IResult> ListCredentialsAsync(ProviderCredentialService service, CancellationToken cancellationToken) =>
@@ -107,11 +139,12 @@ public static class AdminEndpointExtensions
     }
 
     private static async Task<IResult> TestCredentialAsync(
+        ClaimsPrincipal user,
         UpdateWorldTidesCredentialRequest request,
         WorldTidesProvider provider,
         CancellationToken cancellationToken)
     {
-        var result = await provider.ValidateKeyAsync(request.ApiKey, cancellationToken);
+        var result = await provider.ValidateKeyAsync(GetUserId(user), request.ApiKey, cancellationToken);
         return Results.Ok(new WorldTidesKeyTestResponse(result.Success, result.Message, result.RemainingCredits));
     }
 

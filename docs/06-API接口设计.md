@@ -370,6 +370,10 @@
 - Key 校验：非空、去首尾空格、长度 8–256、不含控制字符。
 - 现有配置兜底 Key（User Secrets / key-per-file）不在列表中展示，作为请求期最后候选。
 
+### 8.4 付费 API 调用日志（`MI-0060`）
+
+`GET /api/v1/admin/provider-call-logs` 要求 `Administrator`，支持 `provider`、`operation`、`outcome`、`actorUserId`、`fromUtc`、`toUtc`、`page`、`pageSize`（最大 100）筛选，返回分页 `items/total/page/pageSize`。记录只含密钥提示和网格化位置，不返回 API Key、请求头或完整 URI。
+
 ## 9. 错误响应
 
 ```json
@@ -386,6 +390,7 @@
 | 错误码 | HTTP | 含义 |
 | --- | --- | --- |
 | `VALIDATION_FAILED` | 400 | 参数或业务输入无效 |
+| `AUTHENTICATION_REQUIRED` | 401 | 匿名用户请求了仅登录用户可用的付费潮汐增强 |
 | `LOCATION_NOT_FOUND` | 404 | 地点不存在 |
 | `ANALYSIS_NOT_FOUND` | 404 | 分析结果不存在或不可访问 |
 | `FORECAST_INSUFFICIENT` | 422 | 关键字段不足，无法可靠分析 |
@@ -419,7 +424,7 @@
 
 服务端根据 Provider 配额动态收紧回源，不影响缓存命中读取。
 
-`MI-0027` 已实现登录用户的收藏、查询历史和单位设置端点，以及管理员只读运行状态端点。分析响应新增 `tide` 状态：`disabled` 表示未启用，`available` 表示潮汐可用，`degraded` 表示仍返回潮汐但 Credit 已低于告警阈值，`unavailable` 表示本次潮汐失败；可选潮汐失败不改变基础天气/海况分析的成功状态。
+`MI-0060` 后，`POST /api/v1/marine-analyses` 请求新增可选 `includeTide`，默认 `false`；未请求时 `tide.status=not_requested` 且不调用 WorldTides。只有登录用户可传 `includeTide=true`，匿名请求返回 `401 AUTHENTICATION_REQUIRED`。Provider 未启用时为 `disabled`，成功为 `available`，低 Credit 为 `degraded`，失败为 `unavailable`；潮汐失败仍不改变基础天气/海况分析成功状态。
 
 ## 12. 版本与废弃
 
@@ -447,3 +452,4 @@
 | 2.1 | 2026-08-18 | 增加 `MI-0039` 后台管理端点：`GET/POST/PUT/DELETE /api/v1/admin/locations[/{id}]` 与 `GET /api/v1/admin/users`（均要求 `Administrator` 角色 + `admin` 限流，写操作带防伪头），新增 `LOCATION_CONFLICT`/`LOCATION_IN_USE` 错误码，删除返回级联收藏引用数 |
 | 2.2 | 2026-08-19 | 增加 `MI-0040`：`GET /api/v1/locations/reverse-geocode?lat=&lon=` 逆地理编码端点（天地图服务端反查最近地名，返回 `{ name }`，失败返回 `null`，Best-effort 不阻塞主流程）；`POST /api/v1/marine-analyses` 请求体新增可选 `timeZone`（IANA），AI 解读与解释事实按该时区换算显示时间，缺省回退地点时区 |
 | 2.3 | 2026-08-20 | 增加 `MI-0059` WorldTides 密钥池管理端点：`GET/POST /api/v1/admin/providers/worldtides/credentials`、`PUT .../credentials/{id}/activate`、`DELETE .../credentials/{id}`、`POST .../credentials/test`（均要求 `Administrator` + 防伪 + `admin` 限流；响应不含明文/密文 Key），新增 `PROVIDER_CREDENTIAL_IN_USE` 错误码 |
+| 2.4 | 2026-08-21 | 增加 `MI-0060`：分析请求 `includeTide` 默认关闭，匿名付费潮汐返回 `401 AUTHENTICATION_REQUIRED`；新增管理员 `GET /api/v1/admin/provider-call-logs` 分页筛选端点和 `not_requested` 潮汐状态 |

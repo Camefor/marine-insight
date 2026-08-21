@@ -129,15 +129,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0059` |
-| 当前状态 | `DONE` |
-| 当前目标 | 后台管理 WorldTides API Key 池：多 Key 加密存储 + 健康/credits + 自动故障转移 + 选激活 |
-| 最后完成动作 | 完成 Application/Infrastructure/Provider/双轨迁移/Web 管理端与测试，构建 0 警告、263 测试通过，文档登记并提交推送 |
-| 下一步动作 | 生产已部署 MI-0059；后续轮换 Key 直接走后台 `/admin/providers/worldtides`，无需改文件或重启 |
-| 涉及文件 | `src/MarineInsight.Application/Credentials/`、`ProviderCredentialStore.cs`、`WorldTidesProvider.cs`、`WorldTidesOptions.cs`、双轨迁移、`AdminEndpointExtensions.cs`、`WorldTidesCredentials.razor`、三测试项目、`docs/AGENT-GUIDE.md` 及设计文档 |
-| 验证结果 | Release 构建 0 警告/0 错误；全量 .NET 263/263（Domain 51、Application 80、Infrastructure 67、Web 65）；DataProtection 加密往返、激活互斥、删除守卫、故障转移与 admin 限流内 API 测试通过 |
-| 阻塞/待确认 | 无；Key 仍仅以加密形态存于数据库，管理页只展示末四位，明文不落 Git/日志 |
-| 最后更新 | 2026-08-20 |
+| 当前任务 ID | `MI-0060` |
+| 当前状态 | `IN_PROGRESS` |
+| 当前目标 | 将潮汐改为登录用户显式选择后才查询，并新增付费 API 调用日志及后台列表筛选 |
+| 最后完成动作 | 已完成按需潮汐权限、付费调用日志、后台筛选、SQLite/PostgreSQL 双迁移、设计文档和自动化回归；桌面/移动 E2E 4/4 通过 |
+| 下一步动作 | 完成本地最终准出后提交并推送 `main`，按生产手册执行备份、完整 overlay 重建、迁移、健康/权限/日志冒烟与 Docker 清理 |
+| 涉及文件 | Application 分析与 ProviderCalls、Infrastructure WorldTides/持久化/双迁移、Web Dashboard/Admin/API、测试、幂等 SQL及相关设计文档 |
+| 验证结果 | Release 构建 0 警告/0 错误；Domain 51、Application 82、Infrastructure 71、Web 68 分项通过；Playwright 桌面/360px 4/4；全量需在最后测试修正后再跑一次 |
+| 阻塞/待确认 | 无；生产发布必须继续使用仓库外 Secret，日志不得记录 API Key 或精确凭据 |
+| 最后更新 | 2026-08-21 |
 
 <!-- agent-state:end -->
 
@@ -147,6 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [ ] | `MI-0060` | P0 | `IN_PROGRESS` | 潮汐按需登录查询 + 付费 API 调用日志与后台筛选 | Dashboard 默认不查询潮汐；只有登录用户显式选中后才允许调用 WorldTides，匿名请求不得产生付费调用；每次真实供应商调用记录用户、Provider、用途、坐标/时间范围摘要、结果、Credits、耗时与错误分类且不含密钥；后台支持分页列表与条件筛选；完成自动化验证、提交推送和生产发布 |
 | [x] | `MI-0059` | P0 | `DONE` | 后台管理 WorldTides API Key 池（多 Key 加密存储 + 健康/credits + 自动故障转移 + 选激活） | 新增 `provider_credentials` 表（DataProtection 加密、KeyHint 末四位、激活互斥、健康/credits/检查时间）；Provider 请求期按激活优先解析候选并自动故障转移、回写健康；Web 后台 `/admin/providers/worldtides` 提供列表/添加/测试连接/激活/删除；配置兜底 Key 保留；Release 构建 0 警告/0 错误、全量 263 测试通过、双轨迁移齐备；部署后后台可直接轮换 Key，无需改文件/重启 |
 | [x] | `MI-0057` | P0 | `DONE` | 推送并发布潮汐图表与查询 Loading 优化 | 仅提交 `MI-0055`/`MI-0056` 相关代码和文档；推送 `origin/main`；生产升级前完成非空 PostgreSQL 备份，使用 production/AI/tianditu 完整 overlay 重建；live/ready、核心页面、潮汐静态资源、双视口布局、关键日志和 Docker 清理通过 |
 | [x] | `MI-0056` | P1 | `DONE` | 优化 Dashboard 查询海况 Loading 的 PC 展示 | 查询期间使用查询卡片内的局部状态反馈，不覆盖 Header、查询条件和已有结果；深海主题一致，桌面与移动端无重叠、横向溢出或布局跳变；查询按钮继续防重复提交；Release 构建、自动化测试和双视口浏览器回归通过 |

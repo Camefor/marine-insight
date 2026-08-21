@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using MarineInsight.Application.Users;
 using MarineInsight.Domain.Analysis;
+using MarineInsight.Infrastructure.Persistence;
 using MarineInsight.Web.Components.Features.Dashboard;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +30,7 @@ public sealed class DashboardQuerySessionTests
         Assert.Contains("class=\"ui-icon\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">⌂<", html, StringComparison.Ordinal);
         Assert.Contains("地点搜索", html, StringComparison.Ordinal);
+        Assert.Contains("登录后可查询潮汐", html, StringComparison.Ordinal);
         Assert.Contains("forecast-time-picker", html, StringComparison.Ordinal);
         Assert.Contains("_content/AntDesign/css/ant-design-blazor.css", html, StringComparison.Ordinal);
         Assert.Contains("等待查询", html, StringComparison.Ordinal);
@@ -110,7 +112,7 @@ public sealed class DashboardQuerySessionTests
         Assert.NotEmpty(session.Result.TopRisks);
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "风速" && metric.Value == "4.0");
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "有效波高" && metric.Value == "0.8");
-        Assert.Equal("disabled", session.Result.Tide.Status);
+        Assert.Equal("not_requested", session.Result.Tide.Status);
         Assert.Empty(session.Result.Tide.Points);
     }
 
@@ -123,11 +125,21 @@ public sealed class DashboardQuerySessionTests
 
         using var scope = factory.Services.CreateScope();
         var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MarineInsightDbContext>();
+        var actor = new MarineInsightUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "tide-user@example.com",
+            Email = "tide-user@example.com"
+        };
+        dbContext.Users.Add(actor);
+        await dbContext.SaveChangesAsync();
         session.ForecastStartLocal = new DateTime(2026, 7, 16, 0, 0, 0);
         session.Hours = 24;
+        session.IncludeTide = true;
 
         Assert.True(await session.SelectCatalogLocationAsync(Guid.Parse("8a477d67-73fa-4f43-b954-cd29d238a89d")));
-        await session.SubmitAnalysisAsync();
+        await session.SubmitAnalysisAsync(actor.Id);
 
         var tide = Assert.IsType<DashboardTideResult>(session.Result?.Tide);
         Assert.Equal("available", tide.Status);

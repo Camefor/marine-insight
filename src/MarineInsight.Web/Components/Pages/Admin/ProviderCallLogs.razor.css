@@ -1,0 +1,64 @@
+﻿.provider-call-filters {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.provider-call-filters label {
+    display: grid;
+    gap: 6px;
+}
+
+.provider-call-filters input,
+.provider-call-filters select {
+    background: rgba(7, 27, 44, 0.9);
+    border: 1px solid rgba(118, 190, 210, 0.24);
+    border-radius: 10px;
+    color: var(--text-primary);
+    min-height: 44px;
+    padding: 8px 10px;
+}
+
+.provider-call-filter-actions,
+.provider-call-pager {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+}
+
+.provider-call-filter-actions {
+    align-self: end;
+}
+
+.provider-call-pager {
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.call-outcome {
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 3px 8px;
+}
+
+.call-outcome.succeeded {
+    background: rgba(77, 208, 172, 0.14);
+    color: #86f0cf;
+}
+
+.call-outcome.failed {
+    background: rgba(255, 108, 124, 0.14);
+    color: #ff9daa;
+}
+
+.call-outcome.started {
+    background: rgba(255, 193, 92, 0.14);
+    color: #ffd18a;
+}
+
+@media (max-width: 840px) {
+    .provider-call-filters {
+        grid-template-columns: 1fr;
+    }
+}
