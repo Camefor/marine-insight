@@ -129,13 +129,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0061` |
-| 当前状态 | `DONE` |
-| 当前目标 | 取消 GitHub Actions 中的线上 E2E 测试，同时保留本地 Playwright 测试入口 |
-| 最后完成动作 | 已从 `.github/workflows/dotnet.yml` 移除 Node、npm、Chromium 和 `npm run test:e2e` 步骤，保留 .NET Restore/Build/Test 与本地 E2E 脚本 |
-| 下一步动作 | 等待用户指定下一个任务 |
-| 涉及文件 | `.github/workflows/dotnet.yml`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | workflow 必需/禁用步骤静态断言通过；`git diff --check` 通过；`actionlint` 当前环境未安装 |
+| 当前任务 ID | `MI-0066` |
+| 当前状态 | `IN_PROGRESS` |
+| 当前目标 | 提交并推送 MI-0062 至 MI-0065 的品牌视觉与 PC 潮汐提示改动，并安全部署到腾讯云生产环境 |
+| 最后完成动作 | 已复核部署规范、生产环境记忆、当前分支与工作区范围，确认待发布改动均属于 MI-0062 至 MI-0065 |
+| 下一步动作 | 执行 Release 全量门禁，通过后提交推送，再进行数据库备份、五层 Compose overlay 重建与生产冒烟 |
+| 涉及文件 | MI-0062 至 MI-0065 的 Web、品牌资源、测试与设计文档；`docs/AGENT-GUIDE.md` |
+| 验证结果 | 待执行本轮发布门禁与生产验证 |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-08-21 |
 
@@ -147,6 +147,11 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [ ] | `MI-0066` | P0 | `IN_PROGRESS` | 推送并部署品牌视觉与 PC 潮汐提示优化 | MI-0062 至 MI-0065 相关改动通过 Release 全量门禁并推送 `main`；生产完成非空备份、五层 overlay 重建、健康与核心业务/静态资源/双视口冒烟、日志检查和 Docker 清理 |
+| [x] | `MI-0065` | P1 | `DONE` | 修复 PC 潮汐登录提示水平对齐 | 视口大于 1040px 时，匿名潮汐提示与日期/范围/查询按钮处于同一水平线；1040px 以下既有两列/单列布局不受影响；Playwright 双视口通过 |
+| [x] | `MI-0064` | P1 | `DONE` | 按海洋罗盘风设计稿调整网站 Logo 与设备图标 | Header 使用罗盘/内圈海浪完整横向 Logo；favicon 使用深海蓝透明线稿，Apple Touch/PWA 使用深色底板浅色罗盘；双视口与资源验证通过 |
+| [x] | `MI-0063` | P1 | `DONE` | 按第二版设计稿调整网站 Logo 与设备图标 | Header 使用圆环/海浪/数据柱完整横向 Logo，双层海浪不得越出圆环；favicon、Apple Touch 与 PWA 使用同源圆形图标；双视口与资源验证通过 |
+| [x] | `MI-0062` | P1 | `DONE` | 更换网站主题 Logo 与设备图标 | Header 使用透明的方案 4 横向 SVG（图形 + 白色 `MARINE AI`）；favicon 32/ICO、Apple Touch 180、PWA 192/512 使用同源纯图形，尺寸、背景、manifest、SSR、透明度和双视口布局验证通过 |
 | [x] | `MI-0061` | P1 | `DONE` | 取消 GitHub Actions 线上 E2E 测试 | `.github/workflows/dotnet.yml` 不再安装 Node/Playwright/Chromium，也不再执行 `npm run test:e2e`；保留 .NET Restore/Build/Test 和本地 E2E 脚本；静态断言与 `git diff --check` 通过 |
 | [x] | `MI-0060` | P0 | `DONE` | 潮汐按需登录查询 + 付费 API 调用日志与后台筛选 | Dashboard/REST 默认 `not_requested`，仅登录用户显式选择才调用 WorldTides，匿名带潮汐 401 `AUTHENTICATION_REQUIRED`；新增 `provider_call_logs` 双迁移、每次真实调用记账（含 Credits/耗时/错误分类）；后台费用日志分页筛选页/API；本地 Release 0 警告/0 错误、.NET 272/272、Playwright 4/4；生产已发布（mi0060 非空备份、五层 overlay 重建、迁移在库、匿名不记账冒烟通过） |
 | [x] | `MI-0059` | P0 | `DONE` | 后台管理 WorldTides API Key 池（多 Key 加密存储 + 健康/credits + 自动故障转移 + 选激活） | 新增 `provider_credentials` 表（DataProtection 加密、KeyHint 末四位、激活互斥、健康/credits/检查时间）；Provider 请求期按激活优先解析候选并自动故障转移、回写健康；Web 后台 `/admin/providers/worldtides` 提供列表/添加/测试连接/激活/删除；配置兜底 Key 保留；Release 构建 0 警告/0 错误、全量 263 测试通过、双轨迁移齐备；部署后后台可直接轮换 Key，无需改文件/重启 |
@@ -191,6 +196,10 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0065` | 2026-08-21 | 修复 PC 潮汐登录提示水平对齐 | 在大于 1040px 的四列查询布局中为 `.paid-provider-option` 增加 31px 顶部偏移；Playwright 新增提示卡与日期控件顶线差不超过 1px 的几何断言；Release Web 构建 0 警告/0 错误、桌面/360px 4/4 通过，移动端布局不受影响 |
+| [x] | `MI-0064` | 2026-08-21 | 按海洋罗盘风设计稿调整网站 Logo 与设备图标 | 重绘四向尖角、四个斜向刻度、双圆环与圆内双层海浪；Header 使用浅色罗盘与标题式字标，透明 favicon 使用深海蓝线稿，Apple/PWA 使用深色底板浅色罗盘；Web 定向 2/2、Playwright 桌面/360px 4/4、资源尺寸/透明度与 BOM/CRLF 通过 |
+| [x] | `MI-0063` | 2026-08-21 | 按第二版设计稿调整网站 Logo 与设备图标 | 重绘开放蓝紫/青绿渐变圆环、圆环内双层海浪与五根数据柱；Header 横向 SVG 使用标题式 `Marine AI` 与中文副标题，favicon/Apple Touch/PWA 从同源 SVG 派生；最终微调以圆环内侧裁切消除海浪越界；Release 全量 .NET 272/272、最终 Playwright 桌面/360px 4/4、资源尺寸/透明度与 BOM/CRLF 通过 |
+| [x] | `MI-0062` | 2026-08-21 | 更换网站主题 Logo 与设备图标 | 新增方案 4 数据折线/海浪同源 SVG：Header 使用透明 220×48 横向 Logo，favicon 使用透明 32px PNG 与多尺寸 ICO，Apple Touch 180px 和 PWA 192/512px 使用全画布深海底板；补齐 SVG favicon、manifest 深海主题与 `any maskable`；Release 全量 .NET 272/272、Playwright 桌面/360px 4/4、format、资源解析/尺寸/透明度/媒体类型、diff 与 BOM/CRLF 通过 |
 | [x] | `MI-0061` | 2026-08-21 | 取消 GitHub Actions 线上 E2E 测试 | 从 `.github/workflows/dotnet.yml` 移除 Setup Node、`npm ci`、Playwright Chromium 安装和 `npm run test:e2e`；CI 继续执行 .NET Restore/Build/Test，本地 `test:e2e` 脚本保持不变；workflow 必需/禁用步骤静态断言和 `git diff --check` 通过，当前环境未安装 `actionlint` |
 | [x] | `MI-0059` | 2026-08-20 | 后台管理 WorldTides API Key 池（多 Key 加密存储 + 健康/credits + 自动故障转移 + 选激活） | Application 新增 `IProviderCredentialStore`/`ProviderCredentialService`/模型与校验；Infrastructure 新增 `provider_credentials` 表（DataProtection 加密、`(ProviderName, KeyHint)` 唯一 + `IsActive` 部分唯一索引）、`ProviderCredentialStore`（加密落库/激活互斥/删除守卫/健康回写/审计），SQLite+Postgres 双迁移；`WorldTidesProvider` 增加构造依赖并按激活优先候选自动故障转移，401/403/429/额度耗尽视为 Key 级失败，超时/网络/5xx 不转移，无候选时报 not-configured，配置兜底 Key 保留且不记健康；`ValidateKeyAsync` 供「测试连接」；Web 后台 `/admin/providers/worldtides` 提供列表（末四位/健康/credits/告警/检查时间/失败原因）+ 添加（密码框）+ 测试连接 + 激活 + 删除，AdminTabs 新增「潮汐密钥」；Release 构建 0 警告/0 错误、全量 .NET 263/263（Domain 51、Application 80、Infrastructure 67、Web 65）通过、格式与 BOM/CRLF 检查通过；部署后后台可直接轮换 Key，无需改文件/重启 |
 | [x] | `MI-0058` | 2026-08-20 | 使用 WorldTides API Key 启用真实潮汐数据并发布生产 | 新 Key 直连 WorldTides HTTP 200；本地/生产分析均 `analyzed`、潮汐 `available`、49 个潮位点；生产 Secret 与 `.env` 路径配置在仓库外，备份 `marine-insight-mi0058-20260820-100144.dump` 非空（69,655 字节）；完整 production/AI/tianditu/worldtides overlay 重建后 migrate exit 0、Web healthy；公网 live/ready 200、潮汐/ECharts 资源 200、桌面/360px Playwright 4/4、近 5 分钟 web 错误日志 0；完成 Docker 清理，Key 未进入 Git 或日志 |
@@ -257,6 +266,10 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-21 | `MI-0065` | 修复 PC 四列查询栏“登录后可查询潮汐”提示高于日期、范围和查询按钮的问题；仅在大于 1040px 时增加 31px 顶部偏移，平板和移动断点保持原布局；E2E 增加提示卡与日期控件顶线几何断言 | Release Web 构建 0 警告/0 错误；Playwright 桌面/360px 4/4，桌面顶线误差不超过 1px，移动端无横向溢出 | 完成；等待用户继续确认页面效果或另行指定提交/发布 |
+| 2026-08-21 | `MI-0064` | 根据海洋罗盘风参考图替换品牌视觉：四向尖角、斜向刻度与双圆环构成航海罗盘，双层海浪限制在内圈；Header 使用浅色罗盘，透明 favicon 使用深海蓝线稿，Apple/PWA 使用深海底板浅色罗盘；保持现有 URL、220×48 固有尺寸、组件和 manifest 边界不变 | Web 品牌资源定向 2/2；Playwright 桌面/360px 4/4；SVG 解析、PNG/ICO 尺寸与透明度、`git diff --check`、BOM/CRLF 通过 | 完成；等待用户确认海洋罗盘版视觉效果或另行指定提交/发布 |
+| 2026-08-21 | `MI-0063` | 根据第二版科技数据风参考图重绘现有品牌资产：折线浪图替换为开放渐变圆环、双层海浪和五根数据柱；Header 保持 220×48 横向适配，字标改为标题式 `Marine AI` 并增加中文副标题；透明 favicon 与深海底板 Apple/PWA 图标重新离线派生；最终按用户反馈增加圆环内侧裁切，海浪不再越出圆环 | Release 全量 .NET 272/272；最终 Playwright 桌面/360px 4/4；SVG 解析、PNG/ICO 尺寸与透明度、`git diff --check`、BOM/CRLF 通过 | 完成；等待用户继续确认视觉效果或另行指定提交/发布 |
+| 2026-08-21 | `MI-0062` | 按新 Logo 设计稿重绘方案 4 科技数据风品牌：新增透明横向 Logo、透明纯图形与深海底板应用图标 SVG；替换 favicon 32、Apple Touch 180、PWA 192/512 PNG，新增多尺寸 favicon.ico；Header 改为完整白色 `MARINE AI` 横向 SVG，Head 增加 SVG/ICO 降级，manifest 切换 `#0A131F` 与 `any maskable`；同步 UI、组件与测试文档 | Release 全量 .NET 272/272；Playwright 桌面/360px 4/4；`dotnet format --verify-no-changes`、SVG/manifest 解析、PNG/ICO 尺寸与透明度、静态资源媒体类型、`git diff --check`、改动文本 BOM/CRLF 均通过 | 完成；等待用户确认视觉效果或另行指定提交/发布 |
 | 2026-08-21 | `MI-0061` | 取消 GitHub Actions 线上 E2E：移除 Setup Node、E2E 依赖安装、Chromium 安装和 Playwright 执行步骤；保留 .NET Restore/Build/Test，并保留本地 `npm run test:e2e` 入口 | workflow 必需/禁用步骤静态断言通过；`git diff --check` 通过；当前环境未安装 `actionlint`，未执行远端 GitHub Actions | 完成，无后续动作 |
 | 2026-08-21 | `MI-0060` | 完成潮汐成本控制与费用审计并发布生产：Dashboard/REST 默认 `not_requested`，仅登录用户显式选择才进入 WorldTides，匿名带潮汐返回 401 `AUTHENTICATION_REQUIRED`；新增 `provider_call_logs` 双迁移、每次真实 HTTP 尝试的 started/succeeded/failed 与 Credits/余额/耗时记录，缓存命中不记账且 Begin 失败禁止出网；后台新增费用日志分页筛选页/API；`ce31a1a` 已推送 `origin/main`。本次 SSH 恢复后完成源码同步、`marine-insight-mi0060-20260821-025205.dump`（78,209 字节非空）备份、五层 overlay（production/AI/tianditu/worldtides）重建、`20260821020624_AddProviderCallLogs` 迁移在库确认、潮汐权限/日志冒烟与 Docker 清理（回收 104.5MB） | Release 0 警告/0 错误；.NET 272/272；Playwright 4/4；生产 migrate exit 0、web healthy、公网 live/ready 200、6 预置地点完好、匿名海况 200 且 `tide.status=not_requested`、匿名带潮汐 401、`provider_call_logs` 0 行（匿名不记账）、后台日志页/API 未授权 302→login、`/js/tide-chart.js` 与 `/_framework/blazor.web.js` 200、近 5 分钟错误日志 0 | 发布完成；后台可查询付费调用日志，匿名请求已确认不产生付费调用 |
 | 2026-08-20 | `MI-0059` | 实现后台管理 WorldTides API Key 池：新增 `provider_credentials` 表（DataProtection 加密、`(ProviderName, KeyHint)` 唯一 + `IsActive` 部分唯一索引）与 SQLite/Postgres 双迁移；`ProviderCredentialStore` 完成加密落库、首个自动激活、激活互斥、删除激活守卫、健康/credits 回写与审计；`WorldTidesProvider` 按激活优先解析候选并自动故障转移（401/403/429/额度耗尽为 Key 级失败，超时/网络/5xx 不转移），配置兜底 Key 保留且不记健康，`ValidateKeyAsync` 供「测试连接」；Web 后台 `/admin/providers/worldtides` 提供列表/添加/测试连接/激活/删除，AdminTabs 新增「潮汐密钥」；同步 AGENT-GUIDE 与 05/06/07/22/`.secrets` 文档；`7e49cf1`+`cba5195` 推送 origin 并部署生产（production/AI/tianditu/worldtides 完整 overlay），`provider_credentials` 表与迁移在库确认；生产复测发现重复添加同末四位 Key 时 DbUpdateException 使电路崩溃，修复为 Store 预检 KeyHint 抛 `ProviderCredentialConflictException`（API 409、页面友好提示），`b356616` 修复并再次部署 | Release 构建 0 警告/0 错误；全量 .NET 265/265（Domain 51、Application 80、Infrastructure 68、Web 66），含重复 Key 冲突 Store/API 新测试；DataProtection 加密往返、首个自动激活、激活互斥、删除守卫、配置兜底不记健康、故障转移与 admin 限流内 API 集成测试通过；格式与 BOM/CRLF 检查通过；生产备份 `marine-insight-mi0059-20260820-111025.dump` 非空（71,569 字节），migrate exit 0、web healthy、live/ready 200，6 个预置地点完好，后台潮汐密钥页 200、管理 API 未授权 302→login、近 5 分钟 0 异常，Docker 清理完成 | 生产已部署；后台可直接轮换 Key，无需改文件/重启容器；已添加的 Key ••••7317 可用，重复添加已能友好提示 |随后写入生产仓库外 Secret 和 `.env` 路径，完成源码同步、PostgreSQL 非空备份、production/AI/tianditu/worldtides 完整 overlay 重建与 Docker 清理；本地提交 `453ecb6` 已创建 | 本地和生产分析均 `analysisStatus=analyzed`、潮汐 `available`、49 个潮位点；生产 migrate 退出 0、Web healthy，公网 live/ready 200，潮汐/ECharts 静态资源 200，线上桌面/360px Playwright 4/4，近 5 分钟 web 错误日志 0；备份 `marine-insight-mi0058-20260820-100144.dump` 非空（69,655 字节）；Key 未进入 Git 或日志 | 发布完成；GitHub push 因连接重置失败，网络恢复后重试 `453ecb6` |

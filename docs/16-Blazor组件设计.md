@@ -178,6 +178,14 @@ public sealed partial class RiskSummary
 
 `MI-0051` 新增无状态共享组件 `UiIcon.razor`，集中承载本项目使用的 Lucide 路径、`currentColor` 描边和统一 `24×24` 视口；布局、Dashboard 与工作区页面只传入图标名称和样式类，按钮继续由外层元素提供 `title`、`aria-label` 或可见文字。品牌 PNG 仍由 `App.razor`、`MainLayout.razor` 和 manifest 的既有引用消费，替换二进制资产即可同步 Header、SEO、PWA 与设备图标，不引入运行时图片处理。
 
+`MI-0062` 将可见品牌与设备图标继续限制在应用外壳边界：`MainLayout.razor` 直接引用透明 `marine-ai-logo.svg`，避免组件内重复维护字标；`App.razor` 同时声明 SVG favicon、32px PNG 与 ICO 降级，并继续维护 Apple Touch、社交图和 manifest。`site.webmanifest` 的 192/512 图标声明 `any maskable`，所有 PNG/ICO 均由同源 SVG 离线派生，运行时不增加图像处理依赖。
+
+`MI-0063` 仅替换品牌 SVG 的确定性几何与离线派生图，不改变 `MainLayout.razor`、`App.razor` 或 manifest 的资源边界和 URL。横向 Logo 继续保持 `220×48` 固有尺寸，因此现有桌面 44px、移动 36px 响应式样式与 E2E 天然尺寸断言可以直接验证第二版设计，不新增运行时依赖。
+
+`MI-0064` 继续保持同 URL、同固有尺寸和离线派生流程，仅在三份 SVG 中分别定义适合深色 Header、透明 favicon 和深色设备底板的罗盘轮廓色。组件、CSS、manifest 与 E2E 尺寸断言不变，避免视觉试稿影响应用外壳结构。
+
+`MI-0065` 不改变 `Dashboard.razor` 或认证状态逻辑，仅在 `Dashboard.razor.css` 的大于 1040px 四列查询布局中，为 `.paid-provider-option` 增加 31px 顶部偏移，使其与日期时间控件、范围按钮及查询按钮顶线一致；两列与单列断点继续使用正常文档流。
+
 `MI-0055` 复用 `MarineAnalysisQueryResult.Tide`，由 `DashboardQuerySession` 投影 `DashboardTideResult` 与潮位点、高低潮和涨退潮文本；该投影明确不参与风险评分。`Dashboard.razor` 仅在潮位点存在时动态导入 `tide-chart.js`，模块再从固定版本 `Vizor.ECharts` 静态 Web Asset 加载 ECharts 6；以 SnapshotId 避免重复初始化，通过 `ResizeObserver` 自适应容器，并在重查或页面 Dispose 时销毁实例。JS/Canvas 失败时 Razor 摘要和 Provider 降级文案仍可用。
 
 `MI-0056` 保持 `DashboardQuerySession.IsLoadingAnalysis`、请求取消和重复提交保护不变，仅将条件渲染的忙状态移入 `.query-band`。状态卡使用正常文档流和 scoped CSS，不再采用 `position: fixed` 或页面级 `z-index`；因此查询期间 Header、表单和已有结果继续可见，移动端只通过媒体查询收敛展示密度，不复制业务状态。
@@ -212,3 +220,7 @@ public sealed partial class RiskSummary
 | 3.1 | 2026-08-20 | 记录 `MI-0051` `UiIcon` 共享组件与品牌资产消费边界：集中维护 Lucide 线性 SVG，布局/Dashboard/工作区复用同一组件，Header/SEO/PWA 保持同源 PNG 引用 |
 | 3.2 | 2026-08-20 | 记录 `MI-0055` 潮汐投影与 ECharts 互操作：固定 NuGet 静态资产、按需加载、SnapshotId 去重、ResizeObserver、自适应与 Dispose/失败降级 |
 | 3.3 | 2026-08-20 | 记录 `MI-0056` Dashboard 查询忙状态边界：复用既有 Session 状态，局部状态卡取代页面级固定遮罩，响应式规则不引入额外业务状态 |
+| 3.4 | 2026-08-21 | 记录 `MI-0062` 品牌资产边界：MainLayout 消费透明横向 SVG，App 提供 SVG/PNG/ICO favicon 降级，manifest 消费同源深海底板 PWA 图标 |
+| 3.5 | 2026-08-21 | 记录 `MI-0063` 第二版 Logo 为同 URL、同固有尺寸的 SVG/PNG/ICO 资产替换，组件与 manifest 消费边界保持不变 |
+| 3.6 | 2026-08-21 | 记录 `MI-0064` 海洋罗盘风为同 URL、同尺寸的三套背景适配 SVG，继续离线派生 PNG/ICO，不改变组件与 manifest 边界 |
+| 3.7 | 2026-08-21 | 记录 `MI-0065` 仅通过 Dashboard scoped CSS 修复 PC 潮汐登录提示水平对齐，不改变认证渲染和移动端布局 |

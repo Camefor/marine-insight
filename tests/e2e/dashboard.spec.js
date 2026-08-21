@@ -19,10 +19,10 @@ test('dashboard and account shell remain usable without layout overflow', async 
   await expect(page.getByLabel('纬度')).toBeHidden();
   await expect(page.getByLabel('经度')).toBeHidden();
 
-  const brandMark = page.locator('.app-brand-mark');
-  await expect(brandMark).toBeVisible();
+  const brandLogo = page.locator('.app-brand-logo');
+  await expect(brandLogo).toBeVisible();
   await expect(page.locator('.mobile-dock .ui-icon')).toHaveCount(4);
-  expect(await brandMark.evaluate(image => image.complete && image.naturalWidth === 192)).toBeTruthy();
+  expect(await brandLogo.evaluate(image => image.complete && image.naturalWidth === 220 && image.naturalHeight === 48)).toBeTruthy();
   if (layoutViewportWidth(page) <= 720) {
     await expect(page.locator('.mobile-dock .ui-icon').first()).toBeVisible();
   }
@@ -54,6 +54,7 @@ test('dashboard and account shell remain usable without layout overflow', async 
     const hour = document.querySelector('.datetime-control .forecast-time-picker input');
     const suffix = document.querySelector('.datetime-control .forecast-time-picker .ant-picker-suffix');
     const segment = document.querySelector('.range-controls .segmented-group .segment');
+    const paidProvider = document.querySelector('.range-controls > .paid-provider-option');
     const queryButton = document.querySelector('.range-controls > .primary-button');
     if (!input || !hour || !suffix) throw new Error('Date time control is missing.');
 
@@ -63,6 +64,7 @@ test('dashboard and account shell remain usable without layout overflow', async 
     const hourBox = hour.getBoundingClientRect();
     const suffixBox = suffix.getBoundingClientRect();
     const segmentBox = segment?.getBoundingClientRect();
+    const paidProviderBox = paidProvider?.getBoundingClientRect();
     const queryButtonBox = queryButton?.getBoundingClientRect();
     const suffixStyle = getComputedStyle(suffix);
     return {
@@ -77,6 +79,7 @@ test('dashboard and account shell remain usable without layout overflow', async 
       suffixColor: suffixStyle.color,
       controlTop: controlBox.top,
       segmentTop: segmentBox?.top ?? 0,
+      paidProviderTop: paidProviderBox?.top ?? 0,
       queryButtonTop: queryButtonBox?.top ?? 0,
       language: input.closest('.forecast-date-picker-shell')?.getAttribute('lang'),
       selectedDate: input.value,
@@ -95,6 +98,9 @@ test('dashboard and account shell remain usable without layout overflow', async 
   if (layoutViewportWidth(page) > 680) {
     expect(Math.abs(datetimeLayout.controlTop - datetimeLayout.segmentTop)).toBeLessThanOrEqual(1);
     expect(Math.abs(datetimeLayout.controlTop - datetimeLayout.queryButtonTop)).toBeLessThanOrEqual(1);
+  }
+  if (layoutViewportWidth(page) > 1040) {
+    expect(Math.abs(datetimeLayout.controlTop - datetimeLayout.paidProviderTop)).toBeLessThanOrEqual(1);
   }
   expect(datetimeLayout.language).toBe('zh-CN');
   expect(datetimeLayout.selectedHour).toMatch(/^\d{2}:00$/);

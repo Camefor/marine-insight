@@ -381,6 +381,12 @@
     top: 24px;
 }
 
+@media (min-width: 1041px) {
+    .range-controls > .paid-provider-option {
+        margin-top: 31px;
+    }
+}
+
 .datetime-control input:focus {
     border-color: transparent;
     box-shadow: none;

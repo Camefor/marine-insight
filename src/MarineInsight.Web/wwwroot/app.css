@@ -915,38 +915,13 @@ select {
 
 .app-brand {
     color: var(--marine-text);
-    gap: 11px;
     text-decoration: none;
 }
 
-.app-brand-mark {
-    box-shadow: 0 0 0 4px rgba(72, 224, 192, 0.08), 0 8px 20px rgba(0, 0, 0, 0.26);
-    height: 42px;
-    width: 42px;
-}
-
-.app-brand-copy {
-    line-height: 1.08;
-}
-
-.app-brand-name {
-    color: var(--marine-text);
-    font-size: 1.2rem;
-    letter-spacing: -0.035em;
-}
-
-.app-brand-name span {
-    color: var(--marine-text);
-}
-
-.app-brand-name em {
-    color: var(--marine-accent);
-}
-
-.app-brand-copy small {
-    color: var(--marine-muted);
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
+.app-brand-logo {
+    display: block;
+    height: 44px;
+    width: auto;
 }
 
 .main-nav,
@@ -1123,12 +1098,11 @@ select {
         padding: 8px 14px;
     }
 
-    .app-brand-mark {
+    .app-brand-logo {
         height: 36px;
-        width: 36px;
+        width: auto;
     }
 
-    .app-brand-copy small,
     .main-nav,
     .workspace-nav,
     .account-email {

@@ -1,0 +1,39 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48" role="img" aria-labelledby="title description">
+  <title id="title">Marine AI</title>
+  <desc id="description">四向海洋罗盘与圆内海浪组成的 Marine AI 品牌标识</desc>
+  <defs>
+    <linearGradient id="wave" x1="69" y1="118" x2="188" y2="153" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4169F2" />
+      <stop offset="0.55" stop-color="#348BE7" />
+      <stop offset="1" stop-color="#72D7EA" />
+    </linearGradient>
+    <linearGradient id="wave-light" x1="72" y1="139" x2="185" y2="158" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7EA6FF" />
+      <stop offset="1" stop-color="#A6E9F1" />
+    </linearGradient>
+    <clipPath id="sea-clip" clipPathUnits="userSpaceOnUse">
+      <circle cx="128" cy="128" r="57" />
+    </clipPath>
+    <symbol id="mark" viewBox="0 0 256 256">
+      <g fill="#F5FAFF" stroke="#F5FAFF" stroke-linejoin="round">
+        <path d="M128 19 140 74 128 63 116 74Z" />
+        <path d="m237 128-55 12 11-12-11-12Z" />
+        <path d="m128 237-12-55 12 11 12-11Z" />
+        <path d="M19 128l55-12-11 12 11 12Z" />
+      </g>
+      <g fill="none" stroke="#C9DDEA" stroke-linecap="round">
+        <circle cx="128" cy="128" r="67" stroke-width="7" />
+        <circle cx="128" cy="128" r="56" stroke-width="2" opacity="0.72" />
+        <path d="m78 78-11-11m111 11 11-11m-11 111 11 11M78 178l-11 11" stroke-width="6" />
+      </g>
+      <g clip-path="url(#sea-clip)">
+        <path d="M68 132c20-24 40-23 59-7 20 17 37 20 62-9" fill="none" stroke="url(#wave)" stroke-linecap="round" stroke-width="21" />
+        <path d="M69 157c20-22 41-19 60-6 20 14 39 13 59-10" fill="none" stroke="url(#wave-light)" stroke-linecap="round" stroke-width="12" />
+      </g>
+      <path d="M81 118c14-8 29-7 43 2" fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-width="5" />
+    </symbol>
+  </defs>
+  <use href="#mark" width="48" height="48" />
+  <text x="56" y="28" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="23" font-weight="800" letter-spacing="-0.5">Marine AI</text>
+  <text x="57" y="41" fill="#D7E5F2" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="8.5" font-weight="600" letter-spacing="0.5">海岛海况智能决策平台</text>
+</svg>
