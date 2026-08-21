@@ -129,13 +129,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0067` |
+| 当前任务 ID | `MI-0068` |
 | 当前状态 | `DONE` |
-| 当前目标 | 整理全站样式体系，新增可持久化的日间/夜间主题切换，并提升 `/about` 文字对比度与补充项目开源地址 |
-| 最后完成动作 | 已完成全站样式职责整理、双主题语义色板与持久化切换，优化 About 可读性并增加 GitHub 开源入口，补齐双主题自动化验证 |
-| 下一步动作 | 无；等待用户确认视觉效果或指定发布部署 |
-| 涉及文件 | `src/MarineInsight.Web` 的应用外壳、主题脚本、全局/页面样式与 About 页面；Web/E2E 测试；UI、Blazor、测试文档和本台账 |
-| 验证结果 | 主题脚本语法与 format 通过；Release 全量 .NET 273/273；Playwright 桌面/360px 6/6；日间/夜间系统偏好、手动切换、刷新与跨路由持久化通过；About 六类关键文字两主题 WCAG 对比度不低于 4.5；无横向溢出；内置浏览器无可用实例，视觉验证由真实 Chromium Playwright 完成 |
+| 当前目标 | 将 MI-0067 的日间/夜间主题与 About 优化安全发布到腾讯云生产环境 |
+| 最后完成动作 | 已将 `a45b9ca` 使用五层 Compose overlay 发布生产，完成非空备份、健康/主题资源/双主题跨路由/潮汐权限/日志冒烟与 Docker 清理 |
+| 下一步动作 | 无；等待下一项需求 |
+| 涉及文件 | `docs/AGENT-GUIDE.md`；发布内容为提交 `a45b9ca` 中的 Web、主题脚本、样式、测试与设计文档 |
+| 验证结果 | 本地 format、Release .NET 273/273、Playwright 6/6；发布包 505,264 字节且双端 SHA-256 一致；生产备份 91,046 字节，migrate exit 0、web healthy、live/ready 与核心页面 200、app.css/theme.js 哈希一致、About 主题按钮与开源内容正确、6 个预置地点、匿名默认潮汐 `not_requested`、匿名潮汐 401 且日志计数不变、生产 Playwright 6/6、近 15 分钟关键错误 0、Docker 清理约 103.4 MB |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-08-21 |
 
@@ -147,6 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [x] | `MI-0068` | P0 | `DONE` | 发布日间/夜间主题与 About 优化 | `a45b9ca` 通过 Release 全量门禁；生产完成非空备份、五层 overlay 重建、健康/核心页面/主题资源哈希/双主题跨路由/双视口/日志冒烟与 Docker 清理 |
 | [x] | `MI-0067` | P1 | `DONE` | 整理全站样式并增加日间/夜间主题 | 全站基础色收敛为语义变量，主题切换支持系统偏好、手动切换和本地持久化；`/about` 双主题文字清晰并展示开源地址；桌面/移动、静态 SSR、交互控件与自动化测试通过 |
 | [x] | `MI-0066` | P0 | `DONE` | 推送并部署品牌视觉与 PC 潮汐提示优化 | MI-0062 至 MI-0065 相关改动通过 Release 全量门禁并推送 `main`；生产完成非空备份、五层 overlay 重建、健康与核心业务/静态资源/双视口冒烟、日志检查和 Docker 清理 |
 | [x] | `MI-0065` | P1 | `DONE` | 修复 PC 潮汐登录提示水平对齐 | 视口大于 1040px 时，匿名潮汐提示与日期/范围/查询按钮处于同一水平线；1040px 以下既有两列/单列布局不受影响；Playwright 双视口通过 |
@@ -197,6 +198,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0068` | 2026-08-21 | 发布日间/夜间主题与 About 优化 | `a45b9ca` 已在 `origin/main`；本地 format、Release .NET 273/273、Playwright 6/6；发布包 `marine-insight-mi0068-20260821-080620.tar.gz` 为 505,264 字节且双端 SHA-256 一致；生产创建 `marine-insight-mi0068-20260821-080641.dump`（91,046 字节）非空备份，使用 production/AI/tianditu/worldtides 五层 overlay 重建，migrate exit 0、web healthy；live/ready、首页/About/登录页 200，`app.css`/`theme.js` 哈希一致，About 主题按钮/开源地址正确，6 个预置地点，匿名默认潮汐 `not_requested`、匿名潮汐 401 且 `provider_call_logs` 保持 2，生产桌面/360px 双主题 Playwright 6/6，近 15 分钟关键错误 0，Docker 清理约 103.4 MB |
 | [x] | `MI-0067` | 2026-08-21 | 整理全站样式并增加日间/夜间主题 | 盘点 app/Dashboard/About/用户地点/后台/断线弹层/Leaflet/生成 CSS 职责；`app.css` 建立浅海雾日间与深海仪表夜间语义变量，`theme.js` 支持系统偏好、`localStorage`、无闪烁和 `theme-color` 同步，Header 增加静态 SSR 可用切换按钮；About 清理重复样式、提升正文/卡片/免责声明对比度并增加 GitHub 开源入口；Dashboard、Ant 弹层和后台 scoped CSS 消费主题变量；Release .NET 273/273、Playwright 桌面/360px 6/6、两主题六类 About 文字对比度 ≥4.5、跨路由持久化与无溢出通过 |
 | [x] | `MI-0066` | 2026-08-21 | 推送并部署品牌视觉与 PC 潮汐提示优化 | `dc01dc3` 已推送 `origin/main`；本地 format、.NET 272/272、Playwright 4/4；生产创建 `marine-insight-mi0066-20260821-072232.dump`（84,231 字节）非空备份，使用 production/AI/tianditu/worldtides 五层 overlay 重建，migrate exit 0、web healthy；live/ready、首页/About/登录页 200，9 个品牌资源与本地哈希一致，6 个预置地点，匿名默认潮汐 `not_requested`、匿名潮汐 401 且 `provider_call_logs` 保持 1，生产双视口 4/4，近 15 分钟关键错误 0，Docker 清理约 104 MB |
 | [x] | `MI-0065` | 2026-08-21 | 修复 PC 潮汐登录提示水平对齐 | 在大于 1040px 的四列查询布局中为 `.paid-provider-option` 增加 31px 顶部偏移；Playwright 新增提示卡与日期控件顶线差不超过 1px 的几何断言；Release Web 构建 0 警告/0 错误、桌面/360px 4/4 通过，移动端布局不受影响 |
@@ -269,6 +271,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-21 | `MI-0068` | 将 `a45b9ca` 的日间/夜间主题、样式职责整理和 About 开源入口发布生产；升级前校验源码包并创建非空数据库备份，使用 production/AI/tianditu/worldtides 五层 overlay 重建，完成主题资源、双主题跨路由、业务权限、日志与清理收尾 | 本地 Release .NET 273/273、Playwright 6/6；生产 migrate exit 0、web healthy、live/ready 与核心页面 200、主题 CSS/JS 哈希一致、About 内容正确、6 个地点、匿名潮汐不记账、生产 Playwright 6/6、关键错误 0、Docker 清理约 103.4 MB | 发布完成，无后续动作 |
 | 2026-08-21 | `MI-0067` | 完成全站样式盘点与职责收敛；新增日间/夜间语义主题、系统偏好与本地持久化切换，Header 提供桌面/移动按钮；About 移除浅色基线+深色补丁冲突，增强全部文字层级并展示 GitHub 开源地址；Dashboard、Ant 时间弹层、地图容器与后台组件同步主题变量 | JS 语法、format 通过；Release .NET 273/273；Playwright 桌面/360px 6/6；双主题刷新/跨路由持久化、Dashboard 实际色值变化、About 六类文字 WCAG ≥4.5 与无横向溢出通过；内置浏览器无可用实例，使用真实 Chromium Playwright 完成视觉验证 | 完成；等待用户确认效果或指定部署 |
 | 2026-08-21 | `MI-0066` | 提交并推送 MI-0062 至 MI-0065 的品牌视觉、设备图标与 PC 潮汐提示对齐改动；生产升级前创建非空数据库备份，使用 production/AI/tianditu/worldtides 五层 overlay 完成重建，并执行核心业务、静态资源、响应式布局、日志与清理收尾 | `dc01dc3` 已推送；本地 format、.NET 272/272、Playwright 4/4；生产 migrate exit 0、web healthy、live/ready 与核心页面 200、9 个品牌资源哈希一致、6 个预置地点、匿名默认查询 200 且潮汐 `not_requested`、匿名潮汐 401 且调用日志计数不变、生产 Playwright 4/4、关键错误 0、Docker 清理约 104 MB | 发布完成，无后续动作 |
 | 2026-08-21 | `MI-0065` | 修复 PC 四列查询栏“登录后可查询潮汐”提示高于日期、范围和查询按钮的问题；仅在大于 1040px 时增加 31px 顶部偏移，平板和移动断点保持原布局；E2E 增加提示卡与日期控件顶线几何断言 | Release Web 构建 0 警告/0 错误；Playwright 桌面/360px 4/4，桌面顶线误差不超过 1px，移动端无横向溢出 | 完成；等待用户继续确认页面效果或另行指定提交/发布 |
