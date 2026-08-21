@@ -130,13 +130,13 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 当前任务 ID | `MI-0060` |
-| 当前状态 | `BLOCKED` |
+| 当前状态 | `DONE` |
 | 当前目标 | 将潮汐改为登录用户显式选择后才查询，并新增付费 API 调用日志及后台列表筛选 |
-| 最后完成动作 | 提交 `ce31a1a` 已推送 `origin/main`；本地全部准出通过；生产 SSH 端口可达但服务器拒绝运维记忆中的既有公钥，未开始备份、迁移或容器重建 |
-| 下一步动作 | 通过腾讯云控制台恢复既有运维公钥授权或提供新的可用 SSH 入口，然后从源码同步继续：非空备份 → 五层 overlay 重建 → 迁移/健康/权限/日志冒烟 → Docker 清理 |
+| 最后完成动作 | 生产发布完成：SSH 恢复后同步 `ce31a1a` 源码与部署资产，`mi0060` 非空备份（78,209 字节）、五层 overlay 重建、`provider_call_logs` 迁移在库确认、潮汐权限/日志冒烟与 Docker 清理全部通过 |
+| 下一步动作 | 等待用户指定下一个任务 |
 | 涉及文件 | Application 分析与 ProviderCalls、Infrastructure WorldTides/持久化/双迁移、Web Dashboard/Admin/API、测试、幂等 SQL及相关设计文档 |
-| 验证结果 | Release 构建 0 警告/0 错误；全量 .NET 272/272（Domain 51、Application 82、Infrastructure 71、Web 68）；Playwright 桌面/360px 4/4；format、NuGet/npm 审计、BOM/CRLF、diff 均通过；公网现网 live/ready 仍为 200 |
-| 阻塞/待确认 | 生产 SSH 公钥认证失败；端口可达，既有私钥格式/权限正常但 `ubuntu` 与 `root` 均拒绝该公钥；本机无腾讯云 CLI、GitHub 部署工作流或其他获授权发布通道，不能擅自重置服务器登录凭据 |
+| 验证结果 | Release 构建 0 警告/0 错误；全量 .NET 272/272；Playwright 4/4；生产 migrate exit 0、web healthy、公网 live/ready 200、6 预置地点完好、匿名潮汐 `not_requested`、匿名带潮汐 401、`provider_call_logs` 0 行、后台未授权 302→login、近 5 分钟错误日志 0 |
+| 阻塞/待确认 | 无；生产发布已完成 |
 | 最后更新 | 2026-08-21 |
 
 <!-- agent-state:end -->
@@ -147,7 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0060` | P0 | `BLOCKED` | 潮汐按需登录查询 + 付费 API 调用日志与后台筛选 | 功能、迁移、测试、文档和 `origin/main` 推送已完成；生产发布因服务器拒绝既有 SSH 公钥而阻塞，恢复授权后按记录的部署恢复点继续，不重复本地实现 |
+| [x] | `MI-0060` | P0 | `DONE` | 潮汐按需登录查询 + 付费 API 调用日志与后台筛选 | Dashboard/REST 默认 `not_requested`，仅登录用户显式选择才调用 WorldTides，匿名带潮汐 401 `AUTHENTICATION_REQUIRED`；新增 `provider_call_logs` 双迁移、每次真实调用记账（含 Credits/耗时/错误分类）；后台费用日志分页筛选页/API；本地 Release 0 警告/0 错误、.NET 272/272、Playwright 4/4；生产已发布（mi0060 非空备份、五层 overlay 重建、迁移在库、匿名不记账冒烟通过） |
 | [x] | `MI-0059` | P0 | `DONE` | 后台管理 WorldTides API Key 池（多 Key 加密存储 + 健康/credits + 自动故障转移 + 选激活） | 新增 `provider_credentials` 表（DataProtection 加密、KeyHint 末四位、激活互斥、健康/credits/检查时间）；Provider 请求期按激活优先解析候选并自动故障转移、回写健康；Web 后台 `/admin/providers/worldtides` 提供列表/添加/测试连接/激活/删除；配置兜底 Key 保留；Release 构建 0 警告/0 错误、全量 263 测试通过、双轨迁移齐备；部署后后台可直接轮换 Key，无需改文件/重启 |
 | [x] | `MI-0057` | P0 | `DONE` | 推送并发布潮汐图表与查询 Loading 优化 | 仅提交 `MI-0055`/`MI-0056` 相关代码和文档；推送 `origin/main`；生产升级前完成非空 PostgreSQL 备份，使用 production/AI/tianditu 完整 overlay 重建；live/ready、核心页面、潮汐静态资源、双视口布局、关键日志和 Docker 清理通过 |
 | [x] | `MI-0056` | P1 | `DONE` | 优化 Dashboard 查询海况 Loading 的 PC 展示 | 查询期间使用查询卡片内的局部状态反馈，不覆盖 Header、查询条件和已有结果；深海主题一致，桌面与移动端无重叠、横向溢出或布局跳变；查询按钮继续防重复提交；Release 构建、自动化测试和双视口浏览器回归通过 |
@@ -255,7 +255,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
-| 2026-08-21 | `MI-0060` | 完成潮汐成本控制与费用审计：Dashboard/REST 默认 `not_requested`，仅登录用户显式选择才进入 WorldTides；Application 双重校验登录用户；新增 `provider_call_logs`、SQLite/PostgreSQL 双迁移、每次真实 HTTP 尝试的 started/succeeded/failed 与 Credits/余额/耗时记录，缓存命中不记账且 Begin 失败禁止出网；后台新增费用日志分页筛选页/API；提交 `ce31a1a` 已推送 `origin/main`。随后按生产手册尝试同步，但服务器拒绝运维记忆中的既有公钥，未执行备份、迁移或重建，现网保持原版本健康 | Release 0 警告/0 错误；.NET 272/272；Playwright 桌面/360px 4/4；format、NuGet/npm 漏洞审计、52 个改动文件 BOM/CRLF 门禁与 diff 通过；公网 live/ready 200；SSH 端口可达但既有 `ubuntu`/兼容 `root` 公钥认证均被拒绝 | 通过腾讯云控制台恢复运维公钥或提供新 SSH 授权；恢复后从 `/opt/marine-insight` 源码同步前步骤继续，完成 PostgreSQL 非空备份、production/AI/tianditu/worldtides 五层 overlay、迁移、后台日志页/匿名不记账冒烟、错误日志检查与 Docker 清理 |
+| 2026-08-21 | `MI-0060` | 完成潮汐成本控制与费用审计并发布生产：Dashboard/REST 默认 `not_requested`，仅登录用户显式选择才进入 WorldTides，匿名带潮汐返回 401 `AUTHENTICATION_REQUIRED`；新增 `provider_call_logs` 双迁移、每次真实 HTTP 尝试的 started/succeeded/failed 与 Credits/余额/耗时记录，缓存命中不记账且 Begin 失败禁止出网；后台新增费用日志分页筛选页/API；`ce31a1a` 已推送 `origin/main`。本次 SSH 恢复后完成源码同步、`marine-insight-mi0060-20260821-025205.dump`（78,209 字节非空）备份、五层 overlay（production/AI/tianditu/worldtides）重建、`20260821020624_AddProviderCallLogs` 迁移在库确认、潮汐权限/日志冒烟与 Docker 清理（回收 104.5MB） | Release 0 警告/0 错误；.NET 272/272；Playwright 4/4；生产 migrate exit 0、web healthy、公网 live/ready 200、6 预置地点完好、匿名海况 200 且 `tide.status=not_requested`、匿名带潮汐 401、`provider_call_logs` 0 行（匿名不记账）、后台日志页/API 未授权 302→login、`/js/tide-chart.js` 与 `/_framework/blazor.web.js` 200、近 5 分钟错误日志 0 | 发布完成；后台可查询付费调用日志，匿名请求已确认不产生付费调用 |
 | 2026-08-20 | `MI-0059` | 实现后台管理 WorldTides API Key 池：新增 `provider_credentials` 表（DataProtection 加密、`(ProviderName, KeyHint)` 唯一 + `IsActive` 部分唯一索引）与 SQLite/Postgres 双迁移；`ProviderCredentialStore` 完成加密落库、首个自动激活、激活互斥、删除激活守卫、健康/credits 回写与审计；`WorldTidesProvider` 按激活优先解析候选并自动故障转移（401/403/429/额度耗尽为 Key 级失败，超时/网络/5xx 不转移），配置兜底 Key 保留且不记健康，`ValidateKeyAsync` 供「测试连接」；Web 后台 `/admin/providers/worldtides` 提供列表/添加/测试连接/激活/删除，AdminTabs 新增「潮汐密钥」；同步 AGENT-GUIDE 与 05/06/07/22/`.secrets` 文档；`7e49cf1`+`cba5195` 推送 origin 并部署生产（production/AI/tianditu/worldtides 完整 overlay），`provider_credentials` 表与迁移在库确认；生产复测发现重复添加同末四位 Key 时 DbUpdateException 使电路崩溃，修复为 Store 预检 KeyHint 抛 `ProviderCredentialConflictException`（API 409、页面友好提示），`b356616` 修复并再次部署 | Release 构建 0 警告/0 错误；全量 .NET 265/265（Domain 51、Application 80、Infrastructure 68、Web 66），含重复 Key 冲突 Store/API 新测试；DataProtection 加密往返、首个自动激活、激活互斥、删除守卫、配置兜底不记健康、故障转移与 admin 限流内 API 集成测试通过；格式与 BOM/CRLF 检查通过；生产备份 `marine-insight-mi0059-20260820-111025.dump` 非空（71,569 字节），migrate exit 0、web healthy、live/ready 200，6 个预置地点完好，后台潮汐密钥页 200、管理 API 未授权 302→login、近 5 分钟 0 异常，Docker 清理完成 | 生产已部署；后台可直接轮换 Key，无需改文件/重启容器；已添加的 Key ••••7317 可用，重复添加已能友好提示 |随后写入生产仓库外 Secret 和 `.env` 路径，完成源码同步、PostgreSQL 非空备份、production/AI/tianditu/worldtides 完整 overlay 重建与 Docker 清理；本地提交 `453ecb6` 已创建 | 本地和生产分析均 `analysisStatus=analyzed`、潮汐 `available`、49 个潮位点；生产 migrate 退出 0、Web healthy，公网 live/ready 200，潮汐/ECharts 静态资源 200，线上桌面/360px Playwright 4/4，近 5 分钟 web 错误日志 0；备份 `marine-insight-mi0058-20260820-100144.dump` 非空（69,655 字节）；Key 未进入 Git 或日志 | 发布完成；GitHub push 因连接重置失败，网络恢复后重试 `453ecb6` |
 | 2026-08-20 | `MI-0057` | 将 `MI-0055` 潮汐 ECharts 与 `MI-0056` 局部 Loading 改动提交为 `0b79737` 并推送；按生产记忆同步校验源码包，完成 PostgreSQL 升级前备份与 production/AI/tianditu 完整 overlay 重建；执行健康、核心页面、静态资源、分析 API、双视口布局、日志和 Docker 清理；同步修复冒烟脚本与手册中的旧首页标题断言 | Release 构建 0 警告/0 错误、全量 .NET 232/232、本地 Playwright 4/4、format、NuGet/npm 漏洞审计通过；生产备份 68,926 字节非空，migrate exit 0、Web healthy，live/ready/about/login、tide-chart/ECharts 资源 200，静态资源哈希一致，分析 API为 analyzed，线上 Playwright 4/4，关键日志 0，清理约 96.65 MB；修正后的 `smoke-test.ps1` 公网复验通过 | 发布完成；生产 WorldTides Secret 尚未配置，当前潮汐状态为 disabled；提供生产 Key 后再启用真实潮汐并执行一次受控 Credit 验收 |
 | 2026-08-20 | `MI-0056` | 将 Dashboard 查询海况 Loading 从 `position: fixed; inset: 0` 的全屏遮罩改为查询卡片内的深海主题局部状态卡；查询条件、Header 和已有结果保持可见，移动端通过断点隐藏辅助徽标；同步 UI/Blazor/测试/RoadMap 文档 | Web 62/62；全量 .NET 232/232；Playwright 桌面/360px 4/4，验证非固定定位、查询区边界、不覆盖 Header/结果区和无横向溢出；format、JS 语法、diff、BOM/CRLF 通过 | 完成，无后续动作 |
