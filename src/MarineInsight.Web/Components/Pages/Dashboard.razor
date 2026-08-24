@@ -712,6 +712,7 @@
     private bool _mapInitializationAttempted;
     private Guid? _renderedTideSnapshotId;
     private bool _tideChartUnavailable;
+    private bool _shouldScrollToResult;
     private Guid? _userId;
     private string? _workspaceStatus;
     private List<FavoriteLocation> _favorites = [];
@@ -849,6 +850,8 @@
                 result.Overall?.RiskLevel ?? "unknown",
                 double.TryParse(result.Overall?.Score, out var score) ? score : null));
         }
+
+        _shouldScrollToResult = Session.Result is not null;
     }
 
     private bool HasSelection => Session.SelectedLocation is not null || Session.SelectedMapPoint is not null;
@@ -953,6 +956,12 @@
         }
 
         await EnsureTideChartAsync();
+
+        if (_shouldScrollToResult)
+        {
+            _shouldScrollToResult = false;
+            await Js.InvokeVoidAsync("scrollToElement", "summary-title");
+        }
     }
 
     private async Task EnsureTideChartAsync()

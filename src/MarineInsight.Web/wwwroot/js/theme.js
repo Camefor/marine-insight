@@ -2,7 +2,6 @@
     const storageKey = "marine-insight-theme";
     const lightThemeColor = "#F2F7F9";
     const darkThemeColor = "#0A131F";
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const readSavedTheme = () => {
         try {
@@ -40,7 +39,7 @@
         updateToggle(theme);
     };
 
-    const initialTheme = readSavedTheme() ?? (mediaQuery.matches ? "dark" : "light");
+    const initialTheme = readSavedTheme() ?? "light";
     applyTheme(initialTheme);
 
     document.addEventListener("click", (event) => {
@@ -59,12 +58,11 @@
         applyTheme(nextTheme);
     });
 
-    mediaQuery.addEventListener("change", (event) => {
-        if (!readSavedTheme()) {
-            applyTheme(event.matches ? "dark" : "light");
-        }
-    });
-
     document.addEventListener("DOMContentLoaded", () => updateToggle(document.documentElement.dataset.theme));
     document.addEventListener("enhancedload", () => updateToggle(document.documentElement.dataset.theme));
+
+    window.scrollToElement = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
 })();
