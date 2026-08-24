@@ -715,6 +715,8 @@
     private Guid? _userId;
     private string? _workspaceStatus;
     private List<FavoriteLocation> _favorites = [];
+    // 标记本次查询完成后需要在下一次 OnAfterRenderAsync 中把视口滚动到结果锚点。
+    private bool _shouldScrollToResult;
 
     [Parameter]
     [SupplyParameterFromQuery(Name = "locationId")]
@@ -852,7 +854,8 @@
 
         if (Session.Result is not null)
         {
-            await Js.InvokeVoidAsync("setUrlHash", "summary-title");
+            // 等下一次 OnAfterRenderAsync 结果区渲染完成再滚动，避免 DOM 尚未挂载时找不到锚点元素。
+            _shouldScrollToResult = true;
         }
     }
 
@@ -958,6 +961,21 @@
         }
 
         await EnsureTideChartAsync();
+
+        if (_shouldScrollToResult && Session.Result is not null)
+        {
+            _shouldScrollToResult = false;
+            try
+            {
+                await Js.InvokeVoidAsync("scrollToAnchor", "summary-title");
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+            catch (JSException)
+            {
+            }
+        }
     }
 
     private async Task EnsureTideChartAsync()

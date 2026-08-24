@@ -1103,43 +1103,6 @@ select {
     color: var(--marine-accent-contrast);
 }
 
-.theme-toggle {
-    align-items: center;
-    background: var(--marine-accent-soft);
-    border: 1px solid var(--marine-line);
-    border-radius: 999px;
-    color: var(--marine-text);
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    font-size: 0.78rem;
-    font-weight: 800;
-    gap: 6px;
-    justify-content: center;
-    min-height: 40px;
-    padding: 8px 12px;
-}
-
-.theme-toggle:hover,
-.theme-toggle:focus-visible {
-    border-color: var(--marine-accent);
-    color: var(--marine-accent-strong);
-}
-
-.theme-icon {
-    height: 17px;
-    width: 17px;
-}
-
-.theme-icon-sun,
-:root[data-theme="dark"] .theme-icon-moon {
-    display: none;
-}
-
-:root[data-theme="dark"] .theme-icon-sun {
-    display: block;
-}
-
 .account-email {
     color: var(--marine-muted);
     font-size: 0.78rem;
@@ -1286,15 +1249,6 @@ select {
 
     .app-header-actions {
         gap: 4px;
-    }
-
-    .theme-toggle {
-        min-width: 40px;
-        padding: 8px 10px;
-    }
-
-    .theme-toggle-label {
-        display: none;
     }
 
     .account-link {

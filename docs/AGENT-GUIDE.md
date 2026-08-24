@@ -129,13 +129,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0069` |
-| 当前状态 | `DONE` |
-| 当前目标 | 去除系统主题自动检测（matchMedia），默认使用日间主题；查询到海况结果后使用锚点平滑滚动至结果区域 |
-| 最后完成动作 | 更新 `theme.js` 去除 `matchMedia` 系统偏好检测与变更监听，无持久化记录时默认 `"light"`；`Dashboard.razor` 新增 `_shouldScrollToResult` 标志，`SubmitAsync` 查询成功后置 true，`OnAfterRenderAsync` DOM 更新后调用 `scrollToElement("summary-title")` JS 互操平滑滚动至结果区；提交 `a0088d7` 并发布生产 |
-| 下一步动作 | 无；等待下一项需求 |
-| 涉及文件 | `src/MarineInsight.Web/wwwroot/js/theme.js`、`src/MarineInsight.Web/Components/Pages/Dashboard.razor`、`docs/AGENT-GUIDE.md` |
-| 验证结果 | 本地构建通过；生产 migrate exit 0、web healthy、live/ready 200、Docker 清理完成 |
+| 当前任务 ID | `MI-0070` |
+| 当前状态 | `IN_PROGRESS` |
+| 当前目标 | 移除 Header 主题手动切换按钮，`theme.js` 默认按 `prefers-color-scheme` 识别，无法识别时按客户端时间（6:00-18:00 日间，其它夜间）降级；查询海况成功后使用锚点滚动到结果区，替换掉此前仅改 URL hash 的实现 |
+| 最后完成动作 | 重写 `theme.js`：`matchMedia` 双向识别 + 时间降级 + 系统偏好变化监听；新增 `window.scrollToAnchor` 使用 `scrollIntoView({behavior:"smooth"})` + `replaceState` 同步 URL hash；`MainLayout.razor` 移除 `.theme-toggle` 按钮，`app.css` 清理 `.theme-toggle`/`.theme-icon`/`.theme-toggle-label` 规则及移动端断点，`UiIcon.razor` 删除不再引用的 Sun/Moon case；`Dashboard.razor` 新增 `_shouldScrollToResult` 标志，`SubmitAsync` 成功后置 true，`OnAfterRenderAsync` 在结果 DOM 就绪后调用 `scrollToAnchor("summary-title")` 并捕获 `JSDisconnectedException`/`JSException`；同步 `AboutPageTests.cs`（`data-theme-toggle` 反向断言 + `theme.js` 契约改验 `matchMedia`+`Date().getHours()`+`scrollToAnchor`+`scrollIntoView` 且不含 `localStorage`/`data-theme-toggle`）与 `dashboard.spec.js`（主题测试改为 `emulateMedia({colorScheme})` 触发自动识别，验证 Header 无切换按钮） |
+| 下一步动作 | 标准提交并推送 `origin/main`，随后按生产手册发布上线并冒烟验证 |
+| 涉及文件 | `src/MarineInsight.Web/wwwroot/js/theme.js`、`src/MarineInsight.Web/wwwroot/app.css`、`src/MarineInsight.Web/Components/Layout/MainLayout.razor`、`src/MarineInsight.Web/Components/Pages/Dashboard.razor`、`src/MarineInsight.Web/Components/Shared/UiIcon.razor`、`tests/MarineInsight.Web.Tests/AboutPageTests.cs`、`tests/e2e/dashboard.spec.js`、`docs/AGENT-GUIDE.md` |
+| 验证结果 | `dotnet format --verify-no-changes` 通过；Release 构建 0 警告 0 错误；全量 .NET 测试 273/273 通过（Domain 51、Application 82、Infrastructure 71、Web 69）；文本文件 BOM/CRLF 已统一 |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-08-24 |
 
@@ -147,6 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [ ] | `MI-0070` | P1 | `IN_PROGRESS` | 移除主题手动切换按钮 + 系统偏好/时间降级 + 查询结果锚点滚动 | `theme.js` 用 `matchMedia(prefers-color-scheme)` 识别，识别不到按客户端时间（6:00-18:00 日间）降级并监听系统偏好变化；`MainLayout` 移除切换按钮，`app.css` 清理 `.theme-toggle` 相关规则；Dashboard 用 `_shouldScrollToResult` 标志在 `OnAfterRenderAsync` 通过 `scrollToAnchor("summary-title")` 平滑滚动到结果区并同步 URL hash；本地 Release 273/273，待推送与发布 |
 | [x] | `MI-0069` | P1 | `DONE` | 去除系统主题自动检测 + 查询结果锚点定位 | `theme.js` 去除 `matchMedia` 检测与变更监听，无记录时默认 `"light"`；Dashboard 查询成功后 `OnAfterRenderAsync` 平滑滚动至 `#summary-title`；提交 `a0088d7` 发布生产，live/ready 200 |
 | [x] | `MI-0068` | P0 | `DONE` | 发布日间/夜间主题与 About 优化 | `a45b9ca` 通过 Release 全量门禁；生产完成非空备份、五层 overlay 重建、健康/核心页面/主题资源哈希/双主题跨路由/双视口/日志冒烟与 Docker 清理 |
 | [x] | `MI-0067` | P1 | `DONE` | 整理全站样式并增加日间/夜间主题 | 全站基础色收敛为语义变量，主题切换支持系统偏好、手动切换和本地持久化；`/about` 双主题文字清晰并展示开源地址；桌面/移动、静态 SSR、交互控件与自动化测试通过 |
@@ -272,6 +273,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-08-24 | `MI-0070` | 按用户需求移除 Header 主题手动切换按钮：`theme.js` 改为使用 `matchMedia(prefers-color-scheme)` 双向识别主题，识别失败时按客户端 `Date().getHours()`（6:00-18:00 日间，其它夜间）降级，并注册 `change` 监听自动跟随系统偏好；新增 `window.scrollToAnchor` 使用 `scrollIntoView({behavior:"smooth"})` 平滑滚动到锚点并 `history.replaceState` 同步 URL hash；`MainLayout.razor` 删除 `.theme-toggle` 按钮，`app.css` 清理关联规则与移动端断点，`UiIcon.razor` 删除不再引用的 Sun/Moon case；`Dashboard.razor` 用 `_shouldScrollToResult` 标志在 `OnAfterRenderAsync` 结果 DOM 就绪后调用 `scrollToAnchor("summary-title")` 并容错 `JSDisconnectedException`/`JSException`；`AboutPageTests.cs` 增加 `data-theme-toggle` 反向断言并把 `theme.js` 契约测试改为验证 `matchMedia`+时间降级+`scrollToAnchor`+`scrollIntoView` 且不含 `localStorage`；`dashboard.spec.js` 第三个用例改为 `emulateMedia({colorScheme})` 触发自动识别并验证 Header 无切换按钮 | `dotnet format --verify-no-changes` 通过；Release 构建 0 警告 0 错误；全量 .NET 测试 273/273 通过（Domain 51、Application 82、Infrastructure 71、Web 69）；8 个改动文本文件 BOM/CRLF 统一 | 标准提交推送，随后按生产手册发布上线并冒烟验证 |
 | 2026-08-24 | `MI-0069` | 去除 `theme.js` 中 `matchMedia` 系统偏好检测与变更监听，无 localStorage 记录时默认日间主题；Dashboard 新增 `_shouldScrollToResult` 标志，查询成功后 `OnAfterRenderAsync` 调用 `scrollToElement("summary-title")` 平滑定位至结果区；提交 `a0088d7` 并完成 tar+ssh 同步、pg_dump 备份、production/AI/tianditu/worldtides 五层 overlay 重建 | 生产 migrate exit 0、web healthy、live/ready 200、Docker 清理完成；本地构建通过 | 发布完成，无后续动作 |
 | 2026-08-21 | `MI-0068` | 将 `a45b9ca` 的日间/夜间主题、样式职责整理和 About 开源入口发布生产；升级前校验源码包并创建非空数据库备份，使用 production/AI/tianditu/worldtides 五层 overlay 重建，完成主题资源、双主题跨路由、业务权限、日志与清理收尾 | 本地 Release .NET 273/273、Playwright 6/6；生产 migrate exit 0、web healthy、live/ready 与核心页面 200、主题 CSS/JS 哈希一致、About 内容正确、6 个地点、匿名潮汐不记账、生产 Playwright 6/6、关键错误 0、Docker 清理约 103.4 MB | 发布完成，无后续动作 |
 | 2026-08-21 | `MI-0067` | 完成全站样式盘点与职责收敛；新增日间/夜间语义主题、系统偏好与本地持久化切换，Header 提供桌面/移动按钮；About 移除浅色基线+深色补丁冲突，增强全部文字层级并展示 GitHub 开源地址；Dashboard、Ant 时间弹层、地图容器与后台组件同步主题变量 | JS 语法、format 通过；Release .NET 273/273；Playwright 桌面/360px 6/6；双主题刷新/跨路由持久化、Dashboard 实际色值变化、About 六类文字 WCAG ≥4.5 与无横向溢出通过；内置浏览器无可用实例，使用真实 Chromium Playwright 完成视觉验证 | 完成；等待用户确认效果或指定部署 |

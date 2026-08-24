@@ -22,13 +22,13 @@ public sealed class AboutPageTests
         Assert.Contains("https://github.com/Camefor/marine-insight", html, StringComparison.Ordinal);
         Assert.Contains("target=\"_blank\"", html, StringComparison.Ordinal);
         Assert.Contains("rel=\"noopener noreferrer\"", html, StringComparison.Ordinal);
-        Assert.Contains("data-theme-toggle", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("data-theme-toggle", html, StringComparison.Ordinal);
         Assert.Contains("js/theme.js", html, StringComparison.Ordinal);
         Assert.Contains("免责声明", html, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task ThemeScriptSupportsSystemPreferenceAndPersistedChoice()
+    public async Task ThemeScriptDetectsSystemPreferenceWithTimeFallbackAndExposesScrollHelper()
     {
         using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
         using var client = factory.CreateClient();
@@ -38,8 +38,12 @@ public sealed class AboutPageTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("prefers-color-scheme: dark", script, StringComparison.Ordinal);
-        Assert.Contains("marine-insight-theme", script, StringComparison.Ordinal);
-        Assert.Contains("localStorage.setItem", script, StringComparison.Ordinal);
+        Assert.Contains("prefers-color-scheme: light", script, StringComparison.Ordinal);
+        Assert.Contains("new Date().getHours()", script, StringComparison.Ordinal);
         Assert.Contains("document.documentElement.dataset.theme", script, StringComparison.Ordinal);
+        Assert.Contains("window.scrollToAnchor", script, StringComparison.Ordinal);
+        Assert.Contains("scrollIntoView", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("localStorage", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("data-theme-toggle", script, StringComparison.Ordinal);
     }
 }
