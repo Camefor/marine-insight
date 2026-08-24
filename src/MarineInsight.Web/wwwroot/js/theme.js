@@ -61,8 +61,9 @@
     document.addEventListener("DOMContentLoaded", () => updateToggle(document.documentElement.dataset.theme));
     document.addEventListener("enhancedload", () => updateToggle(document.documentElement.dataset.theme));
 
-    window.scrollToElement = (id) => {
-        const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setUrlHash = (hash) => {
+        if (history && history.replaceState) {
+            history.replaceState(null, "", "#" + hash);
+        }
     };
 })();
