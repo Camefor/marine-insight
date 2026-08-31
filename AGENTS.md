@@ -20,3 +20,17 @@
 - 本次新增或修改的文本文件，除 JSON、YAML 等现代配置文件外，收尾前统一为 UTF-8 with BOM 和 CRLF。
 - 在关键业务规则、第三方差异、单位/时间语义和降级逻辑处添加必要注释；简单逻辑不添加复述代码的注释。
 
+## Agent skills
+
+### Issue tracker
+
+Issue 与 spec 在 GitHub Issues（`github.com/Camefor/marine-insight`），通过 `gh` CLI 操作。详见 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+采用默认的 5 个规范标签（`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`）。详见 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+单上下文（single-context）：仓库根的 `CONTEXT.md` + `docs/adr/`。详见 `docs/agents/domain.md`。
+
