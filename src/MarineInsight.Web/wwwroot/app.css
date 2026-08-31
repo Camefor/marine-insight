@@ -1052,10 +1052,13 @@ select {
     display: block;
     height: 44px;
     width: auto;
+    /* 默认与 data-theme="light" 保持一致：SSR 首屏无 data-theme 时也应用深海蓝滤镜，消除白色 logo 闪现。 */
+    filter: brightness(0) saturate(100%) invert(15%) sepia(25%) saturate(1314%) hue-rotate(153deg) brightness(91%) contrast(93%);
 }
 
-:root[data-theme="light"] .app-brand-logo {
-    filter: brightness(0) saturate(100%) invert(15%) sepia(25%) saturate(1314%) hue-rotate(153deg) brightness(91%) contrast(93%);
+:root[data-theme="dark"] .app-brand-logo {
+    /* 夜间主题使用 SVG 原始浅色描边，与深色背景形成对比。 */
+    filter: none;
 }
 
 .main-nav,
@@ -1106,6 +1109,44 @@ select {
 .account-email {
     color: var(--marine-muted);
     font-size: 0.78rem;
+}
+
+.theme-toggle {
+    align-items: center;
+    background: var(--marine-accent-soft);
+    border: 1px solid var(--marine-line);
+    border-radius: 999px;
+    color: var(--marine-text);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+    gap: 6px;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 12px;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+    border-color: var(--marine-accent);
+    color: var(--marine-accent-strong);
+}
+
+.theme-icon {
+    height: 17px;
+    width: 17px;
+}
+
+/* 默认（light 或 SSR 首屏）显示月亮：点击后切到 dark。dark 主题下反转显示太阳。 */
+.theme-icon-sun,
+:root[data-theme="dark"] .theme-icon-moon {
+    display: none;
+}
+
+:root[data-theme="dark"] .theme-icon-sun {
+    display: block;
 }
 
 .mobile-dock {
@@ -1249,6 +1290,15 @@ select {
 
     .app-header-actions {
         gap: 4px;
+    }
+
+    .theme-toggle {
+        min-width: 40px;
+        padding: 8px 10px;
+    }
+
+    .theme-toggle-label {
+        display: none;
     }
 
     .account-link {

@@ -270,20 +270,24 @@ function layoutViewportWidth(page) {
   return page.viewportSize()?.width ?? 0;
 }
 
-test('theme auto follows system preference across about and dashboard with readable contrast', async ({ page }) => {
+test('light and dark themes persist across about and dashboard via manual toggle', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/about');
+  await page.evaluate(() => localStorage.removeItem('marine-insight-theme'));
+  await page.reload();
 
+  const themeToggle = page.locator('[data-theme-toggle]');
   const repositoryLink = page.getByRole('link', { name: 'github.com/Camefor/marine-insight' });
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await expect(page.locator('[data-theme-toggle]')).toHaveCount(0);
+  await expect(themeToggle).toHaveAttribute('aria-label', '切换至夜间模式');
   await expect(repositoryLink).toHaveAttribute('href', 'https://github.com/Camefor/marine-insight');
   await expect(repositoryLink).toHaveAttribute('target', '_blank');
   await expectAboutContrast(page);
 
-  await page.emulateMedia({ colorScheme: 'dark' });
+  await themeToggle.click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await expectAboutContrast(page);
+  await expect(themeToggle).toHaveAttribute('aria-label', '切换至日间模式');
+  expect(await page.evaluate(() => localStorage.getItem('marine-insight-theme'))).toBe('dark');
 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
@@ -292,12 +296,13 @@ test('theme auto follows system preference across about and dashboard with reada
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   const darkDashboardTheme = await readDashboardTheme(page);
-  await page.emulateMedia({ colorScheme: 'light' });
+  await page.locator('[data-theme-toggle]').click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   const lightDashboardTheme = await readDashboardTheme(page);
   expect(lightDashboardTheme.bodyBackground).not.toBe(darkDashboardTheme.bodyBackground);
   expect(lightDashboardTheme.textColor).not.toBe(darkDashboardTheme.textColor);
   expect(lightDashboardTheme.panelBackground).not.toBe(darkDashboardTheme.panelBackground);
+  expect(await page.evaluate(() => localStorage.getItem('marine-insight-theme'))).toBe('light');
 
   const dimensions = await page.evaluate(() => ({
     viewportWidth: document.documentElement.clientWidth,
