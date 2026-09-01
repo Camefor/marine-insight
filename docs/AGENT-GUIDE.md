@@ -130,12 +130,12 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 当前任务 ID | `MI-0075` |
-| 当前状态 | `IN_PROGRESS` |
+| 当前状态 | `DONE` |
 | 当前目标 | 提交并部署 `MI-0074` 表头主题与结果定位修复，完成推送、生产非空备份、完整 Compose 重建、公网双主题/滚动冒烟、日志检查和 Docker 清理 |
-| 最后完成动作 | 已核对生产部署手册与本机运维记忆，确认源码 tar 同步、production/AI/tianditu overlays、部署前 `pg_dump` 和部署后清理流程 |
-| 下一步动作 | 重跑 Release 构建、全量测试、格式和 E2E；提交推送后同步生产并完成备份、重建与浏览器冒烟 |
+| 最后完成动作 | 创建提交 `c3466c0`；GitHub 推送因网络不可达失败但按运维记忆继续发布；源码同步生产，备份 `marine-insight-mi0075-20260901-172033.dump`（约 92KB），production/AI/tianditu 重建成功，迁移退出 0、Web healthy、真实浏览器验证通过并完成 Docker 清理 |
+| 下一步动作 | 无；网络恢复后可补推 `c3466c0` 及本台账提交 |
 | 涉及文件 | `MI-0074` 的 8 个代码/测试/设计/台账文件，以及本次部署结果更新的 `docs/AGENT-GUIDE.md` |
-| 验证结果 | 待执行本地发布门禁、Git 提交/推送、生产备份、容器健康、公网表头主题与结果定位、预置地点、日志和清理验证 |
+| 验证结果 | 本地 Release 构建 0 警告/0 错误、全量 .NET 277/277、format、diff、Playwright 6/6；生产 HTTPS live/ready 200，真实 Chromium 确认 `#summary-title` 且查询区可见、逐小时表头明暗主题色不同、无横向溢出，6 个预置地点，近 15 分钟错误日志 0 |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-09-01 |
 
@@ -147,7 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0075` | P0 | `IN_PROGRESS` | 提交并部署表头主题与结果定位修复 | 仅提交 `MI-0074` 相关文件并推送 `origin/main`；生产升级前非空备份，production/AI/tianditu 完整重建；live/ready、明暗主题表头、查询后 `#summary-title` 与查询区保留、预置地点、日志和 Docker 清理通过 |
+| [x] | `MI-0075` | P0 | `DONE` | 提交并部署表头主题与结果定位修复 | 提交 `c3466c0` 已创建（推送因 GitHub 网络不可达失败）；生产升级前非空备份 `marine-insight-mi0075-20260901-172033.dump`，production/AI/tianditu 完整重建；live/ready、明暗主题表头、查询后 `#summary-title` 与查询区保留、预置地点、日志和 Docker 清理通过 |
 | [x] | `MI-0074` | P1 | `DONE` | 修复逐小时表头主题色与查询结果定位 | `.hourly-table-wrap` 表头背景/文字消费主题变量；查询成功仍更新 `/#summary-title` 并平滑定位，但使用最小必要滚动保留顶部查询功能可见；桌面与 360px 无重叠/横向溢出，脚本契约和浏览器回归通过 |
 | [x] | `MI-0073` | P0 | `DONE` | 提交并部署天气摘要 | 提交 `9cef8d8` 已推送 `origin/main`；生产升级前创建非空 PostgreSQL 备份 `marine-insight-mi0073-20260901-165839.dump`，使用 production/AI/tianditu 完整 overlay 重建；live/ready、真实浏览器天气摘要、预置地点、关键日志和 Docker 清理均通过 |
 | [x] | `MI-0072` | P1 | `DONE` | 海况查询结果增加天气信息摘要 | 基于查询快照直接显示起报时刻是否下雨、小时雨量、平均风/阵风和下一段降雨起止；连续降雨按相邻逐小时点合并，查询窗口内未结束时明确提示；降水缺失不得展示为无雨；桌面与 360px 无重叠/横向溢出，自动化测试覆盖无雨、正在下雨、未来降雨、窗口内未结束和缺失数据；本地 Release 构建、全量测试、格式和 Playwright 通过 |
@@ -205,6 +205,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0075` | 2026-09-01 | 提交并部署表头主题与结果定位修复 | 本地提交 `c3466c0`；GitHub push 因网络不可达未完成；按运维记忆直接部署源码到 `/opt/marine-insight`，备份 `marine-insight-mi0075-20260901-172033.dump`（约 92KB）非空；production/AI/tianditu 四层 Compose 重建，migrate exit 0、Web healthy；公网 live/ready 200；真实 Chromium 查询确认 `#summary-title`、查询区仍可见、逐小时表头 light/dark 计算颜色不同、无横向溢出；6 个预置地点、近 15 分钟 Web 错误日志 0；Docker 清理回收约 103.5MB |
 | [x] | `MI-0074` | 2026-09-01 | 修复逐小时表头主题色与查询结果定位 | `.hourly-table-wrap th` 改用 `--marine-control-strong`/`--dash-text` 主题变量；`scrollToAnchor` 使用 `block: "nearest"`，保留 `#summary-title` hash 并避免查询区完全离开视口；About 脚本契约、Playwright 双视口查询区相交和明暗主题表头颜色回归通过；Release 构建 0 警告/0 错误、全量 .NET 277/277、Playwright 6/6、format/diff/BOM/CRLF 通过 |
 | [x] | `MI-0072` | 2026-09-01 | 海况查询结果增加天气信息摘要 | `DashboardQuerySession` 从同一份逐小时快照投影 `DashboardWeatherSummary`，展示当前降雨状态/小时雨量、平均风/阵风、蒲福风级和下一雨段起止；缺失降水不误判无雨，雨段在缺失点或查询窗口边界无法确认结束时明确降级；Dashboard 在地点摘要与智能解读之间增加响应式天气速览卡；测试 Weather Provider 支持逐小时指标工厂，覆盖无雨、当前雨、未来雨、窗口内持续降雨和缺失数据；Release 0 警告/0 错误、全量 .NET 277/277、Playwright 桌面/移动 6/6、format/diff/BOM/CRLF 通过 |
 | [x] | `MI-0071` | 2026-08-31 | 恢复 Header 手动主题切换按钮 + 修复 SSR 首屏「第三种样式」闪现 | `theme.js` 恢复 `marine-insight-theme` localStorage 优先 + `matchMedia(prefers-color-scheme: dark)` 后备 + `[data-theme-toggle]` click 委托 + `addEventListener`/`addListener` 兜底 + `DOMContentLoaded`/`enhancedload` 重同步 icon，并保留 `window.scrollToAnchor`；`MainLayout.razor` 在 `app-header-actions` 加回 `.theme-toggle` 按钮；`UiIcon.razor` 按字母序补回 Moon/Sun case；`app.css` 把 `.app-brand-logo` 深海蓝 filter 迁到默认规则，`:root[data-theme="dark"] .app-brand-logo { filter: none; }` 显式覆盖（消除 SSR 首屏白 logo 闪现，只剩两种可见状态），追加 `.theme-toggle`/`.theme-icon`/`.theme-icon-sun`/`.theme-icon-moon` 桌面样式与 ≤720px 断点；`AboutPageTests.cs` 反向断言撤回并契约测试改回 `marine-insight-theme`/`localStorage.setItem/getItem`/`data-theme-toggle`/`window.scrollToAnchor`；`dashboard.spec.js` 用例改名为 `light and dark themes persist across about and dashboard via manual toggle` 并回到 toggle click + reload + 跨路由持久化断言；本地 Release 0 警告 0 错误、`dotnet format` EXIT=0、.NET 全量 273/273、Playwright 桌面/360px 6/6、7 个改动文本文件 BOM=True/CRLF 统一/无 lone LF；`git push origin main` 因 `github.com:443` 不可达失败，按 memory 直接部署：`pg_dump` 备份 `marine-insight-mi0071-20260831-102212.dump`（91,046 字节非空）、production/AI/tianditu 三层 overlay `up -d --build` 重建（migrate exit 0、web 39s 后 healthy）、公网 `/health/live`/`/health/ready`/`/`/`/about`/`/account/login`/`/js/theme.js`/`/app.css` 均 200、`GET /js/theme.js` 契约 8/8 命中、`/` 与 `/about` HTML 均含 `data-theme-toggle`、6 个预置地点完好、近 15 分钟 web 错误日志 0、Docker 清理约 103.5 MB |
@@ -282,6 +283,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-09-01 | `MI-0075` | 完成表头主题和结果定位修复的生产发布：提交 `c3466c0` 已创建，推送因 GitHub 网络不可达失败；源码 tar 同步并完成非空 PostgreSQL 备份、production/AI/tianditu 重建；真实生产浏览器确认 `#summary-title` 保留、查询区仍在视口、逐小时表头明暗主题色变化且页面无横向溢出 | 本地 Release 0 警告/0 错误、全量 .NET 277/277、format/diff、Playwright 6/6；生产 live/ready 200、migrate exit 0、Web healthy、6 个地点、近 15 分钟错误 0、Docker 清理约 103.5MB | 网络恢复后补推 `c3466c0` 与台账提交；功能已上线 |
 | 2026-09-01 | `MI-0074` | 修复 Dashboard 逐小时表头主题适配与查询结果滚动：表头背景/文字不再硬编码深色，改用主题变量；查询完成后仍同步 `/#summary-title`，但采用 `scrollIntoView({ block: "nearest" })` 最小滚动，顶部查询区保持可见 | Release 构建 0 警告/0 错误；全量 .NET 277/277；`dotnet format`、`git diff --check`；Playwright 桌面/移动 6/6，验证查询区可见、表头 light/dark 颜色变化及无横向溢出；8 个改动文本文件 BOM=True、CRLF、无 lone LF | 完成；未提交、未发布，等待用户决定 |
 | 2026-09-01 | `MI-0073` | 完成 `MI-0072` 提交并部署：提交 `9cef8d8` 推送 `origin/main`；源码和部署脚本同步 `/opt/marine-insight`，生产升级前生成非空 PostgreSQL 备份 `marine-insight-mi0073-20260901-165839.dump`；production/AI/tianditu 四层 Compose 重建成功，迁移退出 0，Web healthy；真实 HTTPS Chromium 查询确认天气速览展示“当前无雨”、雨量、风力、平均风、阵风、降雨开始/结束，页面无横向溢出；6 个预置地点保持完整；近 15 分钟 Web 错误日志 0；执行 `deploy/docker-cleanup.sh` 回收约 103.5MB | 本地 Release 构建 0 警告/0 错误；全量 .NET 277/277；`dotnet format --verify-no-changes`、`git diff --check`、Playwright 桌面/移动 6/6；生产 live/ready 200、匿名分析 200、migrate exit 0、Web healthy、真实浏览器摘要通过、Docker 清理完成 | 完成；等待下一项需求 |
 | 2026-09-01 | `MI-0072` | 完成海况查询天气摘要：复用逐小时快照，不新增 Provider/API/数据库调用；从起报点提取当前雨量与平均风/阵风，按标准 m/s 阈值映射蒲福风级，合并下一段连续正降水点并在缺失点/查询边界保守处理结束时间；页面新增主题自适应天气速览卡与 3/2/1 列响应式布局；同步需求、UI、Blazor、测试和 RoadMap 文档 | Release 构建 0 警告/0 错误；Web 定向 73/73、全量 .NET 277/277；`dotnet format --verify-no-changes` 通过；Playwright 桌面/360px 6/6（含天气卡列数和无溢出断言）；`git diff --check` 通过；13 个改动文本文件 BOM=True、CRLF、无 lone LF | 完成；未提交、未发布，等待用户决定 |
