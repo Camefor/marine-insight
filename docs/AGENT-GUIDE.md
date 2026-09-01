@@ -129,13 +129,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0078` |
+| 当前任务 ID | `MI-0079` |
 | 当前状态 | `DONE` |
-| 当前目标 | 修复地点搜索后地图初始化时序与天地图无瓦片问题，确保预置地点和未命中搜索都展开可用地图并正确定位 |
-| 最后完成动作 | 已将地图初始化延后到渲染完成，并加入天地图 Key 缺失/瓦片失败时的 OpenStreetMap 回退；预置/未命中搜索和地图标记回归均通过 |
-| 下一步动作 | 无；功能修复完成 |
-| 涉及文件 | `src/MarineInsight.Web/Components/Pages/Dashboard.razor`、`src/MarineInsight.Web/wwwroot/js/dashboard-map.js`、相关测试与本台账 |
-| 验证结果 | Dashboard 定向 17/17、全量 .NET 278/278、Release 构建 0 警告/0 错误、JS 语法检查、`dotnet format --verify-no-changes`、`git diff --check`、Playwright 双视口 6/6；改动文本文件 UTF-8 BOM/CRLF 且无 lone LF |
+| 当前目标 | 提交并部署 `MI-0078` 地图搜索渲染与瓦片回退修复，完成生产备份、四层 Compose 重建、真实浏览器地图验证和 Docker 清理 |
+| 最后完成动作 | 提交 `2b9e774` 已推送并部署生产；升级前备份、production/AI/tianditu 重建、健康检查、真实 Chromium 地图瓦片验证和 Docker 清理均完成 |
+| 下一步动作 | 无；功能已上线 |
+| 涉及文件 | `MI-0078` 已提交的代码/测试/设计文档，以及本次发布结果更新的 `docs/AGENT-GUIDE.md` |
+| 验证结果 | 本地 Release 构建 0 警告/0 错误、全量 .NET 278/278、Playwright 6/6；生产备份 95,914 字节非空，migrate 退出 0、Web healthy、live/ready 200、地点搜索成功、真实 Chromium 标记可见且天地图瓦片 24/24 加载、地图错误为空、Docker 清理约 103.5MB |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-09-01 |
 
@@ -147,6 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [x] | `MI-0079` | P0 | `DONE` | 提交并部署 `MI-0078` 地图修复 | 提交 `2b9e774` 已推送；生产备份 `marine-insight-mi0078-20260901-141007.dump` 非空 95,914 字节；production/AI/tianditu 四层 Compose 重建，migrate 退出 0、Web healthy；公网 live/ready、首页、地图脚本、地点搜索通过；真实 Chromium 搜索东极岛后标记可见、天地图瓦片 24/24 加载且无地图错误；Docker 清理约 103.5MB |
 | [x] | `MI-0078` | P1 | `DONE` | 修复地点搜索后地图初始化与瓦片回退 | 命中预置地点自动展开并定位，未命中保留错误提示并展开地图；初始化移至 `OnAfterRenderAsync`；天地图 Key 缺失/瓦片失败回退 OpenStreetMap；Dashboard 定向 17/17、全量 .NET 278/278、Release 构建、format、JS 语法和双视口 Playwright 6/6 通过 |
 | [x] | `MI-0077` | P0 | `DONE` | 发布 `MI-0076` Ant 日期/时间选择器主题修复 | 本地 Release/全量测试通过；生产备份 `marine-insight-mi0077-20260901-102813.dump` 非空 94,828 字节；production/AI/tianditu Compose 重建；migrate 退出 0、Web healthy、HTTPS live/ready 200；真实浏览器验证日间/夜间弹层与输入框颜色；关键日志 0；Docker 清理回收约 103.5MB |
 | [x] | `MI-0076` | P1 | `DONE` | 修复日间主题 Ant 日期/时间选择弹层颜色 | 日间 `.ant-picker-panel-container`、日期面板、时间面板及其文字/悬停/禁用/选中态消费 `--marine-*` 变量，不残留夜间硬编码色；夜间现有视觉保持；桌面与 360px 浏览器回归通过 |
@@ -208,6 +209,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0079` | 2026-09-01 | 提交并部署地点搜索地图修复 | 提交 `2b9e774` 已推送 `origin/main`；发布包 508,982 字节且 SHA-256 双端一致；生产升级前备份 `marine-insight-mi0078-20260901-141007.dump`（95,914 字节）非空；production/AI/tianditu 四层 Compose 重建成功，migrate 退出 0、Web healthy；公网 live/ready 200、首页/地图脚本/预置地点搜索通过；真实 Chromium 搜索东极岛后地图标记可见，24/24 天地图瓦片加载且无地图错误；近 15 分钟日志仅 Information；Docker 清理约 103.5MB，清理后健康保持 200 |
 | [x] | `MI-0075` | 2026-09-01 | 提交并部署表头主题与结果定位修复 | 本地提交 `c3466c0`；GitHub push 因网络不可达未完成；按运维记忆直接部署源码到 `/opt/marine-insight`，备份 `marine-insight-mi0075-20260901-172033.dump`（约 92KB）非空；production/AI/tianditu 四层 Compose 重建，migrate exit 0、Web healthy；公网 live/ready 200；真实 Chromium 查询确认 `#summary-title`、查询区仍可见、逐小时表头 light/dark 计算颜色不同、无横向溢出；6 个预置地点、近 15 分钟 Web 错误日志 0；Docker 清理回收约 103.5MB |
 | [x] | `MI-0076` | 2026-09-01 | 修复日间主题 Ant 日期/时间选择弹层颜色 | `app.css` 与 `Dashboard.razor.css` 将日期/时间弹层及起报输入框颜色统一改为 `--marine-*` 变量；Playwright 日间计算样式断言覆盖容器/面板/普通文字/选中态，360px 夜间保持深色；Release 构建 0 警告/0 错误、全量 .NET 277/277、format/diff、双视口 E2E 6/6、8 个文本文件 BOM/CRLF 通过 |
 | [x] | `MI-0074` | 2026-09-01 | 修复逐小时表头主题色与查询结果定位 | `.hourly-table-wrap th` 改用 `--marine-control-strong`/`--dash-text` 主题变量；`scrollToAnchor` 使用 `block: "nearest"`，保留 `#summary-title` hash 并避免查询区完全离开视口；About 脚本契约、Playwright 双视口查询区相交和明暗主题表头颜色回归通过；Release 构建 0 警告/0 错误、全量 .NET 277/277、Playwright 6/6、format/diff/BOM/CRLF 通过 |
@@ -287,6 +289,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-09-01 | `MI-0079` | 完成 `MI-0078` 提交与生产发布：提交 `2b9e774` 推送成功；发布包同步 `/opt/marine-insight`，升级前创建非空 PostgreSQL 备份；production/AI/tianditu 四层 Compose 重建；真实生产浏览器确认预置地点搜索展开地图、定位标记可见且天地图瓦片加载完整；执行 Docker 清理 | 发布包 508,982 字节、双端 SHA-256 一致；备份 95,914 字节；migrate 退出 0、Web healthy、live/ready 200、首页/地图 JS/地点搜索通过；Chromium 瓦片 24/24、无地图错误；近 15 分钟日志仅 Information；清理约 103.5MB，清理后健康保持 200 | 完成，无后续动作 |
 | 2026-09-01 | `MI-0078` | 修复地点搜索后地图无法加载：Blazor 事件中不再在 DOM 更新前初始化 Leaflet，`OnAfterRenderAsync` 负责初始化并同步预置坐标；天地图浏览器 Key 缺失或瓦片错误时自动切换 OpenStreetMap，预置/未命中搜索都展开地图 | Dashboard 定向测试 17/17；全量 .NET 278/278；Release 构建 0 警告/0 错误；JS 语法、`dotnet format --verify-no-changes`、`git diff --check`；Playwright 桌面/移动 6/6；改动文本 UTF-8 BOM/CRLF、无 lone LF | 完成，无后续动作 |
 | 2026-09-01 | `MI-0075` | 完成表头主题和结果定位修复的生产发布：提交 `c3466c0` 已创建，推送因 GitHub 网络不可达失败；源码 tar 同步并完成非空 PostgreSQL 备份、production/AI/tianditu 重建；真实生产浏览器确认 `#summary-title` 保留、查询区仍在视口、逐小时表头明暗主题色变化且页面无横向溢出 | 本地 Release 0 警告/0 错误、全量 .NET 277/277、format/diff、Playwright 6/6；生产 live/ready 200、migrate exit 0、Web healthy、6 个地点、近 15 分钟错误 0、Docker 清理约 103.5MB | 网络恢复后补推 `c3466c0` 与台账提交；功能已上线 |
 | 2026-09-01 | `MI-0077` | 完成 `MI-0076` Ant 日期/时间选择器主题修复生产发布：源码经临时归档 + SCP 同步，升级前创建非空备份 `marine-insight-mi0077-20260901-102813.dump`（94,828 字节），完整 production/AI/tianditu Compose 重建成功 | 本地 Release 0 警告/0 错误、全量 .NET 277/277、format、Playwright 6/6；生产 migrate exit 0、Web healthy、HTTPS live/ready 200、首页/CSS/主题脚本 200、6 个地点；真实 Chromium 确认日间弹层白底青绿选中态、夜间深色保持；近 15 分钟 Web 错误匹配 0；Docker 清理约 103.5MB | 完成，无后续动作 |
