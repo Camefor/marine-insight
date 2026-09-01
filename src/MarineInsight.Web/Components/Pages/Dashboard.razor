@@ -320,6 +320,40 @@
             }
         </section>
 
+        <section class="weather-summary-section" aria-labelledby="weather-summary-title">
+            <div class="section-heading">
+                <h2 id="weather-summary-title">天气速览</h2>
+                <span class="weather-summary-status status-@result.WeatherSummary.Status">@result.WeatherSummary.StatusText</span>
+            </div>
+            <p class="weather-summary-message">@result.WeatherSummary.Message</p>
+            <dl class="weather-summary-grid">
+                <div>
+                    <dt>当前雨量</dt>
+                    <dd>@result.WeatherSummary.RainAmount</dd>
+                </div>
+                <div>
+                    <dt>风力</dt>
+                    <dd>@result.WeatherSummary.WindForce</dd>
+                </div>
+                <div>
+                    <dt>平均风</dt>
+                    <dd>@result.WeatherSummary.WindSpeed</dd>
+                </div>
+                <div>
+                    <dt>阵风</dt>
+                    <dd>@result.WeatherSummary.WindGust</dd>
+                </div>
+                <div>
+                    <dt>降雨开始</dt>
+                    <dd>@(result.WeatherSummary.RainStartUtc.HasValue ? result.WeatherSummary.Status == "raining" ? $"查询起点 {Session.FormatDisplay(result.WeatherSummary.RainStartUtc.Value)} 已在下雨" : Session.FormatDisplay(result.WeatherSummary.RainStartUtc.Value) : "暂无降雨")</dd>
+                </div>
+                <div>
+                    <dt>降雨结束</dt>
+                    <dd>@(result.WeatherSummary.RainEndUtc.HasValue ? Session.FormatDisplay(result.WeatherSummary.RainEndUtc.Value) : result.WeatherSummary.RainStartUtc.HasValue ? "结束时间暂不明确" : "暂无降雨")</dd>
+                </div>
+            </dl>
+        </section>
+
         <section class="explanation-section" aria-labelledby="explanation-title">
             <div class="section-heading">
                 <h2 id="explanation-title">智能解读</h2>

@@ -573,6 +573,7 @@ public sealed class DashboardQuerySession : IDisposable
             })
             .ToArray();
         var timelineWindows = ToTimelineWindows(result);
+        var weatherSummary = CreateWeatherSummary(result.Snapshot.Points, settings);
 
         return new DashboardAnalysisResult(
             result.Snapshot.SnapshotId,
@@ -589,6 +590,7 @@ public sealed class DashboardQuerySession : IDisposable
             result.Snapshot.Quality.MissingMetrics.Select(ToApiName).ToArray(),
             result.Snapshot.Quality.MissingDomains.Select(ToApiName).ToArray(),
             selectedAssessment is null ? null : ToDashboardOverall(selectedAssessment),
+            weatherSummary,
             selectedAssessment is null ? [] : ToActivityScores(selectedAssessment),
             ToRecommendationWindows(result),
             selectedAssessment is null ? [] : ToRiskSummaries(selectedAssessment),
@@ -613,6 +615,124 @@ public sealed class DashboardQuerySession : IDisposable
                 explanation.UncertaintyText),
             "结果仅供辅助决策，请以官方预警和现场管理为准。");
     }
+
+    private static DashboardWeatherSummary CreateWeatherSummary(
+        IReadOnlyList<ForecastSnapshotPoint> points,
+        UserSettings settings)
+    {
+        var orderedPoints = points.OrderBy(point => point.ForecastTimeUtc).ToArray();
+        if (orderedPoints.Length == 0)
+        {
+            return DashboardWeatherSummary.Unknown;
+        }
+
+        var current = orderedPoints[0];
+        var currentRain = current.Metrics.PrecipitationMmPerHour;
+        var currentWind = FormatWind(current.Metrics.WindSpeedMs, settings);
+        var currentGust = FormatWind(current.Metrics.WindGustMs, settings);
+        var rainStartIndex = Array.FindIndex(orderedPoints, point =>
+            point.Metrics.PrecipitationMmPerHour is > 0);
+
+        DateTimeOffset? rainStartUtc = rainStartIndex < 0
+            ? null
+            : orderedPoints[rainStartIndex].ForecastTimeUtc;
+        DateTimeOffset? rainEndUtc = null;
+        var rainEndWithinQuery = false;
+        if (rainStartIndex >= 0)
+        {
+            // 降雨按相邻逐小时点合并；缺失值不会被当成无雨，以免虚构结束时间。
+            for (var index = rainStartIndex + 1; index < orderedPoints.Length; index++)
+            {
+                var precipitation = orderedPoints[index].Metrics.PrecipitationMmPerHour;
+                if (precipitation.HasValue && precipitation.Value <= 0)
+                {
+                    rainEndUtc = orderedPoints[index].ForecastTimeUtc;
+                    rainEndWithinQuery = true;
+                    break;
+                }
+
+                if (!precipitation.HasValue)
+                {
+                    break;
+                }
+            }
+        }
+
+        var status = currentRain.HasValue
+            ? currentRain.Value > 0 ? "raining" : "dry"
+            : "unknown";
+        var statusText = status switch
+        {
+            "raining" => "当前下雨",
+            "dry" => "当前无雨",
+            _ => "当前降水暂无可靠数据"
+        };
+        var rainAmount = currentRain.HasValue
+            ? $"{currentRain.Value:0.0} mm/h"
+            : "暂无数据";
+        var windSpeed = FormatMeasurement(currentWind);
+        var windGust = FormatMeasurement(currentGust);
+        var windForce = current.Metrics.WindSpeedMs.HasValue
+            ? $"{ToBeaufortScale(current.Metrics.WindSpeedMs.Value)}级（{ToBeaufortText(current.Metrics.WindSpeedMs.Value)}）"
+            : "暂无数据";
+        var message = status switch
+        {
+            "raining" when rainEndWithinQuery => "降雨正在持续，预计查询窗口内结束。",
+            "raining" => "降雨正在持续，查询窗口内未发现可靠的结束点。",
+            "dry" when rainStartUtc.HasValue => "当前无雨，查询窗口内稍后有降雨时段。",
+            "dry" => "当前无雨，查询窗口内未发现降雨。",
+            _ => "当前降水数据缺失，无法可靠判断是否下雨。"
+        };
+
+        return new DashboardWeatherSummary(
+            status,
+            statusText,
+            rainAmount,
+            windSpeed,
+            windGust,
+            windForce,
+            rainStartUtc,
+            rainEndUtc,
+            rainEndWithinQuery,
+            message);
+    }
+
+    private static int ToBeaufortScale(double windSpeedMs) => windSpeedMs switch
+    {
+        < 0.3 => 0,
+        < 1.6 => 1,
+        < 3.4 => 2,
+        < 5.5 => 3,
+        < 8.0 => 4,
+        < 10.8 => 5,
+        < 13.9 => 6,
+        < 17.2 => 7,
+        < 20.8 => 8,
+        < 24.5 => 9,
+        < 28.5 => 10,
+        < 32.7 => 11,
+        _ => 12
+    };
+
+    private static string ToBeaufortText(double windSpeedMs) => ToBeaufortScale(windSpeedMs) switch
+    {
+        0 => "无风",
+        1 => "软风",
+        2 => "轻风",
+        3 => "微风",
+        4 => "和风",
+        5 => "清风",
+        6 => "强风",
+        7 => "疾风",
+        8 => "大风",
+        9 => "烈风",
+        10 => "狂风",
+        11 => "暴风",
+        _ => "飓风"
+    };
+
+    private static string FormatMeasurement(FormattedMeasurement measurement) =>
+        measurement.HasValue ? $"{measurement.Value} {measurement.Unit}" : "暂无数据";
 
     private static IEnumerable<DashboardMetricCard> CreateMetricCards(ForecastSnapshotPoint point, UserSettings settings)
     {
@@ -1057,6 +1177,7 @@ public sealed record DashboardAnalysisResult(
     IReadOnlyList<string> MissingMetrics,
     IReadOnlyList<string> MissingDomains,
     DashboardOverallAssessment? Overall,
+    DashboardWeatherSummary WeatherSummary,
     IReadOnlyList<DashboardActivityScore> ActivityScores,
     IReadOnlyList<DashboardRecommendationWindow> RecommendationWindows,
     IReadOnlyList<DashboardRiskSummary> TopRisks,
@@ -1069,6 +1190,31 @@ public sealed record DashboardAnalysisResult(
     IReadOnlyList<DashboardHourlyRow> HourlyRows,
     DashboardExplanation Explanation,
     string Disclaimer);
+
+public sealed record DashboardWeatherSummary(
+    string Status,
+    string StatusText,
+    string RainAmount,
+    string WindSpeed,
+    string WindGust,
+    string WindForce,
+    DateTimeOffset? RainStartUtc,
+    DateTimeOffset? RainEndUtc,
+    bool RainEndWithinQuery,
+    string Message)
+{
+    public static DashboardWeatherSummary Unknown { get; } = new(
+        "unknown",
+        "当前降水暂无可靠数据",
+        "暂无数据",
+        "暂无数据",
+        "暂无数据",
+        "暂无数据",
+        null,
+        null,
+        false,
+        "当前降水数据缺失，无法可靠判断是否下雨。");
+}
 
 public sealed record DashboardTideResult(
     string Status,

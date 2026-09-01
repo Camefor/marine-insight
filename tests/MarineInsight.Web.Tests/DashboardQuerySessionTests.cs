@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using MarineInsight.Application.Users;
 using MarineInsight.Domain.Analysis;
+using MarineInsight.Domain.Forecast;
 using MarineInsight.Infrastructure.Persistence;
 using MarineInsight.Web.Components.Features.Dashboard;
 using Microsoft.Extensions.DependencyInjection;
@@ -117,8 +118,117 @@ public sealed class DashboardQuerySessionTests
         Assert.NotEmpty(session.Result.TopRisks);
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "风速" && metric.Value == "4.0");
         Assert.Contains(session.Result.MetricCards, metric => metric.Label == "有效波高" && metric.Value == "0.8");
+        Assert.Equal("dry", session.Result.WeatherSummary.Status);
+        Assert.Equal("当前无雨", session.Result.WeatherSummary.StatusText);
+        Assert.Equal("0.0 mm/h", session.Result.WeatherSummary.RainAmount);
+        Assert.Equal("4.0 m/s", session.Result.WeatherSummary.WindSpeed);
+        Assert.Equal("6.0 m/s", session.Result.WeatherSummary.WindGust);
+        Assert.Equal("3级（微风）", session.Result.WeatherSummary.WindForce);
+        Assert.Null(session.Result.WeatherSummary.RainStartUtc);
         Assert.Equal("not_requested", session.Result.Tide.Status);
         Assert.Empty(session.Result.Tide.Points);
+    }
+
+    [Fact]
+    public async Task WeatherSummaryProjectsCurrentRainAndReliableEnd()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        factory.Weather.MetricsFactory = index => ForecastMetricSet.Create(
+            windSpeedMs: 8.2,
+            windGustMs: 12.4,
+            precipitationMmPerHour: index <= 2 ? 1.25 : 0);
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 8, 0, 0);
+        session.Hours = 24;
+
+        Assert.True(session.SelectMapPoint(30.194, 122.687));
+        await session.SubmitAnalysisAsync();
+
+        var summary = Assert.IsType<DashboardWeatherSummary>(session.Result?.WeatherSummary);
+        Assert.Equal("raining", summary.Status);
+        Assert.Equal("当前下雨", summary.StatusText);
+        Assert.Equal("1.3 mm/h", summary.RainAmount);
+        Assert.Equal("8.2 m/s", summary.WindSpeed);
+        Assert.Equal("12.4 m/s", summary.WindGust);
+        Assert.Equal("5级（清风）", summary.WindForce);
+        Assert.Equal(session.Result!.FromUtc, summary.RainStartUtc);
+        Assert.Equal(session.Result.FromUtc.AddHours(3), summary.RainEndUtc);
+        Assert.True(summary.RainEndWithinQuery);
+    }
+
+    [Fact]
+    public async Task WeatherSummaryProjectsFutureRainWindow()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        factory.Weather.MetricsFactory = index => ForecastMetricSet.Create(
+            windSpeedMs: 4,
+            windGustMs: 6,
+            precipitationMmPerHour: index is 2 or 3 ? 0.8 : 0);
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 8, 0, 0);
+        session.Hours = 24;
+
+        Assert.True(session.SelectMapPoint(30.194, 122.687));
+        await session.SubmitAnalysisAsync();
+
+        var summary = Assert.IsType<DashboardWeatherSummary>(session.Result?.WeatherSummary);
+        Assert.Equal("dry", summary.Status);
+        Assert.Equal(session.Result!.FromUtc.AddHours(2), summary.RainStartUtc);
+        Assert.Equal(session.Result.FromUtc.AddHours(4), summary.RainEndUtc);
+        Assert.Contains("稍后有降雨", summary.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task WeatherSummaryKeepsEndUnknownWhenRainContinuesThroughQueryWindow()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        factory.Weather.MetricsFactory = _ => ForecastMetricSet.Create(
+            windSpeedMs: 4,
+            windGustMs: 6,
+            precipitationMmPerHour: 0.5);
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 8, 0, 0);
+        session.Hours = 24;
+
+        Assert.True(session.SelectMapPoint(30.194, 122.687));
+        await session.SubmitAnalysisAsync();
+
+        var summary = Assert.IsType<DashboardWeatherSummary>(session.Result?.WeatherSummary);
+        Assert.Equal("raining", summary.Status);
+        Assert.Equal(session.Result!.FromUtc, summary.RainStartUtc);
+        Assert.Null(summary.RainEndUtc);
+        Assert.False(summary.RainEndWithinQuery);
+        Assert.Contains("未发现可靠的结束点", summary.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task WeatherSummaryDoesNotInventRainStateOrEndFromMissingData()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        factory.Weather.MetricsFactory = index => ForecastMetricSet.Create(
+            windSpeedMs: 4,
+            precipitationMmPerHour: index == 1 ? 1 : null);
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        session.ForecastStartLocal = new DateTime(2026, 7, 16, 8, 0, 0);
+        session.Hours = 24;
+
+        Assert.True(session.SelectMapPoint(30.194, 122.687));
+        await session.SubmitAnalysisAsync();
+
+        var summary = Assert.IsType<DashboardWeatherSummary>(session.Result?.WeatherSummary);
+        Assert.Equal("unknown", summary.Status);
+        Assert.Equal(session.Result!.FromUtc.AddHours(1), summary.RainStartUtc);
+        Assert.Null(summary.RainEndUtc);
+        Assert.False(summary.RainEndWithinQuery);
+        Assert.Contains("无法可靠判断", summary.Message, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -381,6 +381,9 @@ public sealed class MarineAnalysisApiTests
 
         public bool ShouldFail { get; set; }
 
+        public Func<int, ForecastMetricSet> MetricsFactory { get; set; } = _ =>
+            ForecastMetricSet.Create(windSpeedMs: 4, windGustMs: 6, precipitationMmPerHour: 0);
+
         public Task<ProviderForecastResult> GetWeatherAsync(
             GeoPoint location,
             ForecastRange range,
@@ -399,7 +402,7 @@ public sealed class MarineAnalysisApiTests
                 Identity,
                 location,
                 range,
-                ForecastMetricSet.Create(windSpeedMs: 4))));
+                MetricsFactory)));
         }
     }
 
@@ -522,6 +525,45 @@ public sealed class MarineAnalysisApiTests
             .Select(index =>
             {
                 var time = range.StartUtc.AddHours(index);
+                var quality = DataQuality.Valid();
+                var sources = metrics.GetPresentMetrics()
+                    .Select(metric => new MetricSource(
+                        metric,
+                        provider,
+                        batchId,
+                        time,
+                        quality.Status,
+                        quality.Freshness));
+                return new ForecastPoint(time, metrics, quality, sources);
+            })
+            .ToArray();
+
+        return new ForecastBatch(
+            batchId,
+            dataDomain,
+            provider,
+            location,
+            null,
+            range.StartUtc.AddHours(-1),
+            range.StartUtc.AddHours(-1),
+            range,
+            points,
+            DataQuality.Valid());
+    }
+
+    private static ForecastBatch CreateBatch(
+        ForecastDataDomain dataDomain,
+        ProviderIdentity provider,
+        GeoPoint location,
+        ForecastRange range,
+        Func<int, ForecastMetricSet> metricsFactory)
+    {
+        var batchId = Guid.NewGuid();
+        var points = Enumerable.Range(0, range.Hours + 1)
+            .Select(index =>
+            {
+                var time = range.StartUtc.AddHours(index);
+                var metrics = metricsFactory(index);
                 var quality = DataQuality.Valid();
                 var sources = metrics.GetPresentMetrics()
                     .Select(metric => new MetricSource(

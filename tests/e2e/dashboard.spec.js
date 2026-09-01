@@ -191,6 +191,46 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(loadingLayout.documentWidth).toBeLessThanOrEqual(loadingLayout.viewportWidth + 1);
   expect(loadingLayout.badgeDisplay === 'none').toBe(layoutViewportWidth(page) <= 680);
 
+  const weatherSummaryLayout = await page.evaluate(() => {
+    const scopeAttribute = Array.from(document.querySelector('.query-band')?.attributes ?? [])
+      .find(attribute => attribute.name.startsWith('b-'))?.name;
+    if (!scopeAttribute) throw new Error('Dashboard scoped CSS attribute is missing.');
+
+    const section = document.createElement('section');
+    section.className = 'weather-summary-section';
+    const heading = document.createElement('div');
+    heading.className = 'section-heading';
+    heading.innerHTML = '<h2>天气速览</h2><span class="weather-summary-status status-raining">当前下雨</span>';
+    const grid = document.createElement('dl');
+    grid.className = 'weather-summary-grid';
+    for (const [label, value] of [
+      ['当前雨量', '1.3 mm/h'], ['风力', '5级（清风）'], ['平均风', '8.2 m/s'],
+      ['阵风', '12.4 m/s'], ['降雨开始', '2026-09-01 08:00'], ['降雨结束', '2026-09-01 11:00']
+    ]) {
+      const item = document.createElement('div');
+      item.innerHTML = `<dt>${label}</dt><dd>${value}</dd>`;
+      grid.appendChild(item);
+    }
+    for (const element of [section, heading, ...heading.children, grid, ...grid.children]) {
+      element.setAttribute(scopeAttribute, '');
+      for (const child of element.children) child.setAttribute(scopeAttribute, '');
+    }
+    section.append(heading, grid);
+    document.querySelector('.dashboard-shell')?.appendChild(section);
+
+    const sectionBox = section.getBoundingClientRect();
+    const gridStyle = getComputedStyle(grid);
+    return {
+      columns: gridStyle.gridTemplateColumns.split(' ').filter(Boolean).length,
+      insideViewport: sectionBox.left >= 0 && sectionBox.right <= document.documentElement.clientWidth + 1,
+      viewportWidth: document.documentElement.clientWidth,
+      documentWidth: document.documentElement.scrollWidth
+    };
+  });
+  expect(weatherSummaryLayout.columns).toBe(layoutViewportWidth(page) <= 420 ? 1 : layoutViewportWidth(page) <= 680 ? 2 : 3);
+  expect(weatherSummaryLayout.insideViewport).toBeTruthy();
+  expect(weatherSummaryLayout.documentWidth).toBeLessThanOrEqual(weatherSummaryLayout.viewportWidth + 1);
+
   await page.goto('/account/login');
   await expect(page.getByRole('heading', { name: '登录' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBeTruthy();

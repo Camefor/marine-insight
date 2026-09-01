@@ -116,6 +116,8 @@ public sealed partial class RiskSummary
 
 当前 `MI-0015` 使用 scoped `DashboardQuerySession` 管理地点搜索、候选选择、请求取消和查询版本；`MI-0017` 已让该状态容器投影综合结论、五类活动评分、主要风险和逐小时评分表；`MI-0018` 已继续投影推荐时间窗、风险上升点和返航截止；`MI-0019` 已增加趋势 Tabs、时间带、选中小时和小时详情 ViewModel；`MI-0024` 已增加地图/坐标目标状态，预置地点和自定义坐标都通过同一分析查询入口提交。页面组件只负责表单绑定、地图 JS 回调、Tab/小时选择和状态展示。
 
+`MI-0072` 由 `DashboardQuerySession` 从既有 `ForecastSnapshotPoint` 集合投影不可变 `DashboardWeatherSummary`；页面不直接分析指标或追加 Provider 请求。相邻逐小时正降水点合并为雨段，缺失点中断可靠结束时间判断，避免把缺失数据误判成无雨。
+
 ## 8. 数据加载与取消
 
 - `OnInitializedAsync` 只加载页面必需数据；图表和历史按可见性延迟加载。
