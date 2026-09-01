@@ -120,6 +120,8 @@ public sealed partial class RiskSummary
 
 `MI-0074` 保持 `Dashboard.razor` 的查询完成标记和 `OnAfterRenderAsync` 边界不变，仅调整共享 `window.scrollToAnchor`：继续同步 `#summary-title`，但使用 `scrollIntoView({ block: "nearest" })` 执行最小必要滚动，保留查询功能与结果之间的上下文。
 
+`MI-0078` 将 Dashboard 地图初始化统一放到 `OnAfterRenderAsync`，确保展开后的 Leaflet 容器已经进入 DOM；地点搜索命中或未命中都会展开地图，前者定位到预置坐标，后者保留地图选点提示。天地图浏览器 Key 缺失或瓦片请求失败时，地图 JS 自动回退 OpenStreetMap，避免空白地图阻断坐标查询。
+
 `MI-0076` 保持 `Dashboard.razor` 的 `DatePicker`/`TimePicker` 状态和事件边界不变，仅由全局 `app.css` 覆盖 Ant Design Portal 弹层的主题色，并由 `Dashboard.razor.css` 让起报输入框继承页面 `color-scheme`，避免日间主题泄漏深色默认值。
 
 ## 8. 数据加载与取消

@@ -816,11 +816,6 @@
     private async Task SearchLocationsAsync()
     {
         await Session.SearchLocationsAsync();
-        if (Session.IsMapPickerOpen)
-        {
-            await EnsureMapAsync();
-            await UpdateMapSelectionAsync();
-        }
     }
 
     private async Task SelectLocationAsync(Guid locationId)
@@ -831,8 +826,6 @@
             Session.ToggleMapPicker();
         }
 
-        await EnsureMapAsync();
-        await UpdateMapSelectionAsync();
     }
 
     private Task OnForecastDateChanged(DateTimeChangedEventArgs<DateTime?> e)
@@ -992,6 +985,7 @@
         if ((firstRender || Session.IsMapPickerOpen) && Session.IsMapPickerOpen)
         {
             await EnsureMapAsync();
+            await UpdateMapSelectionAsync();
         }
 
         await EnsureTideChartAsync();

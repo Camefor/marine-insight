@@ -38,7 +38,8 @@ test('dashboard and account shell remain usable without layout overflow', async 
   await page.waitForTimeout(5000);
   await page.getByPlaceholder('输入海岛或码头名称').fill('东极岛');
   await page.getByRole('button', { name: '查找地点' }).click();
-  await expect(page.locator('#map-picker-title')).toBeHidden();
+  await expect(page.locator('#map-picker-title')).toBeVisible();
+  await expect(page.locator('#dashboard-map-picker .leaflet-marker-icon')).toBeVisible();
   await page.locator('.forecast-date-picker').click();
   const dateCells = page.locator('.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-in-view:not(.ant-picker-cell-disabled)');
   await expect(dateCells.first()).toBeVisible();

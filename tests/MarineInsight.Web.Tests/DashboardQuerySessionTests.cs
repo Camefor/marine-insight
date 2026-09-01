@@ -88,6 +88,9 @@ public sealed class DashboardQuerySessionTests
 
         await session.SearchLocationsAsync();
         var location = Assert.Single(session.LocationResults);
+        Assert.True(session.IsMapPickerOpen);
+        Assert.Equal(location.Latitude, session.MapLatitude);
+        Assert.Equal(location.Longitude, session.MapLongitude);
         session.SelectLocation(location.Id);
         await session.SubmitAnalysisAsync();
 
@@ -127,6 +130,24 @@ public sealed class DashboardQuerySessionTests
         Assert.Null(session.Result.WeatherSummary.RainStartUtc);
         Assert.Equal("not_requested", session.Result.Tide.Status);
         Assert.Empty(session.Result.Tide.Points);
+    }
+
+    [Fact]
+    public async Task SearchWithoutPresetExpandsMapAndKeepsGuidanceError()
+    {
+        using var factory = new MarineAnalysisApiTests.ApiTestApplicationFactory();
+        await factory.MigrateDatabaseAsync();
+
+        using var scope = factory.Services.CreateScope();
+        var session = scope.ServiceProvider.GetRequiredService<DashboardQuerySession>();
+        session.SearchText = "不存在的地点";
+
+        await session.SearchLocationsAsync();
+
+        Assert.True(session.IsMapPickerOpen);
+        Assert.Empty(session.LocationResults);
+        Assert.Null(session.SelectedLocation);
+        Assert.Equal("没有找到匹配的预置地点，请通过地图选点或输入经纬度继续。", session.SearchError);
     }
 
     [Fact]

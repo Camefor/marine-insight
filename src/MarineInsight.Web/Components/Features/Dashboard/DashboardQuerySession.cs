@@ -304,11 +304,12 @@ public sealed class DashboardQuerySession : IDisposable
 
             if (LocationResults.Count > 0)
             {
-                // 命中预置地点：自动选中首个；地图仅在用户主动打开时初始化，避免首屏搜索被瓦片网络阻塞。
+                // 命中预置地点也展开地图，帮助用户确认坐标；容器会在本次渲染完成后初始化。
                 SelectedLocation = LocationResults[0];
                 SelectedMapPoint = null;
                 MapLatitude = SelectedLocation.Latitude;
                 MapLongitude = SelectedLocation.Longitude;
+                IsMapPickerOpen = true;
                 SearchError = null;
             }
             else
