@@ -129,13 +129,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0076` |
+| 当前任务 ID | `MI-0077` |
 | 当前状态 | `DONE` |
-| 当前目标 | 修复日间主题下 Ant Design 日期与时间选择弹层的容器、文字、悬停、禁用和选中颜色，使其统一消费全局主题语义变量 |
-| 最后完成动作 | 将 Ant Design 日期/时间弹层与起报输入框的硬编码深色值替换为 `--marine-*` 主题变量，补充日间计算样式和 360px 夜间回归；完成构建、全量测试、format、diff 与双视口 E2E |
-| 下一步动作 | 无；提交已创建，等待推送结果 |
-| 涉及文件 | `src/MarineInsight.Web/wwwroot/app.css`、`tests/e2e/dashboard.spec.js`、相关 UI/Blazor/测试/RoadMap 文档与本台账 |
-| 验证结果 | Release 构建 0 警告/0 错误；全量 .NET 277/277；`dotnet format --verify-no-changes`、`git diff --check`；Playwright 双视口 6/6；8 个改动文本文件 BOM=True、CRLF、无 lone LF |
+| 当前目标 | 发布 `MI-0076` 日间主题 Ant 日期/时间选择器颜色修复到生产环境并完成备份、重建、健康检查、双主题冒烟和 Docker 清理 |
+| 最后完成动作 | `MI-0076` 已完成生产发布：源码同步、非空 PostgreSQL 备份、production/AI/tianditu Compose 重建、健康检查、双主题真实浏览器验证和 Docker 清理均完成 |
+| 下一步动作 | 无；功能已上线 |
+| 涉及文件 | `MI-0076` 已提交的代码/测试/设计文档，以及本次发布结果更新的 `docs/AGENT-GUIDE.md` |
+| 验证结果 | 本地 Release 构建 0 警告/0 错误、全量 .NET 277/277、format、Playwright 6/6；生产 migrate 退出 0、Web healthy、HTTPS live/ready 200、6 个地点、双主题选择器验证通过、近 15 分钟错误 0、Docker 清理回收约 103.5MB |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-09-01 |
 
@@ -147,6 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [x] | `MI-0077` | P0 | `DONE` | 发布 `MI-0076` Ant 日期/时间选择器主题修复 | 本地 Release/全量测试通过；生产备份 `marine-insight-mi0077-20260901-102813.dump` 非空 94,828 字节；production/AI/tianditu Compose 重建；migrate 退出 0、Web healthy、HTTPS live/ready 200；真实浏览器验证日间/夜间弹层与输入框颜色；关键日志 0；Docker 清理回收约 103.5MB |
 | [x] | `MI-0076` | P1 | `DONE` | 修复日间主题 Ant 日期/时间选择弹层颜色 | 日间 `.ant-picker-panel-container`、日期面板、时间面板及其文字/悬停/禁用/选中态消费 `--marine-*` 变量，不残留夜间硬编码色；夜间现有视觉保持；桌面与 360px 浏览器回归通过 |
 | [x] | `MI-0075` | P0 | `DONE` | 提交并部署表头主题与结果定位修复 | 提交 `c3466c0` 已创建（推送因 GitHub 网络不可达失败）；生产升级前非空备份 `marine-insight-mi0075-20260901-172033.dump`，production/AI/tianditu 完整重建；live/ready、明暗主题表头、查询后 `#summary-title` 与查询区保留、预置地点、日志和 Docker 清理通过 |
 | [x] | `MI-0074` | P1 | `DONE` | 修复逐小时表头主题色与查询结果定位 | `.hourly-table-wrap` 表头背景/文字消费主题变量；查询成功仍更新 `/#summary-title` 并平滑定位，但使用最小必要滚动保留顶部查询功能可见；桌面与 360px 无重叠/横向溢出，脚本契约和浏览器回归通过 |
@@ -286,6 +287,7 @@
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
 | 2026-09-01 | `MI-0075` | 完成表头主题和结果定位修复的生产发布：提交 `c3466c0` 已创建，推送因 GitHub 网络不可达失败；源码 tar 同步并完成非空 PostgreSQL 备份、production/AI/tianditu 重建；真实生产浏览器确认 `#summary-title` 保留、查询区仍在视口、逐小时表头明暗主题色变化且页面无横向溢出 | 本地 Release 0 警告/0 错误、全量 .NET 277/277、format/diff、Playwright 6/6；生产 live/ready 200、migrate exit 0、Web healthy、6 个地点、近 15 分钟错误 0、Docker 清理约 103.5MB | 网络恢复后补推 `c3466c0` 与台账提交；功能已上线 |
+| 2026-09-01 | `MI-0077` | 完成 `MI-0076` Ant 日期/时间选择器主题修复生产发布：源码经临时归档 + SCP 同步，升级前创建非空备份 `marine-insight-mi0077-20260901-102813.dump`（94,828 字节），完整 production/AI/tianditu Compose 重建成功 | 本地 Release 0 警告/0 错误、全量 .NET 277/277、format、Playwright 6/6；生产 migrate exit 0、Web healthy、HTTPS live/ready 200、首页/CSS/主题脚本 200、6 个地点；真实 Chromium 确认日间弹层白底青绿选中态、夜间深色保持；近 15 分钟 Web 错误匹配 0；Docker 清理约 103.5MB | 完成，无后续动作 |
 | 2026-09-01 | `MI-0076` | 完成 Ant Design 日期/时间选择弹层日间主题修复：Portal 弹层、日期/时间面板、文字、悬停、禁用、选中态和起报输入框统一消费主题语义变量，夜间样式保持不变 | Release 构建 0 警告/0 错误；全量 .NET 277/277；`dotnet format --verify-no-changes`、`git diff --check`；Playwright 双视口 6/6；8 个改动文本文件 UTF-8 BOM/CRLF、无 lone LF | 创建标准提交并尝试推送；不触发生产部署 |
 | 2026-09-01 | `MI-0074` | 修复 Dashboard 逐小时表头主题适配与查询结果滚动：表头背景/文字不再硬编码深色，改用主题变量；查询完成后仍同步 `/#summary-title`，但采用 `scrollIntoView({ block: "nearest" })` 最小滚动，顶部查询区保持可见 | Release 构建 0 警告/0 错误；全量 .NET 277/277；`dotnet format`、`git diff --check`；Playwright 桌面/移动 6/6，验证查询区可见、表头 light/dark 颜色变化及无横向溢出；8 个改动文本文件 BOM=True、CRLF、无 lone LF | 完成；未提交、未发布，等待用户决定 |
 | 2026-09-01 | `MI-0073` | 完成 `MI-0072` 提交并部署：提交 `9cef8d8` 推送 `origin/main`；源码和部署脚本同步 `/opt/marine-insight`，生产升级前生成非空 PostgreSQL 备份 `marine-insight-mi0073-20260901-165839.dump`；production/AI/tianditu 四层 Compose 重建成功，迁移退出 0，Web healthy；真实 HTTPS Chromium 查询确认天气速览展示“当前无雨”、雨量、风力、平均风、阵风、降雨开始/结束，页面无横向溢出；6 个预置地点保持完整；近 15 分钟 Web 错误日志 0；执行 `deploy/docker-cleanup.sh` 回收约 103.5MB | 本地 Release 构建 0 警告/0 错误；全量 .NET 277/277；`dotnet format --verify-no-changes`、`git diff --check`、Playwright 桌面/移动 6/6；生产 live/ready 200、匿名分析 200、migrate exit 0、Web healthy、真实浏览器摘要通过、Docker 清理完成 | 完成；等待下一项需求 |
