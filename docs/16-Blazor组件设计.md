@@ -120,6 +120,8 @@ public sealed partial class RiskSummary
 
 `MI-0074` 保持 `Dashboard.razor` 的查询完成标记和 `OnAfterRenderAsync` 边界不变，仅调整共享 `window.scrollToAnchor`：继续同步 `#summary-title`，但使用 `scrollIntoView({ block: "nearest" })` 执行最小必要滚动，保留查询功能与结果之间的上下文。
 
+`MI-0076` 保持 `Dashboard.razor` 的 `DatePicker`/`TimePicker` 状态和事件边界不变，仅由全局 `app.css` 覆盖 Ant Design Portal 弹层的主题色，并由 `Dashboard.razor.css` 让起报输入框继承页面 `color-scheme`，避免日间主题泄漏深色默认值。
+
 ## 8. 数据加载与取消
 
 - `OnInitializedAsync` 只加载页面必需数据；图表和历史按可见性延迟加载。
@@ -231,3 +233,4 @@ public sealed partial class RiskSummary
 | 3.6 | 2026-08-21 | 记录 `MI-0064` 海洋罗盘风为同 URL、同尺寸的三套背景适配 SVG，继续离线派生 PNG/ICO，不改变组件与 manifest 边界 |
 | 3.7 | 2026-08-21 | 记录 `MI-0065` 仅通过 Dashboard scoped CSS 修复 PC 潮汐登录提示水平对齐，不改变认证渲染和移动端布局 |
 | 3.8 | 2026-08-21 | 记录 `MI-0067` 浏览器端明暗主题状态、静态 SSR 可用的 Header 切换按钮、全局语义变量与 About 开源入口组件边界 |
+| 3.9 | 2026-09-01 | 记录 `MI-0076` DatePicker/TimePicker 复用既有状态边界，由全局主题覆盖 Portal 弹层及输入框颜色，不新增组件状态或 JS 互操作 |

@@ -5,7 +5,7 @@
 .ant-picker-dropdown .ant-picker-panel-container,
 .ant-picker-dropdown .ant-picker-time-panel,
 .ant-picker-dropdown .ant-picker-content {
-    background: #071b2d;
+    background: var(--marine-popover);
 }
 
 .ant-picker-dropdown .ant-picker-time-panel-column {
@@ -14,28 +14,28 @@
 }
 
 .ant-picker-dropdown .ant-picker-time-panel-cell-inner {
-    color: #dcecf3;
+    color: var(--marine-text);
     font-family: "DM Mono", Consolas, monospace;
     font-variant-numeric: tabular-nums;
 }
 
 .ant-picker-dropdown .ant-picker-time-panel-cell:hover .ant-picker-time-panel-cell-inner {
-    background: rgba(72, 224, 192, 0.12);
+    background: var(--marine-accent-soft);
 }
 
 .ant-picker-dropdown .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
-    background: #48e0c0;
-    color: #03101c;
+    background: var(--marine-accent);
+    color: var(--marine-accent-contrast);
 }
 
 .ant-picker-dropdown .ant-picker-footer,
 .ant-picker-dropdown .ant-picker-ranges {
-    background: #071b2d;
-    border-color: rgba(111, 145, 164, 0.28);
+    background: var(--marine-popover);
+    border-color: var(--marine-line-strong);
 }
 
 .ant-picker-dropdown .ant-picker-now-btn {
-    color: #48e0c0;
+    color: var(--marine-accent);
 }
 
 .forecast-time-dropdown,
@@ -43,29 +43,29 @@
 .forecast-time-dropdown .ant-picker-panel-container,
 .forecast-time-dropdown .ant-picker-time-panel,
 .forecast-time-dropdown .ant-picker-content {
-    background: #071b2d !important;
-    color: #dcecf3 !important;
+    background: var(--marine-popover) !important;
+    color: var(--marine-text) !important;
     opacity: 1 !important;
 }
 
 .forecast-time-dropdown .ant-picker-time-panel-cell-inner {
-    color: #dcecf3 !important;
+    color: var(--marine-text) !important;
 }
 
 .forecast-time-dropdown .ant-picker-time-panel-column {
-    background: #071b2d !important;
-    border-color: rgba(111, 145, 164, 0.28) !important;
+    background: var(--marine-popover) !important;
+    border-color: var(--marine-line-strong) !important;
 }
 
 .forecast-time-dropdown .ant-picker-time-panel-cell-disabled .ant-picker-time-panel-cell-inner {
     background: transparent !important;
-    color: #7896a6 !important;
+    color: var(--marine-muted-disabled) !important;
     opacity: 1 !important;
 }
 
 .forecast-time-dropdown .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
-    background: #48e0c0 !important;
-    color: #03101c !important;
+    background: var(--marine-accent) !important;
+    color: var(--marine-accent-contrast) !important;
 }
 
 .forecast-date-dropdown,
@@ -75,14 +75,14 @@
 .forecast-date-dropdown .ant-picker-content,
 .forecast-date-dropdown .ant-picker-header,
 .forecast-date-dropdown .ant-picker-footer {
-    background: #071b2d !important;
-    color: #dcecf3 !important;
+    background: var(--marine-popover) !important;
+    color: var(--marine-text) !important;
     opacity: 1 !important;
 }
 
 .forecast-date-dropdown .ant-picker-header,
 .forecast-date-dropdown .ant-picker-footer {
-    border-color: rgba(111, 145, 164, 0.28) !important;
+    border-color: var(--marine-line-strong) !important;
 }
 
 .forecast-date-dropdown .ant-picker-header button,
@@ -90,28 +90,28 @@
 .forecast-date-dropdown .ant-picker-content th,
 .forecast-date-dropdown .ant-picker-cell-in-view .ant-picker-cell-inner,
 .forecast-date-dropdown .ant-picker-today-btn {
-    color: #dcecf3 !important;
+    color: var(--marine-text) !important;
 }
 
 .forecast-date-dropdown .ant-picker-cell-inner {
-    color: #7896a6 !important;
+    color: var(--marine-muted-disabled) !important;
 }
 
 .forecast-date-dropdown .ant-picker-cell:hover .ant-picker-cell-inner,
 .forecast-date-dropdown .ant-picker-cell-in-view:hover .ant-picker-cell-inner {
-    background: rgba(72, 224, 192, 0.16) !important;
-    color: #edf8fb !important;
+    background: var(--marine-accent-soft) !important;
+    color: var(--marine-text) !important;
 }
 
 .forecast-date-dropdown .ant-picker-cell-selected .ant-picker-cell-inner,
 .forecast-date-dropdown .ant-picker-cell-selected:hover .ant-picker-cell-inner {
-    background: #48e0c0 !important;
-    color: #03101c !important;
+    background: var(--marine-accent) !important;
+    color: var(--marine-accent-contrast) !important;
 }
 
 .forecast-date-dropdown .ant-picker-cell-disabled .ant-picker-cell-inner {
     background: transparent !important;
-    color: #527080 !important;
+    color: var(--marine-muted-disabled) !important;
     opacity: 1 !important;
 }
 
@@ -119,14 +119,14 @@
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-content,
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-header,
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-footer {
-    background: #071b2d !important;
-    color: #dcecf3 !important;
+    background: var(--marine-popover) !important;
+    color: var(--marine-text) !important;
     opacity: 1 !important;
 }
 
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-header,
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-footer {
-    border-color: rgba(111, 145, 164, 0.28) !important;
+    border-color: var(--marine-line-strong) !important;
 }
 
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-header button,
@@ -134,60 +134,60 @@
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-content th,
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-in-view .ant-picker-cell-inner,
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-today-btn {
-    color: #dcecf3 !important;
+    color: var(--marine-text) !important;
 }
 
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-inner {
-    color: #7896a6 !important;
+    color: var(--marine-muted-disabled) !important;
 }
 
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell:hover .ant-picker-cell-inner,
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-in-view:hover .ant-picker-cell-inner {
-    background: rgba(72, 224, 192, 0.16) !important;
-    color: #edf8fb !important;
+    background: var(--marine-accent-soft) !important;
+    color: var(--marine-text) !important;
 }
 
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-selected .ant-picker-cell-inner,
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-selected:hover .ant-picker-cell-inner {
-    background: #48e0c0 !important;
-    color: #03101c !important;
+    background: var(--marine-accent) !important;
+    color: var(--marine-accent-contrast) !important;
 }
 
 .ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-disabled .ant-picker-cell-inner {
     background: transparent !important;
-    color: #527080 !important;
+    color: var(--marine-muted-disabled) !important;
     opacity: 1 !important;
 }
 
 .ant-picker-dropdown .ant-picker-time-panel,
 .ant-picker-dropdown .ant-picker-time-panel .ant-picker-content,
 .ant-picker-dropdown .ant-picker-time-panel-column {
-    background: #071b2d !important;
+    background: var(--marine-popover) !important;
     opacity: 1 !important;
 }
 
 .ant-picker-dropdown .ant-picker-time-panel-column {
-    border-color: rgba(111, 145, 164, 0.28) !important;
+    border-color: var(--marine-line-strong) !important;
 }
 
 .ant-picker-dropdown .ant-picker-time-panel-column > li.ant-picker-time-panel-cell .ant-picker-time-panel-cell-inner {
     background: transparent !important;
-    color: #dcecf3 !important;
+    color: var(--marine-text) !important;
 }
 
 .ant-picker-dropdown .ant-picker-time-panel-column > li.ant-picker-time-panel-cell .ant-picker-time-panel-cell-inner:hover {
-    background: rgba(72, 224, 192, 0.16) !important;
-    color: #edf8fb !important;
+    background: var(--marine-accent-soft) !important;
+    color: var(--marine-text) !important;
 }
 
 .ant-picker-dropdown .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
-    background: #48e0c0 !important;
-    color: #03101c !important;
+    background: var(--marine-accent) !important;
+    color: var(--marine-accent-contrast) !important;
 }
 
 .ant-picker-dropdown .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-disabled .ant-picker-time-panel-cell-inner {
     background: transparent !important;
-    color: #7896a6 !important;
+    color: var(--marine-muted-disabled) !important;
     opacity: 1 !important;
 }
 

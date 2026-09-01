@@ -10,6 +10,7 @@ test('dashboard and account shell remain usable without layout overflow', async 
     if (response.status() >= 400) httpErrors.push(`${response.status()} ${response.url()}`);
   });
 
+  await page.addInitScript(() => localStorage.setItem('marine-insight-theme', 'light'));
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '海岛海况智能决策平台' })).toBeVisible();
   await expect(page.getByRole('button', { name: '查询海况' })).toBeVisible();
@@ -41,6 +42,13 @@ test('dashboard and account shell remain usable without layout overflow', async 
   await page.locator('.forecast-date-picker').click();
   const dateCells = page.locator('.ant-picker-dropdown .ant-picker-date-panel .ant-picker-cell-in-view:not(.ant-picker-cell-disabled)');
   await expect(dateCells.first()).toBeVisible();
+  const dateTheme = await readPickerTheme(page, '.forecast-date-dropdown', '.ant-picker-date-panel');
+  expect(dateTheme.theme).toBe('light');
+  expect(dateTheme.containerBackground).toBe(dateTheme.popover);
+  expect(dateTheme.panelBackground).toBe(dateTheme.popover);
+  expect(dateTheme.normalText).toBe(dateTheme.text);
+  expect(dateTheme.selectedBackground).toMatch(/8,\s*127,\s*114/);
+  expect(dateTheme.selectedText).toBe(dateTheme.accentContrast);
   await dateCells.first().click();
   await expect(forecastDate).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
   await page.keyboard.press('Escape');
@@ -48,6 +56,13 @@ test('dashboard and account shell remain usable without layout overflow', async 
   const hourCells = page.locator('.ant-picker-dropdown .ant-picker-time-panel-cell:not(.ant-picker-time-panel-cell-disabled)');
   await expect(hourCells).toHaveCount(24, { timeout: 15_000 });
   await expect(page.locator('.ant-picker-dropdown .ant-picker-time-panel-column')).toHaveCount(1);
+  const timeTheme = await readPickerTheme(page, '.forecast-time-dropdown', '.ant-picker-time-panel');
+  expect(timeTheme.theme).toBe('light');
+  expect(timeTheme.containerBackground).toBe(timeTheme.popover);
+  expect(timeTheme.panelBackground).toBe(timeTheme.popover);
+  expect(timeTheme.normalText).toBe(timeTheme.text);
+  expect(timeTheme.selectedBackground).toMatch(/8,\s*127,\s*114/);
+  expect(timeTheme.selectedText).toBe(timeTheme.accentContrast);
   await page.keyboard.press('Escape');
   const datetimeLayout = await page.evaluate(() => {
     const input = document.querySelector('.datetime-control .forecast-date-picker input');
@@ -361,6 +376,58 @@ test('tide chart renders inside its responsive panel', async ({ page }) => {
 
 function layoutViewportWidth(page) {
   return page.viewportSize()?.width ?? 0;
+}
+
+async function readPickerTheme(page, _dropdownSelector, panelSelector) {
+  const dropdown = page.locator(`.ant-picker-dropdown:visible`).last();
+  const panel = dropdown.locator(panelSelector);
+  const normalCell = panel.locator(
+    '.ant-picker-cell-in-view:not(.ant-picker-cell-selected):not(.ant-picker-cell-disabled) .ant-picker-cell-inner, ' +
+    '.ant-picker-time-panel-cell:not(.ant-picker-time-panel-cell-selected):not(.ant-picker-time-panel-cell-disabled) .ant-picker-time-panel-cell-inner'
+  ).first();
+  const selectedCell = panel.locator(
+    '.ant-picker-cell-selected .ant-picker-cell-inner, ' +
+    '.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner'
+  ).first();
+
+  await expect(dropdown).toBeVisible();
+  await expect(panel).toBeVisible();
+  await expect(normalCell).toBeVisible();
+  await expect(selectedCell).toBeVisible();
+  return dropdown.evaluate((element, activePanelSelector) => {
+    const rootStyle = getComputedStyle(document.documentElement);
+    const panelElement = element.querySelector(activePanelSelector);
+    const normalCellElement = panelElement?.querySelector(
+      '.ant-picker-cell-in-view:not(.ant-picker-cell-selected):not(.ant-picker-cell-disabled) .ant-picker-cell-inner, ' +
+      '.ant-picker-time-panel-cell:not(.ant-picker-time-panel-cell-selected):not(.ant-picker-time-panel-cell-disabled) .ant-picker-time-panel-cell-inner'
+    );
+    const selectedCellElement = panelElement?.querySelector(
+      '.ant-picker-cell-selected .ant-picker-cell-inner, ' +
+      '.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner'
+    );
+    const resolveColor = variableName => {
+      const sample = document.createElement('span');
+      sample.style.color = `var(${variableName})`;
+      element.appendChild(sample);
+      const color = getComputedStyle(sample).color;
+      sample.remove();
+      return color;
+    };
+
+    return {
+      theme: document.documentElement.dataset.theme,
+      popover: resolveColor('--marine-popover'),
+      text: resolveColor('--marine-text'),
+      accent: resolveColor('--marine-accent'),
+      accentContrast: resolveColor('--marine-accent-contrast'),
+      containerBackground: getComputedStyle(element.querySelector('.ant-picker-panel-container')).backgroundColor,
+      panelBackground: getComputedStyle(panelElement).backgroundColor,
+      normalText: getComputedStyle(normalCellElement).color,
+      selectedBackground: getComputedStyle(selectedCellElement).backgroundColor,
+      selectedText: getComputedStyle(selectedCellElement).color,
+      colorScheme: rootStyle.colorScheme
+    };
+  }, panelSelector);
 }
 
 test('light and dark themes persist across about and dashboard via manual toggle', async ({ page }) => {
