@@ -191,6 +191,59 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(loadingLayout.documentWidth).toBeLessThanOrEqual(loadingLayout.viewportWidth + 1);
   expect(loadingLayout.badgeDisplay === 'none').toBe(layoutViewportWidth(page) <= 680);
 
+  const anchorLayout = await page.evaluate(async () => {
+    const query = document.querySelector('.query-band');
+    const target = document.querySelector('.empty-state h2');
+    if (!query || !target || typeof window.scrollToAnchor !== 'function') {
+      throw new Error('Dashboard anchor test regions are missing.');
+    }
+
+    target.id = 'summary-title';
+    window.scrollToAnchor('summary-title');
+    await new Promise(resolve => setTimeout(resolve, 700));
+    const queryBox = query.getBoundingClientRect();
+    return {
+      hash: window.location.hash,
+      queryStillVisible: queryBox.bottom > 0 && queryBox.top < window.innerHeight
+    };
+  });
+  expect(anchorLayout.hash).toBe('#summary-title');
+  expect(anchorLayout.queryStillVisible).toBeTruthy();
+
+  const hourlyHeaderThemes = await page.evaluate(() => {
+    const query = document.querySelector('.query-band');
+    const scopeAttribute = Array.from(query?.attributes ?? [])
+      .find(attribute => attribute.name.startsWith('b-'))?.name;
+    if (!scopeAttribute) throw new Error('Dashboard scoped CSS attribute is missing.');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'hourly-table-wrap';
+    const table = document.createElement('table');
+    const head = document.createElement('thead');
+    const row = document.createElement('tr');
+    const cell = document.createElement('th');
+    cell.textContent = '时间';
+    for (const element of [wrap, table, head, row, cell]) element.setAttribute(scopeAttribute, '');
+    row.appendChild(cell);
+    head.appendChild(row);
+    table.appendChild(head);
+    wrap.appendChild(table);
+    document.body.appendChild(wrap);
+
+    const originalTheme = document.documentElement.dataset.theme;
+    document.documentElement.dataset.theme = 'light';
+    const light = { background: getComputedStyle(cell).backgroundColor, color: getComputedStyle(cell).color };
+    document.documentElement.dataset.theme = 'dark';
+    const dark = { background: getComputedStyle(cell).backgroundColor, color: getComputedStyle(cell).color };
+    document.documentElement.dataset.theme = originalTheme || 'light';
+    wrap.remove();
+    return { light, dark };
+  });
+  expect(hourlyHeaderThemes.light.background).not.toBe('rgba(0, 0, 0, 0)');
+  expect(hourlyHeaderThemes.dark.background).not.toBe('rgba(0, 0, 0, 0)');
+  expect(hourlyHeaderThemes.light.background).not.toBe(hourlyHeaderThemes.dark.background);
+  expect(hourlyHeaderThemes.light.color).not.toBe(hourlyHeaderThemes.dark.color);
+
   const weatherSummaryLayout = await page.evaluate(() => {
     const scopeAttribute = Array.from(document.querySelector('.query-band')?.attributes ?? [])
       .find(attribute => attribute.name.startsWith('b-'))?.name;

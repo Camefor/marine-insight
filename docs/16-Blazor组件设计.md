@@ -118,6 +118,8 @@ public sealed partial class RiskSummary
 
 `MI-0072` 由 `DashboardQuerySession` 从既有 `ForecastSnapshotPoint` 集合投影不可变 `DashboardWeatherSummary`；页面不直接分析指标或追加 Provider 请求。相邻逐小时正降水点合并为雨段，缺失点中断可靠结束时间判断，避免把缺失数据误判成无雨。
 
+`MI-0074` 保持 `Dashboard.razor` 的查询完成标记和 `OnAfterRenderAsync` 边界不变，仅调整共享 `window.scrollToAnchor`：继续同步 `#summary-title`，但使用 `scrollIntoView({ block: "nearest" })` 执行最小必要滚动，保留查询功能与结果之间的上下文。
+
 ## 8. 数据加载与取消
 
 - `OnInitializedAsync` 只加载页面必需数据；图表和历史按可见性延迟加载。

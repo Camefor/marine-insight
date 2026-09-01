@@ -45,5 +45,7 @@ public sealed class AboutPageTests
         Assert.Contains("document.documentElement.dataset.theme", script, StringComparison.Ordinal);
         Assert.Contains("window.scrollToAnchor", script, StringComparison.Ordinal);
         Assert.Contains("scrollIntoView", script, StringComparison.Ordinal);
+        Assert.Contains("block: \"nearest\"", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("block: \"start\"", script, StringComparison.Ordinal);
     }
 }

@@ -1430,9 +1430,9 @@ td {
     white-space: nowrap;
 }
 
-th {
-    background: #0c2942;
-    color: var(--dash-muted);
+.hourly-table-wrap th {
+    background: var(--marine-control-strong);
+    color: var(--dash-text);
     font-family: "DM Mono", Consolas, monospace;
     font-size: 0.69rem;
     letter-spacing: 0.04em;

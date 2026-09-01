@@ -87,14 +87,14 @@
     document.addEventListener("DOMContentLoaded", () => updateToggle(document.documentElement.dataset.theme));
     document.addEventListener("enhancedload", () => updateToggle(document.documentElement.dataset.theme));
 
-    // Blazor 查询完成后调用：把浏览器视口平滑滚动到锚点，并同步 URL hash 便于分享。
+    // Blazor 查询完成后调用：只滚动到足以看见结果的位置，避免把上方查询功能完全推出视口。
     window.scrollToAnchor = (hash) => {
         if (!hash) {
             return;
         }
         const target = document.getElementById(hash);
         if (target && typeof target.scrollIntoView === "function") {
-            target.scrollIntoView({ behavior: "smooth", block: "start" });
+            target.scrollIntoView({ behavior: "smooth", block: "nearest" });
         }
         if (window.history && typeof window.history.replaceState === "function") {
             window.history.replaceState(null, "", "#" + hash);
