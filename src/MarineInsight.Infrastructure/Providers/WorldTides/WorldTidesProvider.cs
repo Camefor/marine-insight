@@ -38,6 +38,16 @@ public sealed class WorldTidesProvider(
             LogLevel.Error,
             new EventId(6101, "ProviderCallLogCompletionFailed"),
             "Failed to complete paid provider call log {ProviderCallId} for {ProviderCode}.");
+    private static readonly Action<ILogger, string, Exception?> LogCredentialUnavailable =
+        LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            new EventId(2101, "ProviderCredentialUnavailable"),
+            "No usable credential is configured for provider {ProviderCode}; tide data is unavailable.");
+    private static readonly Action<ILogger, string, string, Exception?> LogCredentialRejected =
+        LoggerMessage.Define<string, string>(
+            LogLevel.Warning,
+            new EventId(2102, "ProviderCredentialRejected"),
+            "All configured credentials were rejected by provider {ProviderCode}; failure code {ErrorCode}.");
 
     public string ProviderCode => Code;
 
@@ -236,10 +246,13 @@ public sealed class WorldTidesProvider(
 
         if (lastKeyFailure is not null)
         {
+            LogCredentialRejected(logger, Code, lastKeyFailure.ErrorCode, lastKeyFailure);
             throw lastKeyFailure;
         }
 
-        throw new ProviderAuthenticationException(Code, "WorldTides API key is not configured.");
+        var noCredentialException = new ProviderAuthenticationException(Code, "WorldTides API key is not configured.");
+        LogCredentialUnavailable(logger, Code, noCredentialException);
+        throw noCredentialException;
     }
 
     private async Task<IReadOnlyList<CredentialCandidate>> ResolveCandidatesAsync(

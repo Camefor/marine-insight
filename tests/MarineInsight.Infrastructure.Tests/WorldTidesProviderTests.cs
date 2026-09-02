@@ -8,6 +8,7 @@ using MarineInsight.Application.ProviderCalls.Ports;
 using MarineInsight.Domain.Forecast;
 using MarineInsight.Infrastructure.Providers.WorldTides;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -133,13 +134,15 @@ public sealed class WorldTidesProviderTests
         var handler = new StubHttpMessageHandler(_ => JsonResponse(ReadSample()));
         using var httpClient = new HttpClient(handler);
         using var cache = new MemoryCache(new MemoryCacheOptions());
-        var provider = CreateProvider(httpClient, cache, apiKey: null, new FakeCredentialStore());
+        var logger = new CaptureLogger<WorldTidesProvider>();
+        var provider = CreateProvider(httpClient, cache, apiKey: null, store: new FakeCredentialStore(), logger: logger);
 
         var exception = await Assert.ThrowsAsync<ProviderAuthenticationException>(() =>
             provider.GetTidesAsync(new GeoPoint(30.194, 122.687), new ForecastRange(StartUtc, 24), ActorUserId, default));
 
         Assert.Contains("not configured", exception.Message, StringComparison.Ordinal);
         Assert.Equal(0, handler.CallCount);
+        Assert.Contains(logger.Entries, entry => entry.EventId.Id == 2101);
     }
 
     [Fact]
@@ -240,7 +243,8 @@ public sealed class WorldTidesProviderTests
         IMemoryCache cache,
         string? apiKey = "test-key",
         FakeCredentialStore? store = null,
-        FakeProviderCallLogStore? callLogStore = null) =>
+        FakeProviderCallLogStore? callLogStore = null,
+        ILogger<WorldTidesProvider>? logger = null) =>
         new(
             client,
             Options.Create(new WorldTidesOptions
@@ -255,7 +259,7 @@ public sealed class WorldTidesProviderTests
             store ?? new FakeCredentialStore(),
             callLogStore ?? new FakeProviderCallLogStore(),
             new FixedTimeProvider(FetchedAtUtc),
-            NullLogger<WorldTidesProvider>.Instance);
+            logger ?? NullLogger<WorldTidesProvider>.Instance);
 
     private static string ReadSample() => File.ReadAllText(
         Path.Combine(AppContext.BaseDirectory, "TestData", "WorldTides", "tide-response.json"));
@@ -366,6 +370,34 @@ public sealed class WorldTidesProviderTests
     private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => utcNow;
+    }
+
+    private sealed class CaptureLogger<T> : ILogger<T>
+    {
+        public List<(LogLevel Level, EventId EventId, Exception? Exception)> Entries { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            Entries.Add((logLevel, eventId, exception));
+        }
+
+        private sealed class NullScope : IDisposable
+        {
+            public static NullScope Instance { get; } = new();
+
+            public void Dispose()
+            {
+            }
+        }
     }
 
     private sealed class StubHttpMessageHandler(

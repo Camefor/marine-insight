@@ -129,13 +129,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0080` |
-| 当前状态 | `DONE` |
-| 当前目标 | 修复自动识别主题未持久化导致跨页面回落日间，确保主题缓存与导航同步 |
-| 最后完成动作 | 提交 `e32c149` 已创建并完成生产部署；`theme.js` 已持久化自动识别主题并在导航生命周期重新同步 |
-| 下一步动作 | 无；功能已上线 |
-| 涉及文件 | `src/MarineInsight.Web/wwwroot/js/theme.js`、主题设计/测试文档、`tests/e2e/dashboard.spec.js`、`tests/MarineInsight.Web.Tests/AboutPageTests.cs` |
-| 验证结果 | 本地 Release 构建 0 警告/0 错误、.NET 278/278、Playwright 8/8、生产主题双视口 2/2、JS 语法、format、diff、BOM/CRLF 全部通过；生产备份 95,914 字节非空、migrate 退出 0、Web healthy、live/ready 200、Docker 清理约 103.5MB |
+| 当前任务 ID | `MI-0083` |
+| 当前状态 | `IN_PROGRESS` |
+| 当前目标 | 提交并部署 MI-0082 潮汐生产修复 |
+| 最后完成动作 | MI-0082 已在生产验证通过；确认发布同步清单不包含任何 `compose*.yaml` |
+| 下一步动作 | 运行本地门禁后创建标准提交、推送 main；发布前后核对服务器 `compose.worldtides.yaml` SHA-256 |
+| 涉及文件 | `src/MarineInsight.Application/Analysis/MarineAnalysisQueryService.cs`、`src/MarineInsight.Infrastructure/Providers/WorldTides/WorldTidesProvider.cs`、`tests/MarineInsight.Infrastructure.Tests/WorldTidesProviderTests.cs`、`docs/13-日志设计.md`、`docs/18-部署文档.md`、生产 `/opt/marine-insight/src/` |
+| 验证结果 | MI-0082 生产验证已通过；本任务提交/推送/再次发布尚未执行 |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-09-02 |
 
@@ -147,6 +147,9 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [ ] | `MI-0083` | P0 | `IN_PROGRESS` | 提交并部署 MI-0082 潮汐生产修复 | 标准提交并推送 `main`；生产备份、受保护 `compose.worldtides.yaml` 前后 SHA-256 不变、源码同步不含 Compose 文件、完整 overlay 重建、migrate/Web/HTTPS/Secret 冒烟、Docker 清理通过 |
+| [x] | `MI-0082` | P0 | `DONE` | 修复生产漏加 WorldTides overlay 并部署潮汐诊断日志 | 生产运行容器已包含 `compose.worldtides.yaml`、`TideProviders__WorldTides__Enabled=true` 和 Secret 挂载；备份 96,152 字节、migrate 退出 0、Web healthy、HTTPS live/ready 200、Docker 清理通过 |
+| [x] | `MI-0081` | P1 | `DONE` | 排查登录用户潮汐查询未展示并补充 API Key 诊断日志 | 确认“当前环境未启用潮汐数据”仅由 `Enabled=false` 产生；生产命令必须叠加 `compose.worldtides.yaml`；无候选 Key 和所有 Key 被 401/403 拒绝分别记录事件 2101/2102，应用层记录 4101/4102；Provider 定向测试 11/11 通过 |
 | [x] | `MI-0080` | P1 | `DONE` | 修复自动识别主题缓存与跨页面同步 | 首页浏览器识别暗色后写入 `localStorage`，`/about` 与完整/增强导航保持同一主题；补充 Web 契约和 Playwright 回归；.NET 278/278、Playwright 8/8、格式、JS 语法、diff 与 BOM/CRLF 检查通过 |
 | [x] | `MI-0079` | P0 | `DONE` | 提交并部署 `MI-0078` 地图修复 | 提交 `2b9e774` 已推送；生产备份 `marine-insight-mi0078-20260901-141007.dump` 非空 95,914 字节；production/AI/tianditu 四层 Compose 重建，migrate 退出 0、Web healthy；公网 live/ready、首页、地图脚本、地点搜索通过；真实 Chromium 搜索东极岛后标记可见、天地图瓦片 24/24 加载且无地图错误；Docker 清理约 103.5MB |
 | [x] | `MI-0078` | P1 | `DONE` | 修复地点搜索后地图初始化与瓦片回退 | 命中预置地点自动展开并定位，未命中保留错误提示并展开地图；初始化移至 `OnAfterRenderAsync`；天地图 Key 缺失/瓦片失败回退 OpenStreetMap；Dashboard 定向 17/17、全量 .NET 278/278、Release 构建、format、JS 语法和双视口 Playwright 6/6 通过 |
@@ -290,6 +293,9 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-09-02 | `MI-0083` | 启动提交与部署：用户要求提交并部署 MI-0082 潮汐生产修复；已复读生产 SSH 记忆、部署手册并确认发布同步不得覆盖 `compose.worldtides.yaml` | MI-0082 既有生产验证通过；本任务门禁、提交、推送和再次发布待执行 | 运行 Release/全量测试，提交并推送，发布前后核对受保护 overlay SHA-256 |
+| 2026-09-02 | `MI-0082` | 完成生产修复：同步潮汐诊断代码，创建 PostgreSQL 备份 `marine-insight-mi0082-20260902-053845.dump`，使用 `compose.yaml + compose.production.yaml + compose.ai.yaml + compose.tianditu.yaml + compose.worldtides.yaml` 重建；运行容器已启用潮汐并挂载 Secret | 本地 Release 构建 0 警告/0 错误、全量 .NET 278/278；生产备份 96,152 字节、migrate 退出 0、Web healthy、容器内 Secret 可读、HTTPS live/ready 200；Docker 清理回收约 103.5MB；未执行真实登录潮汐请求，避免额外消耗 Credits | 登录用户执行一次受控潮汐查询，后台查看 `provider_call_logs`；如 Key 被拒绝，按 `2102`/`PROVIDER_AUTHENTICATION_FAILED` 更新 |
+| 2026-09-02 | `MI-0081` | 排查登录用户勾选潮汐后仅显示“当前环境未启用潮汐数据”：根因是 `TideProviders:WorldTides:Enabled` 默认值为 `false`，生产必须叠加 `compose.worldtides.yaml`；API Key 失效不会归类为 disabled。新增潮汐禁用、无凭证、凭证被拒绝的结构化日志，且不记录 Key | WorldTides Provider 定向测试 11/11 通过；全量构建/测试待本次收尾执行 | 后台检查 Compose overlay、`TideProviders__WorldTides__Enabled` 和 `/admin/provider-call-logs`；若出现 2102/4102，再更新 Key |
 | 2026-09-02 | `MI-0080` | 定位并修复自动识别主题未缓存的问题：`theme.js` 现在持久化首次解析主题，手动选择另记标记，并在 `DOMContentLoaded`、`enhancedload`、`pageshow` 重新同步缓存主题；补充主题设计/测试文档和浏览器识别跨页面回归；提交 `e32c149` 并按生产手册完成部署 | 本地 Release 构建 0 警告/0 错误、.NET 278/278、Playwright 双视口 8/8；生产备份 `marine-insight-mi0080-20260902-025048.dump` 非空 95,914 字节，migrate 退出 0、Web healthy、live/ready 200、首页/About/主题脚本/预置地点通过，真实生产主题双视口 2/2，Docker 清理回收约 103.5MB；GitHub push 因网络不可达失败 | 完成，无后续动作 |
 | 2026-09-01 | `MI-0079` | 完成 `MI-0078` 提交与生产发布：提交 `2b9e774` 推送成功；发布包同步 `/opt/marine-insight`，升级前创建非空 PostgreSQL 备份；production/AI/tianditu 四层 Compose 重建；真实生产浏览器确认预置地点搜索展开地图、定位标记可见且天地图瓦片加载完整；执行 Docker 清理 | 发布包 508,982 字节、双端 SHA-256 一致；备份 95,914 字节；migrate 退出 0、Web healthy、live/ready 200、首页/地图 JS/地点搜索通过；Chromium 瓦片 24/24、无地图错误；近 15 分钟日志仅 Information；清理约 103.5MB，清理后健康保持 200 | 完成，无后续动作 |
 | 2026-09-01 | `MI-0078` | 修复地点搜索后地图无法加载：Blazor 事件中不再在 DOM 更新前初始化 Leaflet，`OnAfterRenderAsync` 负责初始化并同步预置坐标；天地图浏览器 Key 缺失或瓦片错误时自动切换 OpenStreetMap，预置/未命中搜索都展开地图 | Dashboard 定向测试 17/17；全量 .NET 278/278；Release 构建 0 警告/0 错误；JS 语法、`dotnet format --verify-no-changes`、`git diff --check`；Playwright 桌面/移动 6/6；改动文本 UTF-8 BOM/CRLF、无 lone LF | 完成，无后续动作 |

@@ -2,6 +2,7 @@
 using MarineInsight.Application.Forecast.Ports;
 using MarineInsight.Domain.Analysis;
 using MarineInsight.Domain.Forecast;
+using Microsoft.Extensions.Logging;
 
 namespace MarineInsight.Application.Analysis;
 
@@ -10,6 +11,17 @@ namespace MarineInsight.Application.Analysis;
 /// </summary>
 public sealed class MarineAnalysisQueryService
 {
+    private static readonly Action<ILogger, string, Exception?> LogTideProviderDisabled =
+        LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            new EventId(4101, "TideProviderDisabled"),
+            "Tide enrichment was requested but provider {ProviderCode} is disabled or unavailable.");
+    private static readonly Action<ILogger, string, string, Exception?> LogTideProviderFailed =
+        LoggerMessage.Define<string, string>(
+            LogLevel.Warning,
+            new EventId(4102, "TideProviderFailed"),
+            "Tide enrichment failed for provider {ProviderCode} with error code {ErrorCode}.");
+
     private readonly IWeatherForecastProvider _weatherProvider;
     private readonly IMarineForecastProvider _marineProvider;
     private readonly IForecastCacheKeyFactory _cacheKeyFactory;
@@ -17,6 +29,7 @@ public sealed class MarineAnalysisQueryService
     private readonly ForecastSnapshotAssembler _snapshotAssembler;
     private readonly MarineRiskRuleEngine _riskRuleEngine;
     private readonly ITideProvider? _tideProvider;
+    private readonly ILogger<MarineAnalysisQueryService> _logger;
 
     public MarineAnalysisQueryService(
         IWeatherForecastProvider weatherProvider,
@@ -25,7 +38,8 @@ public sealed class MarineAnalysisQueryService
         ForecastBatchCacheCoordinator cacheCoordinator,
         ForecastSnapshotAssembler snapshotAssembler,
         MarineRiskRuleEngine? riskRuleEngine = null,
-        IEnumerable<ITideProvider>? tideProviders = null)
+        IEnumerable<ITideProvider>? tideProviders = null,
+        ILogger<MarineAnalysisQueryService>? logger = null)
     {
         ArgumentNullException.ThrowIfNull(weatherProvider);
         ArgumentNullException.ThrowIfNull(marineProvider);
@@ -40,6 +54,7 @@ public sealed class MarineAnalysisQueryService
         _snapshotAssembler = snapshotAssembler;
         _riskRuleEngine = riskRuleEngine ?? new MarineRiskRuleEngine();
         _tideProvider = tideProviders?.SingleOrDefault();
+        _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<MarineAnalysisQueryService>.Instance;
     }
 
     public async Task<MarineAnalysisQueryResult> ExecuteAsync(
@@ -153,6 +168,7 @@ public sealed class MarineAnalysisQueryService
 
         if (_tideProvider is null || !_tideProvider.IsEnabled)
         {
+            LogTideProviderDisabled(_logger, _tideProvider?.ProviderCode ?? "worldtides", null);
             return TideQueryStatus.Disabled;
         }
 
@@ -174,6 +190,7 @@ public sealed class MarineAnalysisQueryService
         {
             // Tide is an optional enrichment. Provider faults must remain visible without
             // suppressing the deterministic weather and marine safety assessment.
+            LogTideProviderFailed(_logger, exception.ProviderCode, exception.ErrorCode, exception);
             return new TideQueryStatus("unavailable", "none", null, exception.ErrorCode, null);
         }
     }
