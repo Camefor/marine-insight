@@ -132,10 +132,10 @@
 | 当前任务 ID | `MI-0080` |
 | 当前状态 | `DONE` |
 | 当前目标 | 修复自动识别主题未持久化导致跨页面回落日间，确保主题缓存与导航同步 |
-| 最后完成动作 | `theme.js` 已持久化自动识别主题并在导航生命周期重新同步；主题契约、全量测试、格式和编码检查完成 |
-| 下一步动作 | 无；功能修复完成 |
+| 最后完成动作 | 提交 `e32c149` 已创建并完成生产部署；`theme.js` 已持久化自动识别主题并在导航生命周期重新同步 |
+| 下一步动作 | 无；功能已上线 |
 | 涉及文件 | `src/MarineInsight.Web/wwwroot/js/theme.js`、主题设计/测试文档、`tests/e2e/dashboard.spec.js`、`tests/MarineInsight.Web.Tests/AboutPageTests.cs` |
-| 验证结果 | 回归用例修复前失败（期望 `dark`，实际 `null`）；修复后 .NET 278/278、Playwright 8/8、JS 语法、format、diff、7 个改动文本 BOM/CRLF 全部通过 |
+| 验证结果 | 本地 Release 构建 0 警告/0 错误、.NET 278/278、Playwright 8/8、生产主题双视口 2/2、JS 语法、format、diff、BOM/CRLF 全部通过；生产备份 95,914 字节非空、migrate 退出 0、Web healthy、live/ready 200、Docker 清理约 103.5MB |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-09-02 |
 
@@ -290,7 +290,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
-| 2026-09-02 | `MI-0080` | 定位并修复自动识别主题未缓存的问题：`theme.js` 现在持久化首次解析主题，手动选择另记标记，并在 `DOMContentLoaded`、`enhancedload`、`pageshow` 重新同步缓存主题；补充主题设计/测试文档和浏览器识别跨页面回归 | 修复前回归期望 `dark` 但缓存为 `null`；修复后 .NET 278/278、Playwright 双视口 8/8、JS 语法、format、diff、7 个改动文本 BOM/CRLF 全部通过 | 完成，无后续动作 |
+| 2026-09-02 | `MI-0080` | 定位并修复自动识别主题未缓存的问题：`theme.js` 现在持久化首次解析主题，手动选择另记标记，并在 `DOMContentLoaded`、`enhancedload`、`pageshow` 重新同步缓存主题；补充主题设计/测试文档和浏览器识别跨页面回归；提交 `e32c149` 并按生产手册完成部署 | 本地 Release 构建 0 警告/0 错误、.NET 278/278、Playwright 双视口 8/8；生产备份 `marine-insight-mi0080-20260902-025048.dump` 非空 95,914 字节，migrate 退出 0、Web healthy、live/ready 200、首页/About/主题脚本/预置地点通过，真实生产主题双视口 2/2，Docker 清理回收约 103.5MB；GitHub push 因网络不可达失败 | 完成，无后续动作 |
 | 2026-09-01 | `MI-0079` | 完成 `MI-0078` 提交与生产发布：提交 `2b9e774` 推送成功；发布包同步 `/opt/marine-insight`，升级前创建非空 PostgreSQL 备份；production/AI/tianditu 四层 Compose 重建；真实生产浏览器确认预置地点搜索展开地图、定位标记可见且天地图瓦片加载完整；执行 Docker 清理 | 发布包 508,982 字节、双端 SHA-256 一致；备份 95,914 字节；migrate 退出 0、Web healthy、live/ready 200、首页/地图 JS/地点搜索通过；Chromium 瓦片 24/24、无地图错误；近 15 分钟日志仅 Information；清理约 103.5MB，清理后健康保持 200 | 完成，无后续动作 |
 | 2026-09-01 | `MI-0078` | 修复地点搜索后地图无法加载：Blazor 事件中不再在 DOM 更新前初始化 Leaflet，`OnAfterRenderAsync` 负责初始化并同步预置坐标；天地图浏览器 Key 缺失或瓦片错误时自动切换 OpenStreetMap，预置/未命中搜索都展开地图 | Dashboard 定向测试 17/17；全量 .NET 278/278；Release 构建 0 警告/0 错误；JS 语法、`dotnet format --verify-no-changes`、`git diff --check`；Playwright 桌面/移动 6/6；改动文本 UTF-8 BOM/CRLF、无 lone LF | 完成，无后续动作 |
 | 2026-09-01 | `MI-0075` | 完成表头主题和结果定位修复的生产发布：提交 `c3466c0` 已创建，推送因 GitHub 网络不可达失败；源码 tar 同步并完成非空 PostgreSQL 备份、production/AI/tianditu 重建；真实生产浏览器确认 `#summary-title` 保留、查询区仍在视口、逐小时表头明暗主题色变化且页面无横向溢出 | 本地 Release 0 警告/0 错误、全量 .NET 277/277、format/diff、Playwright 6/6；生产 live/ready 200、migrate exit 0、Web healthy、6 个地点、近 15 分钟错误 0、Docker 清理约 103.5MB | 网络恢复后补推 `c3466c0` 与台账提交；功能已上线 |
