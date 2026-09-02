@@ -41,10 +41,12 @@ public sealed class AboutPageTests
         Assert.Contains("marine-insight-theme", script, StringComparison.Ordinal);
         Assert.Contains("localStorage.setItem", script, StringComparison.Ordinal);
         Assert.Contains("localStorage.getItem", script, StringComparison.Ordinal);
+        Assert.Contains("persistTheme(initialTheme)", script, StringComparison.Ordinal);
         Assert.Contains("data-theme-toggle", script, StringComparison.Ordinal);
         Assert.Contains("document.documentElement.dataset.theme", script, StringComparison.Ordinal);
         Assert.Contains("window.scrollToAnchor", script, StringComparison.Ordinal);
         Assert.Contains("scrollIntoView", script, StringComparison.Ordinal);
+        Assert.Contains("MutationObserver", script, StringComparison.Ordinal);
         Assert.Contains("block: \"nearest\"", script, StringComparison.Ordinal);
         Assert.DoesNotContain("block: \"start\"", script, StringComparison.Ordinal);
     }

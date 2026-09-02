@@ -472,6 +472,25 @@ test('light and dark themes persist across about and dashboard via manual toggle
   expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
 });
 
+test('browser-detected theme persists across page navigation', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto('/');
+  await page.evaluate(() => localStorage.removeItem('marine-insight-theme'));
+  await page.reload();
+
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  expect(await page.evaluate(() => localStorage.getItem('marine-insight-theme'))).toBe('dark');
+
+  const aboutLink = page.getByRole('link', { name: '功能介绍' });
+  if (await aboutLink.isVisible()) {
+    await aboutLink.click();
+  } else {
+    await page.goto('/about');
+  }
+  await expect(page).toHaveURL(/\/about$/);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+});
+
 async function expectAboutContrast(page) {
   const contrastRatios = await page.evaluate(() => {
     const parseColor = value => {

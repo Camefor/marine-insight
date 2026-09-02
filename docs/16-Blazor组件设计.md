@@ -194,7 +194,7 @@ public sealed partial class RiskSummary
 
 `MI-0065` 不改变 `Dashboard.razor` 或认证状态逻辑，仅在 `Dashboard.razor.css` 的大于 1040px 四列查询布局中，为 `.paid-provider-option` 增加 31px 顶部偏移，使其与日期时间控件、范围按钮及查询按钮顶线一致；两列与单列断点继续使用正常文档流。
 
-`MI-0067` 继续保持主题状态在浏览器呈现层：`App.razor` 在主样式前加载 `wwwroot/js/theme.js`，脚本先读取持久化选择、再回退系统 `prefers-color-scheme`，将 `data-theme`、`color-scheme` 和 `theme-color` 同步到文档；`MainLayout.razor` 提供不依赖 Blazor 交互渲染的 `data-theme-toggle` 按钮，因此静态 SSR 的 `/about` 与 Interactive Server 页面共享同一切换行为。`app.css` 统一定义 `--marine-*` 语义变量，组件 scoped CSS 只保留局部布局和风险语义；主题不进入 .NET 状态容器，也不触发服务器重渲染。`About.razor` 增加外部 GitHub 仓库入口，使用新窗口和 `noopener noreferrer` 隔离外部页面。
+`MI-0067` 继续保持主题状态在浏览器呈现层：`App.razor` 在主样式前加载 `wwwroot/js/theme.js`，脚本先读取浏览器缓存、再回退系统 `prefers-color-scheme`，并把首次识别结果写回缓存，将 `data-theme`、`color-scheme` 和 `theme-color` 同步到文档；手动选择另记标记，以便无手动选择时仍能跟随系统偏好变化。脚本在 `DOMContentLoaded`、Blazor `enhancedload`、`pageshow` 和根节点 `MutationObserver` 触发时重新应用缓存主题，确保静态 SSR 的 `/about` 与 Interactive Server 页面跨导航共享同一主题。`MainLayout.razor` 提供不依赖 Blazor 交互渲染的 `data-theme-toggle` 按钮。`app.css` 统一定义 `--marine-*` 语义变量，组件 scoped CSS 只保留局部布局和风险语义；主题不进入 .NET 状态容器，也不触发服务器重渲染。`About.razor` 增加外部 GitHub 仓库入口，使用新窗口和 `noopener noreferrer` 隔离外部页面。
 
 `MI-0055` 复用 `MarineAnalysisQueryResult.Tide`，由 `DashboardQuerySession` 投影 `DashboardTideResult` 与潮位点、高低潮和涨退潮文本；该投影明确不参与风险评分。`Dashboard.razor` 仅在潮位点存在时动态导入 `tide-chart.js`，模块再从固定版本 `Vizor.ECharts` 静态 Web Asset 加载 ECharts 6；以 SnapshotId 避免重复初始化，通过 `ResizeObserver` 自适应容器，并在重查或页面 Dispose 时销毁实例。JS/Canvas 失败时 Razor 摘要和 Provider 降级文案仍可用。
 
@@ -236,3 +236,4 @@ public sealed partial class RiskSummary
 | 3.7 | 2026-08-21 | 记录 `MI-0065` 仅通过 Dashboard scoped CSS 修复 PC 潮汐登录提示水平对齐，不改变认证渲染和移动端布局 |
 | 3.8 | 2026-08-21 | 记录 `MI-0067` 浏览器端明暗主题状态、静态 SSR 可用的 Header 切换按钮、全局语义变量与 About 开源入口组件边界 |
 | 3.9 | 2026-09-01 | 记录 `MI-0076` DatePicker/TimePicker 复用既有状态边界，由全局主题覆盖 Portal 弹层及输入框颜色，不新增组件状态或 JS 互操作 |
+| 4.0 | 2026-09-02 | 记录 `MI-0080` 自动识别主题写入浏览器缓存，并在完整/增强导航生命周期重新同步主题 |
