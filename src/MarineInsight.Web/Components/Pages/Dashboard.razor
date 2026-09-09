@@ -4,12 +4,15 @@
 @using MarineInsight.Application.Locations
 @using MarineInsight.Domain.Forecast
 @using Microsoft.Extensions.Configuration
+@using MarineInsight.Application.Sharing
 @inject DashboardQuerySession Session
 @inject IJSRuntime Js
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserWorkspaceService Workspace
 @inject ReverseGeocodeService ReverseGeocode
 @inject IConfiguration Configuration
+@inject ShareSnapshotService ShareService
+@inject NavigationManager Navigation
 @implements IAsyncDisposable
 
 
@@ -318,6 +321,21 @@
                     </AuthorizeView>
                 </div>
             }
+
+            <div class="share-controls">
+                <button class="secondary-button" type="button" @onclick="CreateShareAsync" disabled="@_isCreatingShare">
+                    @(_isCreatingShare ? "生成中…" : "分享本次结果")
+                </button>
+                @if (!string.IsNullOrWhiteSpace(_shareUrl))
+                {
+                    <a class="share-link" href="@_shareUrl">打开分享页</a>
+                    <span class="workspace-inline-status" role="status">链接有效至 @_shareExpiresAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(_shareError))
+                {
+                    <span class="account-alert" role="alert">@_shareError</span>
+                }
+            </div>
         </section>
 
         <section class="weather-summary-section" aria-labelledby="weather-summary-title">
@@ -748,6 +766,10 @@
     private bool _tideChartUnavailable;
     private Guid? _userId;
     private string? _workspaceStatus;
+    private bool _isCreatingShare;
+    private string? _shareUrl;
+    private DateTimeOffset? _shareExpiresAt;
+    private string? _shareError;
     private List<FavoriteLocation> _favorites = [];
     // 标记本次查询完成后需要在下一次 OnAfterRenderAsync 中把视口滚动到结果锚点。
     private bool _shouldScrollToResult;
@@ -883,6 +905,32 @@
         {
             // 等下一次 OnAfterRenderAsync 结果区渲染完成再滚动，避免 DOM 尚未挂载时找不到锚点元素。
             _shouldScrollToResult = true;
+        }
+    }
+
+    private async Task CreateShareAsync()
+    {
+        if (Session.Result is not { } result)
+        {
+            return;
+        }
+
+        _isCreatingShare = true;
+        _shareError = null;
+        try
+        {
+            var payload = System.Text.Json.JsonSerializer.Serialize(result);
+            var created = await ShareService.CreateAsync(payload);
+            _shareExpiresAt = created.ExpiresAtUtc;
+            _shareUrl = new Uri(new Uri(Navigation.BaseUri), $"share/{created.Token}").ToString();
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            _shareError = "分享链接生成失败，请稍后重试。";
+        }
+        finally
+        {
+            _isCreatingShare = false;
         }
     }
 

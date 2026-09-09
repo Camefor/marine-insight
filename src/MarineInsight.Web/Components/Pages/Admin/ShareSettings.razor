@@ -1,0 +1,55 @@
+﻿@page "/admin/share-settings"
+@attribute [Authorize(Policy = "Administrator")]
+@rendermode InteractiveServer
+@using MarineInsight.Application.Sharing
+@inject ShareSnapshotService ShareService
+
+<PageTitle>分享设置 | Marine AI</PageTitle>
+
+<main class="workspace-page admin-page">
+    <header class="workspace-heading"><div><p class="workspace-eyebrow">管理员</p><h1>分享设置</h1></div></header>
+    <AdminTabs />
+    <section class="admin-section" aria-labelledby="share-settings-title">
+        <h2 id="share-settings-title">分享链接有效期</h2>
+        <form class="workspace-form" @onsubmit="SaveAsync" @onsubmit:preventDefault>
+            <label><span>有效天数（1-30 天）</span><input type="number" min="1" max="30" @bind="_days" required /></label>
+            <p class="map-hint">海况查询结果最多持久化 30 天；修改设置只影响之后新生成的链接。</p>
+            @if (!string.IsNullOrWhiteSpace(_message))
+            {
+                <p class="workspace-status" role="status">@_message</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <p class="account-alert" role="alert">@_error</p>
+            }
+            <div class="workspace-form-actions"><button class="workspace-primary" type="submit">保存设置</button></div>
+        </form>
+    </section>
+</main>
+
+@code {
+    private int _days = MarineInsight.Application.Sharing.ShareSettings.DefaultLinkValidityDays;
+    private string? _message;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _days = (await ShareService.GetSettingsAsync()).LinkValidityDays;
+    }
+
+    private async Task SaveAsync()
+    {
+        _message = null;
+        _error = null;
+        try
+        {
+            var settings = await ShareService.UpdateSettingsAsync(_days);
+            _days = settings.LinkValidityDays;
+            _message = "分享链接有效期已更新。";
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            _error = exception.Message;
+        }
+    }
+}

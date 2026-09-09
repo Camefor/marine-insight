@@ -129,15 +129,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0083` |
+| 当前任务 ID | `MI-0084` |
 | 当前状态 | `DONE` |
-| 当前目标 | 提交并部署 MI-0082 潮汐生产修复 |
-| 最后完成动作 | 提交 `afa2026` 已推送并完成生产发布；发布前后 `compose.worldtides.yaml` SHA-256 保持不变 |
-| 下一步动作 | 无；等待登录用户执行一次受控潮汐查询 |
-| 涉及文件 | `src/MarineInsight.Application/Analysis/MarineAnalysisQueryService.cs`、`src/MarineInsight.Infrastructure/Providers/WorldTides/WorldTidesProvider.cs`、`tests/MarineInsight.Infrastructure.Tests/WorldTidesProviderTests.cs`、`docs/13-日志设计.md`、`docs/18-部署文档.md`、生产 `/opt/marine-insight/src/` |
-| 验证结果 | 本地 Release 构建 0 警告/0 错误、全量 .NET 278/278；提交推送成功；生产备份 `marine-insight-mi0083-20260902-055138.dump` 96,152 字节非空、migrate 退出 0、Web healthy、HTTPS live/ready 200、潮汐开关/Secret 挂载通过、overlay 哈希未变、Docker 清理回收约 8.086MB |
+| 当前目标 | 为海况查询结果提供最长保留 30 天、有效期可由管理后台配置的分享链接和独立查看页 |
+| 最后完成动作 | 已完成分享快照、后台有效期设置、匿名 API、Dashboard 分享入口、独立查看页、SQLite/PostgreSQL 迁移、测试和文档 |
+| 下一步动作 | 无；等待用户决定是否提交或部署 |
+| 涉及文件 | `src/MarineInsight.Application/Sharing/`、`src/MarineInsight.Infrastructure/Persistence/`、`src/MarineInsight.Web/Api/`、`src/MarineInsight.Web/Components/Pages/`、迁移、测试和相关设计文档 |
+| 验证结果 | Release 构建 0 警告/0 错误；分享服务 3/3、全量 .NET 281/281 通过；`dotnet format --verify-no-changes`、`git diff --check`、BOM/CRLF 检查通过 |
 | 阻塞/待确认 | 无 |
-| 最后更新 | 2026-09-02 |
+| 最后更新 | 2026-09-09 |
 
 <!-- agent-state:end -->
 
@@ -147,6 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [x] | `MI-0084` | P1 | `DONE` | 海况查询结果分享、30 天保留和后台有效期配置 | 查询完成可生成匿名分享链接；链接独立页面可查看当次快照；有效期可配置为 1-30 天；过期数据不可访问并清理；迁移、测试、文档与格式检查通过 |
 | [x] | `MI-0083` | P0 | `DONE` | 提交并部署 MI-0082 潮汐生产修复 | 提交 `afa2026` 已推送；生产备份、受保护 `compose.worldtides.yaml` 前后 SHA-256 不变、源码同步不含 Compose 文件、完整 overlay 重建、migrate/Web/HTTPS/Secret 冒烟、Docker 清理通过 |
 | [x] | `MI-0082` | P0 | `DONE` | 修复生产漏加 WorldTides overlay 并部署潮汐诊断日志 | 生产运行容器已包含 `compose.worldtides.yaml`、`TideProviders__WorldTides__Enabled=true` 和 Secret 挂载；备份 96,152 字节、migrate 退出 0、Web healthy、HTTPS live/ready 200、Docker 清理通过 |
 | [x] | `MI-0081` | P1 | `DONE` | 排查登录用户潮汐查询未展示并补充 API Key 诊断日志 | 确认“当前环境未启用潮汐数据”仅由 `Enabled=false` 产生；生产命令必须叠加 `compose.worldtides.yaml`；无候选 Key 和所有 Key 被 401/403 拒绝分别记录事件 2101/2102，应用层记录 4101/4102；Provider 定向测试 11/11 通过 |
@@ -293,6 +294,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-09-09 | `MI-0084` | 完成海况结果分享闭环：Dashboard 查询结果可生成随机 token 分享链接；新增匿名分享 API 与 `/share/{token}` 独立查看页；后台可配置 1-30 天链接有效期；快照固定保留 30 天并按访问/创建触发过期清理 | Release 构建 0 警告/0 错误；分享服务 3/3、全量 .NET 281/281；`dotnet format --verify-no-changes`、`git diff --check`、UTF-8 BOM/CRLF 检查通过；SQLite 与 PostgreSQL 迁移均已补齐 | 等待用户决定是否提交或部署 |
 | 2026-09-02 | `MI-0083` | 完成提交与部署：提交 `afa2026` 已推送 `origin/main`；仅同步 `src/` 与部署脚本，发布归档不含任何 Compose 文件；生产使用完整五层 overlay 重建潮汐功能 | 本地 Release 构建 0 警告/0 错误、全量 .NET 278/278；备份 `marine-insight-mi0083-20260902-055138.dump` 96,152 字节；migrate 退出 0、Web healthy、HTTPS live/ready 200；`compose.worldtides.yaml` 前后 SHA-256 均为 `8af798...d57b`；Docker 清理回收约 8.086MB | 无；登录用户执行一次受控潮汐查询并在后台观察 `provider_call_logs` |
 | 2026-09-02 | `MI-0082` | 完成生产修复：同步潮汐诊断代码，创建 PostgreSQL 备份 `marine-insight-mi0082-20260902-053845.dump`，使用 `compose.yaml + compose.production.yaml + compose.ai.yaml + compose.tianditu.yaml + compose.worldtides.yaml` 重建；运行容器已启用潮汐并挂载 Secret | 本地 Release 构建 0 警告/0 错误、全量 .NET 278/278；生产备份 96,152 字节、migrate 退出 0、Web healthy、容器内 Secret 可读、HTTPS live/ready 200；Docker 清理回收约 103.5MB；未执行真实登录潮汐请求，避免额外消耗 Credits | 登录用户执行一次受控潮汐查询，后台查看 `provider_call_logs`；如 Key 被拒绝，按 `2102`/`PROVIDER_AUTHENTICATION_FAILED` 更新 |
 | 2026-09-02 | `MI-0081` | 排查登录用户勾选潮汐后仅显示“当前环境未启用潮汐数据”：根因是 `TideProviders:WorldTides:Enabled` 默认值为 `false`，生产必须叠加 `compose.worldtides.yaml`；API Key 失效不会归类为 disabled。新增潮汐禁用、无凭证、凭证被拒绝的结构化日志，且不记录 Key | WorldTides Provider 定向测试 11/11 通过；全量构建/测试待本次收尾执行 | 后台检查 Compose overlay、`TideProviders__WorldTides__Enabled` 和 `/admin/provider-call-logs`；若出现 2102/4102，再更新 Key |

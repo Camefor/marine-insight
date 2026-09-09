@@ -491,6 +491,24 @@
     font-weight: 700;
 }
 
+.share-controls {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.share-link {
+    color: #1f6b5d;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.share-page .workspace-heading {
+    align-items: center;
+}
+
 .admin-page {
     display: grid;
     gap: 24px;

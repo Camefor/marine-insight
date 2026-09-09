@@ -3,6 +3,7 @@ using System;
 using MarineInsight.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MarineInsight.Migrations.PostgreSql.Migrations
 {
     [DbContext(typeof(MarineInsightDbContext))]
-    partial class MarineInsightDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909102522_AddShareSnapshots")]
+    partial class AddShareSnapshots
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -971,15 +974,9 @@ namespace MarineInsight.Migrations.PostgreSql.Migrations
                         .HasColumnType("text")
                         .HasColumnName("payload");
 
-                    b.Property<DateTimeOffset>("RetainUntilUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("retain_until");
-
                     b.HasKey("Token");
 
                     b.HasIndex("ExpiresAtUtc");
-
-                    b.HasIndex("RetainUntilUtc");
 
                     b.ToTable("share_snapshots", (string)null);
                 });

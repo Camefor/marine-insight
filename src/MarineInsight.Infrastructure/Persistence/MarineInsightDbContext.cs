@@ -36,6 +36,10 @@ public sealed class MarineInsightDbContext(DbContextOptions<MarineInsightDbConte
 
     public DbSet<ProviderCallLogEntity> ProviderCallLogs => Set<ProviderCallLogEntity>();
 
+    public DbSet<ShareSnapshotEntity> ShareSnapshots => Set<ShareSnapshotEntity>();
+
+    public DbSet<ShareSettingsEntity> ShareSettings => Set<ShareSettingsEntity>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

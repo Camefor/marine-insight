@@ -61,6 +61,11 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IProviderCallLogStore, ProviderCallLogStore>();
         services.AddScoped<IForecastBatchRepository, ForecastBatchRepository>();
         services.AddScoped<IAnalysisReportRepository, AnalysisReportRepository>();
+        services.AddScoped<ShareSnapshotRepository>();
+        services.AddScoped<MarineInsight.Application.Sharing.Ports.IShareSnapshotRepository>(provider =>
+            provider.GetRequiredService<ShareSnapshotRepository>());
+        services.AddScoped<MarineInsight.Application.Sharing.Ports.IShareSettingsRepository>(provider =>
+            provider.GetRequiredService<ShareSnapshotRepository>());
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IUserWorkspaceRepository, UserWorkspaceRepository>();
         services.AddScoped<IOperationalReadRepository, OperationalReadRepository>();

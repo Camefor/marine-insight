@@ -924,6 +924,59 @@ namespace MarineInsight.Infrastructure.Persistence.Migrations
                     b.ToTable("query_history", (string)null);
                 });
 
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.ShareSettingsEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<int>("LinkValidityDays")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("link_validity_days");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("share_settings", (string)null);
+                });
+
+            modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.ShareSnapshotEntity", b =>
+                {
+                    b.Property<string>("Token")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("token");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTimeOffset>("RetainUntilUtc")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("retain_until");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payload");
+
+                    b.HasKey("Token");
+
+                    b.HasIndex("ExpiresAtUtc");
+
+                    b.HasIndex("RetainUntilUtc");
+
+                    b.ToTable("share_snapshots", (string)null);
+                });
+
             modelBuilder.Entity("MarineInsight.Infrastructure.Persistence.Entities.UserLocationEntity", b =>
                 {
                     b.Property<Guid>("Id")

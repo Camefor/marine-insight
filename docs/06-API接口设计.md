@@ -54,6 +54,9 @@
 | 管理 | PUT | `/admin/locations/{id}` | 修改预置地点 | 管理员 |
 | 管理 | DELETE | `/admin/locations/{id}` | 删除预置地点（返回级联收藏引用数） | 管理员 |
 | 管理 | GET | `/admin/users` | 已注册用户只读列表 | 管理员 |
+| 分享 | POST | `/shares` | 持久化当前海况结果并生成分享链接 | 匿名（限流） |
+| 分享 | GET | `/shares/{token}` | 获取未过期的分享快照 | 匿名（限流） |
+| 管理 | GET/PUT | `/admin/share-settings` | 配置分享链接有效期（1-30 天） | 管理员 |
 | 系统 | GET | `/health/live` | 存活检查 | 基础设施 |
 | 系统 | GET | `/health/ready` | 就绪检查 | 基础设施 |
 

@@ -3,6 +3,7 @@ using MarineInsight.Application.Admin;
 using MarineInsight.Application.Credentials;
 using MarineInsight.Application.Errors;
 using MarineInsight.Application.ProviderCalls;
+using MarineInsight.Application.Sharing;
 using MarineInsight.Domain.Location;
 using MarineInsight.Infrastructure.Providers.WorldTides;
 using MarineInsight.Web.Admin;
@@ -34,8 +35,30 @@ public static class AdminEndpointExtensions
         group.MapDelete("/providers/worldtides/credentials/{id:guid}", DeleteCredentialAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
         group.MapPost("/providers/worldtides/credentials/test", TestCredentialAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
         group.MapGet("/provider-call-logs", ListProviderCallLogsAsync);
+        group.MapGet("/share-settings", GetShareSettingsAsync);
+        group.MapPut("/share-settings", UpdateShareSettingsAsync).AddEndpointFilter(ValidateAntiforgeryAsync);
 
         return endpoints;
+    }
+
+    private static async Task<IResult> GetShareSettingsAsync(
+        ShareSnapshotService service,
+        CancellationToken cancellationToken) =>
+        Results.Ok(await service.GetSettingsAsync(cancellationToken));
+
+    private static async Task<IResult> UpdateShareSettingsAsync(
+        UpdateShareSettingsRequest request,
+        ShareSnapshotService service,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Results.Ok(await service.UpdateSettingsAsync(request.LinkValidityDays, cancellationToken));
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            return Validation(exception.Message);
+        }
     }
 
     private static async Task<IResult> ListProviderCallLogsAsync(
@@ -304,6 +327,8 @@ public static class AdminEndpointExtensions
             : char.ToLowerInvariant(name[0]) + name[1..];
     }
 }
+
+public sealed record UpdateShareSettingsRequest(int LinkValidityDays);
 
 public sealed record CreateAdminLocationRequest(
     string DisplayName,

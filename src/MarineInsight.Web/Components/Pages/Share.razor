@@ -1,0 +1,151 @@
+﻿@page "/share/{Token}"
+@rendermode InteractiveServer
+@using System.Text.Json
+@using MarineInsight.Application.Sharing
+@using MarineInsight.Web.Components.Features.Dashboard
+@inject ShareSnapshotService ShareService
+
+<PageTitle>海况结果分享 | Marine AI</PageTitle>
+
+<main class="workspace-page share-page">
+    @if (_loading)
+    {
+        <p class="workspace-status" role="status">正在加载分享结果…</p>
+    }
+    else if (_result is null)
+    {
+        <section class="workspace-empty" role="alert">
+            <h1>分享链接已失效</h1>
+            <p>该海况结果不存在或已超过有效期。请让分享者重新生成链接。</p>
+            <a class="workspace-primary" href="/">返回海况查询</a>
+        </section>
+    }
+    else
+    {
+        var result = _result;
+        <header class="workspace-heading">
+            <div>
+                <p class="workspace-eyebrow">Marine AI · 分享结果</p>
+                <h1>@result.DisplayName</h1>
+                <p>@result.FromUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm") - @result.ToUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @result.Hours 小时</p>
+            </div>
+            <a class="secondary-button" href="/">查询新的海况</a>
+        </header>
+
+        <section class="summary-band" aria-labelledby="share-summary-title">
+            <h2 id="share-summary-title">海况摘要</h2>
+            <dl class="summary-grid">
+                <div><dt>综合分</dt><dd>@(result.Overall?.Score ?? "暂无") · @(result.Overall?.RiskLevelText ?? "数据不足")</dd></div>
+                <div><dt>置信度</dt><dd>@(result.Overall?.Confidence ?? "暂无")</dd></div>
+                <div><dt>数据质量</dt><dd>@result.QualityStatus / @result.Freshness</dd></div>
+                <div><dt>完整度</dt><dd>@result.Completeness.ToString("P0")</dd></div>
+            </dl>
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(result.Explanation.Headline))
+        {
+            <section class="explanation-section" aria-labelledby="share-explanation-title">
+                <h2 id="share-explanation-title">智能解读</h2>
+                <h3>@result.Explanation.Headline</h3>
+                <p>@result.Explanation.Summary</p>
+            </section>
+        }
+
+        <section class="weather-summary-section" aria-labelledby="share-weather-title">
+            <h2 id="share-weather-title">天气速览</h2>
+            <p>@result.WeatherSummary.Message</p>
+            <dl class="weather-summary-grid">
+                <div><dt>降水</dt><dd>@result.WeatherSummary.RainAmount</dd></div>
+                <div><dt>风速</dt><dd>@result.WeatherSummary.WindSpeed</dd></div>
+                <div><dt>阵风</dt><dd>@result.WeatherSummary.WindGust</dd></div>
+                <div><dt>风力</dt><dd>@result.WeatherSummary.WindForce</dd></div>
+            </dl>
+        </section>
+
+        @if (result.RecommendationWindows.Count > 0)
+        {
+            <section class="recommendation-section" aria-labelledby="share-recommendation-title">
+                <h2 id="share-recommendation-title">推荐时间窗</h2>
+                <div class="recommendation-list">
+                    @foreach (var window in result.RecommendationWindows)
+                    {
+                        <article class="recommendation-item">
+                            <strong>@window.Label：@window.StartUtc.ToLocalTime().ToString("MM-dd HH:mm") - @window.EndUtc.ToLocalTime().ToString("MM-dd HH:mm")</strong>
+                            <p>最佳分 @window.BestScore，门槛 @window.MinimumScore，时长 @window.DurationHours 小时。</p>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (result.TopRisks.Count > 0)
+        {
+            <section class="risk-section" aria-labelledby="share-risk-title">
+                <h2 id="share-risk-title">主要风险</h2>
+                <div class="risk-list">
+                    @foreach (var risk in result.TopRisks)
+                    {
+                        <article class="risk-item severity-@risk.Severity"><strong>@risk.Code</strong><span>@risk.Message</span></article>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (result.Tide.Points.Count > 0)
+        {
+            <section class="tide-section" aria-labelledby="share-tide-title">
+                <h2 id="share-tide-title">潮汐参考</h2>
+                <p>@result.Tide.Message</p>
+                <div class="tide-overview">
+                    <article><span>当前潮位</span><strong>@result.Tide.CurrentHeightM?.ToString("0.00") m</strong></article>
+                    <article><span>潮位范围</span><strong>@result.Tide.MinimumHeightM?.ToString("0.00")–@result.Tide.MaximumHeightM?.ToString("0.00") m</strong></article>
+                </div>
+            </section>
+        }
+
+        <section class="hourly-section" aria-labelledby="share-hourly-title">
+            <h2 id="share-hourly-title">逐小时指标</h2>
+            <div class="hourly-table-wrap" tabindex="0">
+                <table>
+                    <thead><tr><th>时间</th><th>风速</th><th>阵风</th><th>浪高</th><th>综合分</th><th>等级</th></tr></thead>
+                    <tbody>
+                        @foreach (var row in result.HourlyRows)
+                        {
+                            <tr><td>@row.ForecastTimeUtc.ToLocalTime().ToString("MM-dd HH:mm")</td><td>@row.WindSpeedMs</td><td>@row.WindGustMs</td><td>@row.WaveHeightM</td><td>@row.Score</td><td>@row.RiskLevel</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <p class="dashboard-footer">结果仅供辅助决策，请以官方预警和现场管理为准。</p>
+    }
+</main>
+
+@code {
+    [Parameter]
+    public string? Token { get; set; }
+
+    private bool _loading = true;
+    private DashboardAnalysisResult? _result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var snapshot = await ShareService.GetAsync(Token ?? string.Empty);
+        if (snapshot is not null)
+        {
+            try
+            {
+                _result = JsonSerializer.Deserialize<DashboardAnalysisResult>(
+                    snapshot.Payload,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (JsonException)
+            {
+                _result = null;
+            }
+        }
+
+        _loading = false;
+    }
+}

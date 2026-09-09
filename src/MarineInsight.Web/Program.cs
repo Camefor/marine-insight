@@ -8,6 +8,7 @@ using MarineInsight.Application.Credentials;
 using MarineInsight.Application.Forecast;
 using MarineInsight.Application.Locations;
 using MarineInsight.Application.ProviderCalls;
+using MarineInsight.Application.Sharing;
 using MarineInsight.Application.Users;
 using MarineInsight.Domain.Analysis;
 using MarineInsight.Infrastructure.Caching;
@@ -186,6 +187,7 @@ builder.Services.AddScoped<AdminLocationService>();
 builder.Services.AddScoped<AdminUserService>();
 builder.Services.AddScoped<ProviderCredentialService>();
 builder.Services.AddScoped<ProviderCallLogService>();
+builder.Services.AddScoped<ShareSnapshotService>();
 builder.Services.AddScoped<DashboardQuerySession>();
 builder.Services.AddMarineInsightTelemetry(builder.Configuration);
 builder.Services
@@ -263,6 +265,7 @@ app.MapAccountEndpoints();
 app.MapUserWorkspaceEndpoints();
 app.MapOperationsEndpoints();
 app.MapAdminEndpoints();
+app.MapShareEndpoints();
 
 app.Run();
 

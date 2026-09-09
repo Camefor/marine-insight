@@ -17,6 +17,7 @@ $env:Database__Provider = "PostgreSql"
 $env:ConnectionStrings__MarineInsight = "Host=localhost;Database=marine_insight;Username=marine_insight;Password=design-time"
 
 dotnet ef migrations script --idempotent `
+    --configuration Release `
     --project (Join-Path $repositoryRoot "src/MarineInsight.Migrations.PostgreSql/MarineInsight.Migrations.PostgreSql.csproj") `
     --startup-project (Join-Path $repositoryRoot "src/MarineInsight.Web/MarineInsight.Web.csproj") `
     --context MarineInsightDbContext `
