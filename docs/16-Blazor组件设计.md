@@ -122,6 +122,8 @@ public sealed partial class RiskSummary
 
 `MI-0078` 将 Dashboard 地图初始化统一放到 `OnAfterRenderAsync`，确保展开后的 Leaflet 容器已经进入 DOM；地点搜索命中或未命中都会展开地图，前者定位到预置坐标，后者保留地图选点提示。天地图浏览器 Key 缺失或瓦片请求失败时，地图 JS 自动回退 OpenStreetMap，避免空白地图阻断坐标查询。
 
+`MI-0085` 只调整共享 `dashboard-map.js` 的 Leaflet 呈现边界：地图最低缩放级别为 3，并使用 Web Mercator 有效范围限制拖动；天地图底图、注记层与 OpenStreetMap 降级层统一设置 `noWrap`。Dashboard、我的地点和后台预置地点继续复用同一模块，选点回调、定位和降级状态不增加新的 .NET 状态。
+
 `MI-0076` 保持 `Dashboard.razor` 的 `DatePicker`/`TimePicker` 状态和事件边界不变，仅由全局 `app.css` 覆盖 Ant Design Portal 弹层的主题色，并由 `Dashboard.razor.css` 让起报输入框继承页面 `color-scheme`，避免日间主题泄漏深色默认值。
 
 ## 8. 数据加载与取消
@@ -237,3 +239,4 @@ public sealed partial class RiskSummary
 | 3.8 | 2026-08-21 | 记录 `MI-0067` 浏览器端明暗主题状态、静态 SSR 可用的 Header 切换按钮、全局语义变量与 About 开源入口组件边界 |
 | 3.9 | 2026-09-01 | 记录 `MI-0076` DatePicker/TimePicker 复用既有状态边界，由全局主题覆盖 Portal 弹层及输入框颜色，不新增组件状态或 JS 互操作 |
 | 4.0 | 2026-09-02 | 记录 `MI-0080` 自动识别主题写入浏览器缓存，并在完整/增强导航生命周期重新同步主题 |
+| 4.1 | 2026-09-15 | 记录 `MI-0085` 共享地图模块使用最低缩放、Web Mercator 边界和非环绕瓦片配置，修复低缩放世界副本重复且不改变 .NET 状态边界 |

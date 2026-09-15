@@ -1,5 +1,8 @@
 ﻿const maps = new Map();
 
+const minimumMapZoom = 3;
+const webMercatorBounds = [[-85.05112878, -180], [85.05112878, 180]];
+
 export function init(elementId, dotNetReference, options) {
     const element = document.getElementById(elementId);
     if (!element) {
@@ -21,7 +24,10 @@ export function init(elementId, dotNetReference, options) {
     }
 
     const map = window.L.map(element, {
-        zoomControl: true
+        zoomControl: true,
+        minZoom: minimumMapZoom,
+        maxBounds: webMercatorBounds,
+        maxBoundsViscosity: 1
     }).setView([latitude, longitude], zoom);
 
     // Tianditu WMTS tiles use CGCS2000, which is aligned with WGS-84 for point picking.
@@ -34,8 +40,12 @@ export function init(elementId, dotNetReference, options) {
         }
 
         tileFallbackActive = true;
+        // Leaflet wraps Web Mercator horizontally by default; disabling it keeps one world copy at low zoom.
         const fallbackLayer = window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            bounds: webMercatorBounds,
+            minZoom: minimumMapZoom,
             maxZoom: 19,
+            noWrap: true,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
         });
         fallbackLayer.on("tileerror", () => notifyUnavailable(
@@ -46,8 +56,11 @@ export function init(elementId, dotNetReference, options) {
 
     if (tk) {
         const tiandituOptions = {
+            bounds: webMercatorBounds,
             subdomains: ["0", "1", "2", "3", "4", "5", "6", "7"],
-            maxZoom: 18
+            minZoom: minimumMapZoom,
+            maxZoom: 18,
+            noWrap: true
         };
         const baseLayer = window.L.tileLayer(
             `https://t{s}.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${encodeURIComponent(tk)}`,

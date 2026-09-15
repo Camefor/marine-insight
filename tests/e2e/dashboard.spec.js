@@ -307,6 +307,75 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(httpErrors).toEqual([]);
 });
 
+test('map does not repeat world tiles at minimum zoom', async ({ page }) => {
+  const transparentPng = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    'base64'
+  );
+  await page.route(/(?:tianditu\.gov\.cn|tile\.openstreetmap\.org)/, route => route.fulfill({
+    status: 200,
+    contentType: 'image/png',
+    body: transparentPng
+  }));
+
+  await page.goto('/');
+  await page.waitForTimeout(5000);
+  await page.getByPlaceholder('输入海岛或码头名称').fill('东极岛');
+  await page.getByRole('button', { name: '查找地点' }).click();
+  await expect(page.locator('#dashboard-map-picker .leaflet-marker-icon')).toBeVisible();
+
+  const zoomOut = page.locator('#dashboard-map-picker .leaflet-control-zoom-out');
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    if ((await zoomOut.getAttribute('class'))?.includes('leaflet-disabled')) break;
+    await zoomOut.click();
+    await page.waitForTimeout(300);
+  }
+  await expect(zoomOut).toHaveClass(/leaflet-disabled/);
+  await page.waitForTimeout(300);
+
+  const layerStats = await page.evaluate(() => {
+    const coordinateKey = source => {
+      const url = new URL(source);
+      if (url.hostname.endsWith('tianditu.gov.cn')) {
+        return [
+          url.searchParams.get('LAYER'),
+          url.searchParams.get('TILEMATRIX'),
+          url.searchParams.get('TILEROW'),
+          url.searchParams.get('TILECOL')
+        ].join('/');
+      }
+
+      const match = url.pathname.match(/\/(\d+)\/(\d+)\/(\d+)\.png$/);
+      return match ? match.slice(1).join('/') : url.href;
+    };
+
+    const mapBounds = document.querySelector('#dashboard-map-picker').getBoundingClientRect();
+    return Array.from(document.querySelectorAll('#dashboard-map-picker .leaflet-tile-pane .leaflet-layer'))
+      .map(layer => Array.from(layer.querySelectorAll('img.leaflet-tile')))
+      .filter(tiles => tiles.length > 0)
+      .map(tiles => {
+        const keys = tiles.map(tile => coordinateKey(tile.src));
+        const tileBounds = tiles.map(tile => tile.getBoundingClientRect());
+        const coverageGaps = {
+          left: Math.max(0, Math.min(...tileBounds.map(bounds => bounds.left)) - mapBounds.left),
+          right: Math.max(0, mapBounds.right - Math.max(...tileBounds.map(bounds => bounds.right))),
+          top: Math.max(0, Math.min(...tileBounds.map(bounds => bounds.top)) - mapBounds.top),
+          bottom: Math.max(0, mapBounds.bottom - Math.max(...tileBounds.map(bounds => bounds.bottom)))
+        };
+        return {
+          duplicateCount: keys.length - new Set(keys).size,
+          coverageGaps
+        };
+      });
+  });
+
+  expect(layerStats.length).toBeGreaterThan(0);
+  expect(layerStats.map(layer => layer.duplicateCount)).toEqual(layerStats.map(() => 0));
+  for (const layer of layerStats) {
+    expect(Math.max(...Object.values(layer.coverageGaps))).toBeLessThanOrEqual(2);
+  }
+});
+
 test('tide chart renders inside its responsive panel', async ({ page }) => {
   const consoleErrors = [];
   const httpErrors = [];
