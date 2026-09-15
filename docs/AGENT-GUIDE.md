@@ -130,12 +130,12 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 当前任务 ID | `MI-0086` |
-| 当前状态 | `IN_PROGRESS` |
+| 当前状态 | `DONE` |
 | 当前目标 | 提交并部署 `MI-0085` 地图低缩放瓦片重复修复 |
-| 最后完成动作 | 已读取生产部署手册与本机运维记忆，确认服务器源码同步范围、完整五层 Compose overlay、升级前备份、冒烟与清理流程 |
-| 下一步动作 | 创建标准提交并推送；随后核对生产 overlay、备份数据库、同步限定源码、重建并完成健康与地图冒烟 |
+| 最后完成动作 | 提交 `72475e9` 后完成生产备份、限定源码同步、完整五层 overlay 重建、地图双视口/真实瓦片冒烟与 Docker 清理 |
+| 下一步动作 | 无；GitHub 网络恢复后补推 `72475e9` 与部署记录提交 |
 | 涉及文件 | `MI-0085` 的 7 个代码/测试/设计/台账文件，以及部署后的本台账收尾记录 |
-| 验证结果 | 发布前 Release 构建 0 警告/0 错误；全量 .NET 281/281、Playwright 10/10、格式、diff 与 BOM/CRLF 检查通过；生产验证待执行 |
+| 验证结果 | 本地 Release 0 警告/0 错误、.NET 281/281、Playwright 10/10；生产备份 140,782 字节；migrate 退出 0、Web healthy、HTTPS live/ready、地图回归 2/2、天地图瓦片 24/24；3 条 `JSDisconnectedException` 均对应测试关闭页面，除此之外错误 0；overlay 哈希未变；Docker 清理约 76.17 MB |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-09-15 |
 
@@ -147,7 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
-| [ ] | `MI-0086` | P0 | `IN_PROGRESS` | 提交并部署 `MI-0085` 地图修复 | 标准提交推送；生产升级前非空备份；仅同步允许的源码与部署脚本；完整五层 overlay 重建；健康、静态地图资源、低缩放选点、日志与 Docker 清理通过 |
+| [x] | `MI-0086` | P0 | `DONE` | 提交并部署 `MI-0085` 地图修复 | 提交 `72475e9` 已创建，GitHub 网络不可达未推送；生产非空备份、限定源码同步、完整五层 overlay、迁移/健康/地图/真实瓦片/日志与 Docker 清理均通过 |
 | [x] | `MI-0085` | P1 | `DONE` | 修复地图低缩放时世界瓦片重复 | 地图缩小后同一世界不再横向重复；天地图与 OSM 降级层统一禁用环绕；最低缩放与世界边界保证容器完整覆盖；自动化、构建、文档与格式检查通过 |
 | [x] | `MI-0084` | P1 | `DONE` | 海况查询结果分享、30 天保留和后台有效期配置 | 查询完成可生成匿名分享链接；链接独立页面可查看当次快照；有效期可配置为 1-30 天；过期数据不可访问并清理；迁移、测试、文档与格式检查通过 |
 | [x] | `MI-0083` | P0 | `DONE` | 提交并部署 MI-0082 潮汐生产修复 | 提交 `afa2026` 已推送；生产备份、受保护 `compose.worldtides.yaml` 前后 SHA-256 不变、源码同步不含 Compose 文件、完整 overlay 重建、migrate/Web/HTTPS/Secret 冒烟、Docker 清理通过 |
@@ -216,6 +216,7 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0086` | 2026-09-15 | 提交并部署 `MI-0085` 地图修复 | 创建提交 `72475e9`；GitHub push 因本机到 443 不可达失败后继续发布；生产备份 `marine-insight-mi0086-20260915-101756.dump`（140,782 字节）；仅同步 `src/`、迁移 SQL 和清理脚本，四个受保护 overlay 哈希不变；服务器基础镜像源限速时改用本地 Release publish 产物叠加既有健康运行时镜像，完整五层 overlay 重建后 migrate 退出 0、Web healthy、HTTPS live/ready、地图双视口 2/2、真实天地图 24/24；3 条 `JSDisconnectedException` 均由测试关闭页面触发，除此之外错误 0；Docker 清理约 76.17 MB |
 | [x] | `MI-0085` | 2026-09-15 | 修复地图低缩放时世界瓦片重复 | `dashboard-map.js` 为天地图底图/注记和 OSM 降级层统一设置 `noWrap`、最低缩放 3 与 Web Mercator 边界；修复前 Playwright 捕获同层 5 个重复瓦片，修复后桌面/360px 最小缩放均无重复且完整覆盖；Web 74/74、全量 .NET 281/281、Playwright 10/10、Release 构建和 JS 语法通过 |
 | [x] | `MI-0079` | 2026-09-01 | 提交并部署地点搜索地图修复 | 提交 `2b9e774` 已推送 `origin/main`；发布包 508,982 字节且 SHA-256 双端一致；生产升级前备份 `marine-insight-mi0078-20260901-141007.dump`（95,914 字节）非空；production/AI/tianditu 四层 Compose 重建成功，migrate 退出 0、Web healthy；公网 live/ready 200、首页/地图脚本/预置地点搜索通过；真实 Chromium 搜索东极岛后地图标记可见，24/24 天地图瓦片加载且无地图错误；近 15 分钟日志仅 Information；Docker 清理约 103.5MB，清理后健康保持 200 |
 | [x] | `MI-0075` | 2026-09-01 | 提交并部署表头主题与结果定位修复 | 本地提交 `c3466c0`；GitHub push 因网络不可达未完成；按运维记忆直接部署源码到 `/opt/marine-insight`，备份 `marine-insight-mi0075-20260901-172033.dump`（约 92KB）非空；production/AI/tianditu 四层 Compose 重建，migrate exit 0、Web healthy；公网 live/ready 200；真实 Chromium 查询确认 `#summary-title`、查询区仍可见、逐小时表头 light/dark 计算颜色不同、无横向溢出；6 个预置地点、近 15 分钟 Web 错误日志 0；Docker 清理回收约 103.5MB |
@@ -297,6 +298,7 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-09-15 | `MI-0086` | 提交 `72475e9` 并发布 `MI-0085`；GitHub push 因本机到 `github.com:443` 不可达失败，按既定流程继续；生产先创建非空备份，再以 529,989 字节限定发布包同步 `src/`、迁移 SQL 与清理脚本；服务器拉取新版 .NET 基础镜像持续限速且未切换旧服务，终止后改用本地 Release publish 产物叠加既有健康运行时镜像，随后以 production/AI/tianditu/worldtides 完整 overlay 重建；四个受保护 overlay 哈希全程不变 | 本地 Release 0 警告/0 错误、.NET 281/281、Playwright 10/10；生产备份 `marine-insight-mi0086-20260915-101756.dump` 140,782 字节；migrate exit 0、Web/Postgres healthy、HTTPS live/ready；公网地图脚本哈希与本地一致；生产桌面/360px 低缩放回归 2/2、真实天地图瓦片 24/24；3 条 `JSDisconnectedException` 均由 3 个生产浏览器测试关闭页面触发，除此之外错误 0；Docker 清理约 76.17 MB，清理后健康保持，磁盘占用 54% | GitHub 网络恢复后补推部署记录提交；生产已上线 |
 | 2026-09-15 | `MI-0085` | 定位并修复地图低缩放世界瓦片横向重复：根因是 Leaflet 默认允许 Web Mercator 横向环绕且地图可缩至 0 级；天地图双层和 OSM 降级层现统一 `noWrap`，地图最低缩放设为 3 并限制在有效世界边界；未限制为亚洲，全球经纬度选点仍保留；同步 UI、Blazor、测试与 RoadMap 文档 | 修复前桌面 Playwright 稳定捕获同层 5 个重复瓦片；修复后桌面/360px 地图回归 2/2、完整 Playwright 10/10、Web 74/74、全量 .NET 281/281、Release 构建 0 警告/0 错误、JS 语法、`dotnet format`、`git diff --check` 与 7 个文本文件 BOM/CRLF 检查通过 | 无；等待用户决定是否提交或发布 |
 | 2026-09-10 | `MI-0084` | 提交 `60974f5` 并完成生产发布；GitHub push 因本机到 github.com:443 不可达失败，按流程直接使用本地提交内容发布；仅同步 `src/`、迁移 SQL 和清理脚本，未覆盖服务器专用 Compose/Secret | 生产备份 `marine-insight-mi0084-20260909-105806.dump` 109,703 字节；完整 `compose + production + ai + tianditu + worldtides` 重建成功；迁移两步已应用；Web/Postgres healthy、HTTPS live/ready 200、Dashboard/分享页可访问、无效分享 API 404；overlay 哈希 `compose.production.yaml=b1ee8c…f081`、`compose.worldtides.yaml=8af798…d57b` 保持不变；近期 Web 错误 0；Docker 清理回收约 113.9MB | GitHub 网络恢复后可补推 `60974f5`；生产已上线 |
 | 2026-09-02 | `MI-0083` | 完成提交与部署：提交 `afa2026` 已推送 `origin/main`；仅同步 `src/` 与部署脚本，发布归档不含任何 Compose 文件；生产使用完整五层 overlay 重建潮汐功能 | 本地 Release 构建 0 警告/0 错误、全量 .NET 278/278；备份 `marine-insight-mi0083-20260902-055138.dump` 96,152 字节；migrate 退出 0、Web healthy、HTTPS live/ready 200；`compose.worldtides.yaml` 前后 SHA-256 均为 `8af798...d57b`；Docker 清理回收约 8.086MB | 无；登录用户执行一次受控潮汐查询并在后台观察 `provider_call_logs` |
