@@ -129,13 +129,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0089` |
-| 当前状态 | `DONE` |
-| 当前目标 | 提交并部署 `MI-0088` 范围控件主题与布局修复 |
-| 最后完成动作 | 提交 `0f661e0` 已推送；生产完成备份、源码同步、四层 Compose 重建、迁移/健康/HTTPS/页面/CSS 冒烟和 Docker 清理 |
-| 下一步动作 | 无；等待用户确认线上视觉 |
-| 涉及文件 | `MI-0088`/`MI-0087` 相关文件及本台账部署记录 |
-| 验证结果 | Release 构建 0 警告/0 错误、全量 .NET 281/281、Playwright 本地 10/10；生产备份 141,075 字节，migrate 退出 0，Web/Postgres healthy，HTTPS live/ready 200，线上首页/登录/24H/72H/scoped CSS 通过，近 10 分钟 Web error 0，Docker 清理回收约 83.35 MB |
+| 当前任务 ID | `MI-0090` |
+| 当前状态 | `IN_PROGRESS` |
+| 当前目标 | 修复移动端 Dashboard 查询区按钮遮挡和错位并提交发布 |
+| 最后完成动作 | 已定位查询网格最小内容宽度导致 808px 溢出，修复查询/地点/范围网格收缩、移动单列、按钮全宽和日期控件负外边距；Playwright 10/10 通过 |
+| 下一步动作 | 执行 Release 构建/全量测试，创建提交并按生产流程备份、同步、重建和冒烟 |
+| 涉及文件 | `docs/15-UI设计.md`、`src/MarineInsight.Web/Components/Pages/Dashboard.razor.css`、`tests/e2e/dashboard.spec.js` 与本台账 |
+| 验证结果 | 本地 Playwright 桌面/移动 10/10；Release 和全量 .NET 门禁待本次执行 |
 | 阻塞/待确认 | 无 |
 | 最后更新 | 2026-09-21 |
 
@@ -147,6 +147,7 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [ ] | `MI-0090` | P0 | `IN_PROGRESS` | 修复移动端 Dashboard 查询区按钮遮挡和错位并提交发布 | Release 构建、全量测试、生产备份、源码同步、Compose 重建、健康/页面/移动按钮冒烟和 Docker 清理通过后完成 |
 | [x] | `MI-0089` | P0 | `DONE` | 提交并部署 `MI-0088` 范围控件主题与布局修复 | 提交 `0f661e0` 已推送；Release 构建/全量测试通过；生产备份、限定源码同步、production/AI/tianditu Compose 重建、migrate/健康/HTTPS/首页/登录/24H/72H/scoped CSS 冒烟和 Docker 清理通过 |
 | [x] | `MI-0088` | P1 | `DONE` | 修复 Dashboard 24H/72H/7d 范围控件的双主题颜色和布局遮挡 | 分段控件使用 Marine AI 主题语义色；取消旧版负边距/顶部偏移；桌面查询栏列宽不再挤压，移动端三等分按钮无重叠；Playwright 双视口 10/10 和 BOM/CRLF 检查通过 |
 | [x] | `MI-0087` | P1 | `DONE` | 引入 Binance 数据工作台结构并以 Marine AI 主题完成 Dashboard 视觉落地 | 根目录保留完整设计规范；主题 surface 改为扁平分层，卡片/控件圆角收紧，去除装饰性渐变/阴影，保留 Marine AI 品牌与风险语义；定向/全量测试、格式与 BOM/CRLF 检查通过 |

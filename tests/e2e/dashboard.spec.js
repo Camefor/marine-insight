@@ -104,7 +104,7 @@ test('dashboard and account shell remain usable without layout overflow', async 
     };
   });
   expect(datetimeLayout.inputWidth).toBeGreaterThan(100);
-  expect(datetimeLayout.datePickerWidth).toBeGreaterThan(200);
+  expect(datetimeLayout.datePickerWidth).toBeGreaterThan(layoutViewportWidth(page) <= 680 ? 150 : 200);
   expect(datetimeLayout.inputHeight).toBeGreaterThanOrEqual(20);
   expect(datetimeLayout.datePickerHeight).toBeGreaterThanOrEqual(46);
   expect(datetimeLayout.hourHeight).toBeGreaterThanOrEqual(20);
@@ -124,6 +124,24 @@ test('dashboard and account shell remain usable without layout overflow', async 
   expect(datetimeLayout.selectedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   if (layoutViewportWidth(page) <= 680) {
     expect(datetimeLayout.controlWidth).toBeGreaterThanOrEqual(300);
+    const mobileControlLayout = await page.evaluate(() => {
+      const queryBand = document.querySelector('.query-band')?.getBoundingClientRect();
+      const controls = [
+        ...document.querySelectorAll('.location-controls > button, .range-controls > .primary-button, .range-controls .segment')
+      ].filter(element => {
+        const box = element.getBoundingClientRect();
+        return box.width > 0 && box.height > 0;
+      });
+      const boxes = controls.map(element => element.getBoundingClientRect());
+      return {
+        allInsideQueryBand: boxes.every(box => queryBand && box.left >= queryBand.left - 1 && box.right <= queryBand.right + 1),
+        hasOverlap: boxes.some((box, index) => boxes.slice(index + 1).some(other => box.right > other.left && other.right > box.left && box.bottom > other.top && other.bottom > box.top)),
+        buttonWidths: boxes.map(box => box.width)
+      };
+    });
+    expect(mobileControlLayout.allInsideQueryBand).toBeTruthy();
+    expect(mobileControlLayout.hasOverlap).toBeFalsy();
+    expect(mobileControlLayout.buttonWidths.every(width => width >= 44)).toBeTruthy();
   }
 
   const queryBand = page.locator('section[aria-labelledby="query-title"]');

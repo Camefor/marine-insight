@@ -1883,6 +1883,23 @@ td {
     background: var(--marine-control);
 }
 
+.query-form,
+.location-controls,
+.range-controls {
+    min-width: 0;
+    width: 100%;
+}
+
+.location-controls > *,
+.range-controls > *,
+.field input {
+    min-width: 0;
+}
+
+.field input {
+    width: 100%;
+}
+
 .range-controls {
     align-items: end;
     gap: 12px;
@@ -1901,7 +1918,7 @@ td {
     align-content: end;
     gap: 6px;
     min-width: 0;
-    padding-top: 20px;
+    padding-top: 0;
 }
 
 .segmented-group legend {
@@ -1943,7 +1960,52 @@ td {
     }
 }
 
+@media (min-width: 681px) {
+    .range-controls {
+        align-items: start;
+    }
+
+    .range-controls > .segmented-group {
+        margin-top: -17px;
+        position: relative;
+        top: 31px;
+    }
+
+    .range-controls > .primary-button {
+        margin-top: 30px;
+    }
+}
+
+@media (min-width: 1041px) {
+    .range-controls > .paid-provider-option {
+        margin-top: 31px;
+    }
+}
+
 @media (max-width: 680px) {
+    .range-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .range-controls > .segmented-group,
+    .range-controls > .primary-button,
+    .range-controls > .paid-provider-option {
+        grid-column: auto;
+        margin-top: 0;
+        position: static;
+        top: auto;
+    }
+
+    .location-controls > button,
+    .range-controls > .primary-button {
+        width: 100%;
+    }
+
+    .datetime-control {
+        margin-inline: 0;
+        width: 100%;
+    }
+
     .segmented-group {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         padding-top: 0;
