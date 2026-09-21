@@ -526,12 +526,21 @@ test('light and dark themes persist across about and dashboard via manual toggle
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   const darkDashboardTheme = await readDashboardTheme(page);
+  const darkRangeTheme = await readRangeTheme(page);
   await page.locator('[data-theme-toggle]').click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   const lightDashboardTheme = await readDashboardTheme(page);
+  const lightRangeTheme = await readRangeTheme(page);
   expect(lightDashboardTheme.bodyBackground).not.toBe(darkDashboardTheme.bodyBackground);
   expect(lightDashboardTheme.textColor).not.toBe(darkDashboardTheme.textColor);
   expect(lightDashboardTheme.panelBackground).not.toBe(darkDashboardTheme.panelBackground);
+  expect(darkRangeTheme.activeBackground).not.toBe(darkRangeTheme.inactiveBackground);
+  expect(lightRangeTheme.activeBackground).not.toBe(lightRangeTheme.inactiveBackground);
+  expect(lightRangeTheme.activeBackground).not.toBe(darkRangeTheme.activeBackground);
+  expect(darkRangeTheme.activeText).not.toBe(darkRangeTheme.inactiveText);
+  expect(lightRangeTheme.activeText).not.toBe(lightRangeTheme.inactiveText);
+  expect(darkRangeTheme.hasOverlap).toBeFalsy();
+  expect(lightRangeTheme.hasOverlap).toBeFalsy();
   expect(await page.evaluate(() => localStorage.getItem('marine-insight-theme'))).toBe('light');
 
   const dimensions = await page.evaluate(() => ({
@@ -620,8 +629,26 @@ async function expectAboutContrast(page) {
 async function readDashboardTheme(page) {
   await expect(page.locator('.dashboard-shell')).toBeVisible();
   return page.evaluate(() => ({
-    bodyBackground: getComputedStyle(document.body).backgroundImage,
+    bodyBackground: getComputedStyle(document.body).backgroundColor,
     textColor: getComputedStyle(document.querySelector('.dashboard-shell')).color,
-    panelBackground: getComputedStyle(document.querySelector('.query-band')).backgroundImage
+    panelBackground: getComputedStyle(document.querySelector('.query-band')).backgroundColor
   }));
+}
+
+async function readRangeTheme(page) {
+  return page.evaluate(() => {
+    const buttons = [...document.querySelectorAll('.segmented-group .segment')];
+    const boxes = buttons.map(button => button.getBoundingClientRect());
+    const active = buttons.find(button => button.classList.contains('active'));
+    const inactive = buttons.find(button => !button.classList.contains('active'));
+    const activeStyle = active ? getComputedStyle(active) : null;
+    const inactiveStyle = inactive ? getComputedStyle(inactive) : null;
+    return {
+      activeBackground: activeStyle?.backgroundColor || '',
+      activeText: activeStyle?.color || '',
+      inactiveBackground: inactiveStyle?.backgroundColor || '',
+      inactiveText: inactiveStyle?.color || '',
+      hasOverlap: boxes.some((box, index) => boxes.slice(index + 1).some(other => box.right > other.left && other.right > box.left && box.bottom > other.top && other.bottom > box.top))
+    };
+  });
 }

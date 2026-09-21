@@ -11,7 +11,7 @@
     --dash-coral: var(--marine-coral);
     --dash-yellow: var(--marine-sand);
     --dash-good: var(--marine-good);
-    --dash-radius: 12px;
+    --dash-radius: 8px;
 }
 
 .dashboard-shell {
@@ -19,7 +19,7 @@
     color: var(--dash-text);
     min-height: calc(100vh - 72px);
     overflow: hidden;
-    padding: clamp(20px, 4vw, 54px) clamp(16px, 4vw, 58px) 60px;
+    padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 52px) 60px;
     position: relative;
 }
 
@@ -27,7 +27,7 @@
     background: repeating-radial-gradient(ellipse at 50% 10%, transparent 0 48px, var(--dashboard-grid) 49px 50px);
     content: "";
     inset: -40% -15%;
-    opacity: 0.32;
+    opacity: 0;
     pointer-events: none;
     position: absolute;
     transform: rotate(-8deg);
@@ -128,8 +128,8 @@
     background: var(--dash-panel);
     border: 1px solid var(--dash-line);
     border-radius: var(--dash-radius);
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
-    margin-bottom: 16px;
+    box-shadow: none;
+    margin-bottom: 12px;
     padding: clamp(18px, 3vw, 28px);
 }
 
@@ -1762,5 +1762,211 @@ td {
         animation: none;
         transform: none;
         transition: none;
+    }
+}
+
+/* MI-0087: flat data-workbench surfaces keep hierarchy readable without decorative glow. */
+.dashboard-shell {
+    --dash-panel-soft: var(--marine-control);
+    --dash-radius: 8px;
+}
+
+.dashboard-header {
+    gap: 24px;
+    margin-bottom: 20px;
+}
+
+.disclaimer {
+    background: var(--dash-panel);
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.query-band,
+.summary-band,
+.explanation-section,
+.activity-section,
+.risk-section,
+.trend-section,
+.recommendation-section,
+.tide-section,
+.source-section,
+.metric-section,
+.hourly-section {
+    background: var(--dash-panel);
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.query-band {
+    background: var(--dash-panel-solid);
+}
+
+.field input,
+.candidate-button,
+.map-picker,
+.selected-location-bar,
+.metric-item,
+.source-item,
+.activity-item,
+.risk-item,
+.recommendation-item,
+.trend-panel,
+.hour-detail-panel,
+.tide-overview article,
+.tide-chart-shell,
+.hourly-table-wrap {
+    border-radius: 8px;
+}
+
+.datetime-control {
+    background: var(--marine-control);
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.datetime-control input,
+.datetime-control ::deep .forecast-date-picker.ant-picker,
+.datetime-control ::deep .forecast-time-picker.ant-picker {
+    border-radius: 7px;
+}
+
+.primary-button,
+.secondary-button,
+.candidate-button,
+.segment,
+.favorite-button,
+.trend-tab {
+    border-radius: 6px;
+}
+
+.primary-button {
+    min-height: 42px;
+    padding-inline: 18px;
+}
+
+.secondary-button,
+.segment {
+    min-height: 42px;
+}
+
+.secondary-button {
+    background: var(--marine-control);
+}
+
+.segment.active,
+.trend-tab.active {
+    background: var(--marine-accent-soft);
+}
+
+.metric-item:hover {
+    transform: none;
+}
+
+.trend-bar.primary {
+    background: var(--dash-accent);
+}
+
+.trend-bar.secondary {
+    background: var(--dash-coral);
+}
+
+.timeline-window {
+    background: var(--dash-accent);
+}
+
+.tide-section {
+    background: var(--dash-panel);
+}
+
+.query-loading {
+    background: var(--marine-control);
+}
+
+.range-controls {
+    align-items: end;
+    gap: 12px;
+    grid-template-columns: minmax(300px, 1.2fr) minmax(220px, 0.8fr) minmax(200px, 0.8fr) auto;
+}
+
+.range-controls > .segmented-group,
+.range-controls > .primary-button,
+.range-controls > .paid-provider-option {
+    margin-top: 0;
+    position: static;
+    top: auto;
+}
+
+.segmented-group {
+    align-content: end;
+    gap: 6px;
+    min-width: 0;
+    padding-top: 20px;
+}
+
+.segmented-group legend {
+    grid-column: 1 / -1;
+    margin-bottom: -1px;
+}
+
+.segment {
+    background: var(--marine-control);
+    border-color: var(--marine-line-strong);
+    color: var(--marine-text);
+    min-width: 68px;
+    padding-inline: 10px;
+    white-space: nowrap;
+}
+
+.segment:hover,
+.segment:focus-visible {
+    background: var(--marine-accent-soft);
+    border-color: var(--marine-accent);
+    color: var(--marine-accent-strong);
+}
+
+.segment.active,
+.segment.active:hover,
+.segment.active:focus-visible {
+    background: var(--marine-accent);
+    border-color: var(--marine-accent);
+    color: var(--marine-accent-contrast);
+}
+
+@media (max-width: 1040px) {
+    .range-controls {
+        gap: 12px;
+    }
+
+    .segmented-group {
+        padding-top: 0;
+    }
+}
+
+@media (max-width: 680px) {
+    .segmented-group {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding-top: 0;
+        width: 100%;
+    }
+
+    .segmented-group legend {
+        margin-bottom: 0;
+    }
+
+    .segment {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 680px) {
+    .dashboard-shell {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .dashboard-header {
+        gap: 16px;
     }
 }

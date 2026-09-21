@@ -129,15 +129,15 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 当前任务 ID | `MI-0086` |
-| 当前状态 | `DONE` |
-| 当前目标 | 提交并部署 `MI-0085` 地图低缩放瓦片重复修复 |
-| 最后完成动作 | 提交 `72475e9` 后完成生产备份、限定源码同步、完整五层 overlay 重建、地图双视口/真实瓦片冒烟与 Docker 清理 |
-| 下一步动作 | 无；GitHub 网络恢复后补推 `72475e9` 与部署记录提交 |
-| 涉及文件 | `MI-0085` 的 7 个代码/测试/设计/台账文件，以及部署后的本台账收尾记录 |
-| 验证结果 | 本地 Release 0 警告/0 错误、.NET 281/281、Playwright 10/10；生产备份 140,782 字节；migrate 退出 0、Web healthy、HTTPS live/ready、地图回归 2/2、天地图瓦片 24/24；3 条 `JSDisconnectedException` 均对应测试关闭页面，除此之外错误 0；overlay 哈希未变；Docker 清理约 76.17 MB |
+| 当前任务 ID | `MI-0089` |
+| 当前状态 | `IN_PROGRESS` |
+| 当前目标 | 提交并部署 `MI-0088` 范围控件主题与布局修复 |
+| 最后完成动作 | 已读取生产部署手册、服务器记忆和 overlay 约束，确认本地改动范围及发布链 |
+| 下一步动作 | 执行 Release 构建/全量测试，创建提交并同步源码到生产；完成备份、四层 Compose 重建、健康与页面冒烟、Docker 清理 |
+| 涉及文件 | 当前工作区全部 `MI-0088`/`MI-0087` 相关文件及本台账部署记录 |
+| 验证结果 | 本次部署门禁尚未执行 |
 | 阻塞/待确认 | 无 |
-| 最后更新 | 2026-09-15 |
+| 最后更新 | 2026-09-21 |
 
 <!-- agent-state:end -->
 
@@ -147,6 +147,9 @@
 
 | 完成 | ID | 优先级 | 状态 | 任务 | 来源与验收 |
 | --- | --- | --- | --- | --- | --- |
+| [ ] | `MI-0089` | P0 | `IN_PROGRESS` | 提交并部署 `MI-0088` 范围控件主题与布局修复 | Release 构建、全量测试、生产备份、源码同步、production/AI/tianditu Compose 重建、健康/页面/主题控件冒烟和 Docker 清理通过后完成 |
+| [x] | `MI-0088` | P1 | `DONE` | 修复 Dashboard 24H/72H/7d 范围控件的双主题颜色和布局遮挡 | 分段控件使用 Marine AI 主题语义色；取消旧版负边距/顶部偏移；桌面查询栏列宽不再挤压，移动端三等分按钮无重叠；Playwright 双视口 10/10 和 BOM/CRLF 检查通过 |
+| [x] | `MI-0087` | P1 | `DONE` | 引入 Binance 数据工作台结构并以 Marine AI 主题完成 Dashboard 视觉落地 | 根目录保留完整设计规范；主题 surface 改为扁平分层，卡片/控件圆角收紧，去除装饰性渐变/阴影，保留 Marine AI 品牌与风险语义；定向/全量测试、格式与 BOM/CRLF 检查通过 |
 | [x] | `MI-0086` | P0 | `DONE` | 提交并部署 `MI-0085` 地图修复 | 提交 `72475e9` 已创建，GitHub 网络不可达未推送；生产非空备份、限定源码同步、完整五层 overlay、迁移/健康/地图/真实瓦片/日志与 Docker 清理均通过 |
 | [x] | `MI-0085` | P1 | `DONE` | 修复地图低缩放时世界瓦片重复 | 地图缩小后同一世界不再横向重复；天地图与 OSM 降级层统一禁用环绕；最低缩放与世界边界保证容器完整覆盖；自动化、构建、文档与格式检查通过 |
 | [x] | `MI-0084` | P1 | `DONE` | 海况查询结果分享、30 天保留和后台有效期配置 | 查询完成可生成匿名分享链接；链接独立页面可查看当次快照；有效期可配置为 1-30 天；过期数据不可访问并清理；迁移、测试、文档与格式检查通过 |
@@ -216,6 +219,8 @@
 
 | 完成 | ID | 完成日期 | 任务 | 验证与说明 |
 | --- | --- | --- | --- | --- |
+| [x] | `MI-0088` | 2026-09-21 | 修复 Dashboard 24H/72H/7d 范围控件的双主题颜色和布局遮挡 | `Dashboard.razor.css` 用 Marine AI 语义色区分激活/未激活态，移除负边距和顶部偏移，调整桌面查询栏列宽并将移动端按钮固定三等分；Playwright 双视口 10/10，`git diff --check` 和 BOM/CRLF 检查通过 |
+| [x] | `MI-0087` | 2026-09-21 | 引入 Binance 数据工作台结构并以 Marine AI 主题完成 Dashboard 视觉落地 | 根目录新增 `DESIGN.md`；`app.css` 与 `Dashboard.razor.css` 建立扁平深色/浅色 surface 层级、8px 数据卡片圆角、无装饰渐变/阴影的查询与结果工作台，保留青绿/珊瑚风险语义；主题 E2E 断言改为比较实际背景色；Dashboard 17/17、全量 .NET 281/281、Playwright 双视口 10/10、format 与 BOM/CRLF 检查通过 |
 | [x] | `MI-0086` | 2026-09-15 | 提交并部署 `MI-0085` 地图修复 | 创建提交 `72475e9`；GitHub push 因本机到 443 不可达失败后继续发布；生产备份 `marine-insight-mi0086-20260915-101756.dump`（140,782 字节）；仅同步 `src/`、迁移 SQL 和清理脚本，四个受保护 overlay 哈希不变；服务器基础镜像源限速时改用本地 Release publish 产物叠加既有健康运行时镜像，完整五层 overlay 重建后 migrate 退出 0、Web healthy、HTTPS live/ready、地图双视口 2/2、真实天地图 24/24；3 条 `JSDisconnectedException` 均由测试关闭页面触发，除此之外错误 0；Docker 清理约 76.17 MB |
 | [x] | `MI-0085` | 2026-09-15 | 修复地图低缩放时世界瓦片重复 | `dashboard-map.js` 为天地图底图/注记和 OSM 降级层统一设置 `noWrap`、最低缩放 3 与 Web Mercator 边界；修复前 Playwright 捕获同层 5 个重复瓦片，修复后桌面/360px 最小缩放均无重复且完整覆盖；Web 74/74、全量 .NET 281/281、Playwright 10/10、Release 构建和 JS 语法通过 |
 | [x] | `MI-0079` | 2026-09-01 | 提交并部署地点搜索地图修复 | 提交 `2b9e774` 已推送 `origin/main`；发布包 508,982 字节且 SHA-256 双端一致；生产升级前备份 `marine-insight-mi0078-20260901-141007.dump`（95,914 字节）非空；production/AI/tianditu 四层 Compose 重建成功，migrate 退出 0、Web healthy；公网 live/ready 200、首页/地图脚本/预置地点搜索通过；真实 Chromium 搜索东极岛后地图标记可见，24/24 天地图瓦片加载且无地图错误；近 15 分钟日志仅 Information；Docker 清理约 103.5MB，清理后健康保持 200 |
@@ -298,6 +303,8 @@
 
 | 日期 | 任务 ID | 会话结果 | 验证 | 下一步 |
 | --- | --- | --- | --- | --- |
+| 2026-09-21 | `MI-0088` | 修复 Dashboard 范围选择控件：24H/72H/7d 激活态和未激活态改用明暗主题语义色；移除旧版负边距/顶部偏移，调整桌面查询栏列宽避免挤压，移动端改为三等分布局；同步 UI 设计与 E2E 主题/几何回归 | Playwright 桌面/移动 10/10；范围控件双主题颜色差异、激活态对比度和按钮无重叠断言通过；`git diff --check` 与改动文本 UTF-8 BOM/CRLF 检查通过 | 等待用户人工确认 24H/72H/7d 控件视觉；未执行生产部署 |
+| 2026-09-21 | `MI-0087` | 将仓库根目录加入 Binance 设计规范，并按“Binance 数据工作台结构 + Linear surface 克制 + Marine AI 风险语义”落地主题基础：`app.css` 由渐变/半透明/阴影改为扁平明暗 surface 层级，Header 与 Dashboard 控件圆角收紧，Dashboard 卡片去除装饰性发光；同步 UI 设计记录和扁平背景主题 E2E 断言 | Dashboard 定向测试 17/17；全量 .NET 281/281；Playwright 桌面/移动 10/10；`dotnet format --verify-no-changes --no-restore` 通过；`git diff --check` 与 `DESIGN.md`、CSS、Razor、测试、台账等改动文本 UTF-8 BOM/CRLF 检查通过 | 等待用户人工确认新主题视觉；未执行生产部署 |
 | 2026-09-15 | `MI-0086` | 提交 `72475e9` 并发布 `MI-0085`；GitHub push 因本机到 `github.com:443` 不可达失败，按既定流程继续；生产先创建非空备份，再以 529,989 字节限定发布包同步 `src/`、迁移 SQL 与清理脚本；服务器拉取新版 .NET 基础镜像持续限速且未切换旧服务，终止后改用本地 Release publish 产物叠加既有健康运行时镜像，随后以 production/AI/tianditu/worldtides 完整 overlay 重建；四个受保护 overlay 哈希全程不变 | 本地 Release 0 警告/0 错误、.NET 281/281、Playwright 10/10；生产备份 `marine-insight-mi0086-20260915-101756.dump` 140,782 字节；migrate exit 0、Web/Postgres healthy、HTTPS live/ready；公网地图脚本哈希与本地一致；生产桌面/360px 低缩放回归 2/2、真实天地图瓦片 24/24；3 条 `JSDisconnectedException` 均由 3 个生产浏览器测试关闭页面触发，除此之外错误 0；Docker 清理约 76.17 MB，清理后健康保持，磁盘占用 54% | GitHub 网络恢复后补推部署记录提交；生产已上线 |
 | 2026-09-15 | `MI-0085` | 定位并修复地图低缩放世界瓦片横向重复：根因是 Leaflet 默认允许 Web Mercator 横向环绕且地图可缩至 0 级；天地图双层和 OSM 降级层现统一 `noWrap`，地图最低缩放设为 3 并限制在有效世界边界；未限制为亚洲，全球经纬度选点仍保留；同步 UI、Blazor、测试与 RoadMap 文档 | 修复前桌面 Playwright 稳定捕获同层 5 个重复瓦片；修复后桌面/360px 地图回归 2/2、完整 Playwright 10/10、Web 74/74、全量 .NET 281/281、Release 构建 0 警告/0 错误、JS 语法、`dotnet format`、`git diff --check` 与 7 个文本文件 BOM/CRLF 检查通过 | 无；等待用户决定是否提交或发布 |
 | 2026-09-10 | `MI-0084` | 提交 `60974f5` 并完成生产发布；GitHub push 因本机到 github.com:443 不可达失败，按流程直接使用本地提交内容发布；仅同步 `src/`、迁移 SQL 和清理脚本，未覆盖服务器专用 Compose/Secret | 生产备份 `marine-insight-mi0084-20260909-105806.dump` 109,703 字节；完整 `compose + production + ai + tianditu + worldtides` 重建成功；迁移两步已应用；Web/Postgres healthy、HTTPS live/ready 200、Dashboard/分享页可访问、无效分享 API 404；overlay 哈希 `compose.production.yaml=b1ee8c…f081`、`compose.worldtides.yaml=8af798…d57b` 保持不变；近期 Web 错误 0；Docker 清理回收约 113.9MB | GitHub 网络恢复后可补推 `60974f5`；生产已上线 |
